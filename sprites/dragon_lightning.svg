@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Coda -->
+  <path d="M8 44 Q4 52 10 56 Q14 58 16 54 Q12 50 14 44 Z" fill="#d4ac0d"/>
+  <!-- Corpo -->
+  <ellipse cx="32" cy="40" rx="18" ry="14" fill="#f1c40f"/>
+  <!-- Pancia -->
+  <ellipse cx="32" cy="44" rx="11" ry="8" fill="#fef9c3"/>
+  <!-- Ali -->
+  <path d="M14 36 Q6 20 18 28 L22 34 Z" fill="#d4ac0d" opacity="0.85"/>
+  <path d="M50 36 Q58 20 46 28 L42 34 Z" fill="#d4ac0d" opacity="0.85"/>
+  <!-- Collo -->
+  <ellipse cx="32" cy="26" rx="9" ry="7" fill="#f1c40f"/>
+  <!-- Testa -->
+  <ellipse cx="32" cy="18" rx="13" ry="11" fill="#f1c40f"/>
+  <!-- Muso -->
+  <ellipse cx="40" cy="20" rx="7" ry="5" fill="#d4ac0d"/>
+  <!-- Occhio -->
+  <circle cx="29" cy="15" r="4" fill="white"/>
+  <circle cx="30" cy="15" r="2.5" fill="#e74c3c"/>
+  <circle cx="30.5" cy="14.5" r="1.2" fill="#1a1a2e"/>
+  <!-- Corna -->
+  <polygon points="26,8 22,2 30,7" fill="#f39c12"/>
+  <polygon points="35,6 32,0 39,5" fill="#f39c12"/>
+  <!-- Fulmini dalla bocca -->
+  <path d="M44 18 L50 14 L47 18 L54 13 L50 18 L56 16" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M44 20 L49 17 L47 20 L52 17" stroke="#fef08a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- Scintille -->
+  <circle cx="52" cy="12" r="2" fill="#fff" opacity="0.9"/>
+  <circle cx="55" cy="16" r="1.5" fill="#fef08a" opacity="0.8"/>
+  <!-- Piedini -->
+  <ellipse cx="22" cy="52" rx="5" ry="3" fill="#d4ac0d"/>
+  <ellipse cx="42" cy="52" rx="5" ry="3" fill="#d4ac0d"/>
+  <!-- Artigli -->
+  <line x1="19" y1="54" x2="17" y2="57" stroke="#b7950b" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="22" y1="55" x2="22" y2="58" stroke="#b7950b" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="25" y1="54" x2="27" y2="57" stroke="#b7950b" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

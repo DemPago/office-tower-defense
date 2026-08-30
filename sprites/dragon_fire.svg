@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Coda -->
+  <path d="M8 44 Q4 52 10 56 Q14 58 16 54 Q12 50 14 44 Z" fill="#c0392b"/>
+  <!-- Corpo -->
+  <ellipse cx="32" cy="40" rx="18" ry="14" fill="#e74c3c"/>
+  <!-- Pancia -->
+  <ellipse cx="32" cy="44" rx="11" ry="8" fill="#fadbd8"/>
+  <!-- Ali -->
+  <path d="M14 36 Q6 20 18 28 L22 34 Z" fill="#c0392b" opacity="0.85"/>
+  <path d="M50 36 Q58 20 46 28 L42 34 Z" fill="#c0392b" opacity="0.85"/>
+  <!-- Collo -->
+  <ellipse cx="32" cy="26" rx="9" ry="7" fill="#e74c3c"/>
+  <!-- Testa -->
+  <ellipse cx="32" cy="18" rx="13" ry="11" fill="#e74c3c"/>
+  <!-- Muso -->
+  <ellipse cx="40" cy="20" rx="7" ry="5" fill="#c0392b"/>
+  <!-- Occhio -->
+  <circle cx="29" cy="15" r="4" fill="white"/>
+  <circle cx="30" cy="15" r="2.5" fill="#f1c40f"/>
+  <circle cx="30.5" cy="14.5" r="1.2" fill="#1a1a2e"/>
+  <!-- Corno -->
+  <polygon points="26,8 22,2 30,7" fill="#f1c40f"/>
+  <polygon points="35,6 32,0 39,5" fill="#f1c40f"/>
+  <!-- Narici fuoco -->
+  <circle cx="38" cy="21" r="1.5" fill="#922b21"/>
+  <circle cx="43" cy="20" r="1.5" fill="#922b21"/>
+  <!-- Fiamme dalla bocca -->
+  <path d="M44 19 Q52 16 56 12 Q50 18 54 22 Q48 20 46 24 Q46 18 42 21 Z" fill="#e67e22" opacity="0.9"/>
+  <path d="M45 20 Q51 18 53 15 Q49 20 51 23 Q47 21 45 24 Z" fill="#f1c40f" opacity="0.8"/>
+  <!-- Piedini -->
+  <ellipse cx="22" cy="52" rx="5" ry="3" fill="#c0392b"/>
+  <ellipse cx="42" cy="52" rx="5" ry="3" fill="#c0392b"/>
+  <!-- Artigli -->
+  <line x1="19" y1="54" x2="17" y2="57" stroke="#922b21" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="22" y1="55" x2="22" y2="58" stroke="#922b21" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="25" y1="54" x2="27" y2="57" stroke="#922b21" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

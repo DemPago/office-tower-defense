@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Armatura roccia (piastre) -->
+  <ellipse cx="32" cy="40" rx="22" ry="17" fill="#7f8c8d" opacity="0.5"/>
+  <!-- Coda -->
+  <path d="M8 44 Q4 52 10 56 Q14 58 16 54 Q12 50 14 44 Z" fill="#616a6b"/>
+  <!-- Corpo -->
+  <ellipse cx="32" cy="40" rx="19" ry="15" fill="#7f8c8d"/>
+  <!-- Piastre armatura corpo -->
+  <path d="M16 36 Q20 32 24 35 Q20 38 16 36 Z" fill="#95a5a6"/>
+  <path d="M40 35 Q44 32 48 36 Q44 38 40 35 Z" fill="#95a5a6"/>
+  <path d="M28 44 Q32 40 36 44 Q32 48 28 44 Z" fill="#95a5a6"/>
+  <!-- Pancia -->
+  <ellipse cx="32" cy="44" rx="11" ry="8" fill="#bdc3c7"/>
+  <!-- Ali (rocciose, spezzate) -->
+  <path d="M14 36 Q6 22 16 28 L20 34 Z" fill="#616a6b" opacity="0.9"/>
+  <path d="M10 30 Q8 24 14 27 L16 30 Z" fill="#7f8c8d" opacity="0.8"/>
+  <path d="M50 36 Q58 22 48 28 L44 34 Z" fill="#616a6b" opacity="0.9"/>
+  <path d="M54 30 Q56 24 50 27 L48 30 Z" fill="#7f8c8d" opacity="0.8"/>
+  <!-- Collo -->
+  <ellipse cx="32" cy="26" rx="10" ry="7" fill="#7f8c8d"/>
+  <!-- Piastra collo -->
+  <path d="M24 24 Q32 20 40 24 Q32 28 24 24 Z" fill="#95a5a6"/>
+  <!-- Testa -->
+  <ellipse cx="32" cy="17" rx="14" ry="11" fill="#7f8c8d"/>
+  <!-- Piastra testa -->
+  <path d="M22 13 Q32 9 42 13 Q32 17 22 13 Z" fill="#95a5a6"/>
+  <!-- Muso -->
+  <ellipse cx="41" cy="19" rx="7" ry="5" fill="#616a6b"/>
+  <!-- Occhio corazzato -->
+  <circle cx="28" cy="14" r="5" fill="#2c3e50"/>
+  <circle cx="28" cy="14" r="3.5" fill="white"/>
+  <circle cx="28.5" cy="13.5" r="2" fill="#e74c3c"/>
+  <circle cx="29" cy="13" r="1" fill="#1a1a2e"/>
+  <!-- Corna di roccia -->
+  <polygon points="25,7 20,1 28,6" fill="#616a6b"/>
+  <polygon points="36,5 33,-1 40,4" fill="#616a6b"/>
+  <!-- Texture crepature -->
+  <line x1="22" y1="40" x2="26" y2="44" stroke="#95a5a6" stroke-width="0.8" opacity="0.6"/>
+  <line x1="38" y1="38" x2="35" y2="43" stroke="#95a5a6" stroke-width="0.8" opacity="0.6"/>
+  <!-- Sassi scagliati dalla bocca -->
+  <circle cx="50" cy="17" r="4" fill="#7f8c8d"/>
+  <circle cx="56" cy="13" r="3" fill="#95a5a6"/>
+  <circle cx="54" cy="20" r="2.5" fill="#616a6b"/>
+  <!-- Piedini corazzati -->
+  <ellipse cx="21" cy="53" rx="6" ry="4" fill="#616a6b"/>
+  <ellipse cx="43" cy="53" rx="6" ry="4" fill="#616a6b"/>
+  <!-- Artigli pesanti -->
+  <line x1="17" y1="55" x2="15" y2="59" stroke="#4a4a4a" stroke-width="2" stroke-linecap="round"/>
+  <line x1="21" y1="57" x2="21" y2="61" stroke="#4a4a4a" stroke-width="2" stroke-linecap="round"/>
+  <line x1="25" y1="55" x2="27" y2="59" stroke="#4a4a4a" stroke-width="2" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Scudo acqua (aura) -->
+  <ellipse cx="32" cy="35" rx="24" ry="20" fill="none" stroke="#3498db" stroke-width="2" opacity="0.5" stroke-dasharray="4 3"/>
+  <!-- Coda -->
+  <path d="M8 44 Q4 52 10 56 Q14 58 16 54 Q12 50 14 44 Z" fill="#2980b9"/>
+  <!-- Corpo -->
+  <ellipse cx="32" cy="40" rx="18" ry="14" fill="#3498db"/>
+  <!-- Pancia -->
+  <ellipse cx="32" cy="44" rx="11" ry="8" fill="#d6eaf8"/>
+  <!-- Ali -->
+  <path d="M14 36 Q6 20 18 28 L22 34 Z" fill="#2980b9" opacity="0.85"/>
+  <path d="M50 36 Q58 20 46 28 L42 34 Z" fill="#2980b9" opacity="0.85"/>
+  <!-- Collo -->
+  <ellipse cx="32" cy="26" rx="9" ry="7" fill="#3498db"/>
+  <!-- Testa -->
+  <ellipse cx="32" cy="18" rx="13" ry="11" fill="#3498db"/>
+  <!-- Muso -->
+  <ellipse cx="40" cy="20" rx="7" ry="5" fill="#2980b9"/>
+  <!-- Occhio -->
+  <circle cx="29" cy="15" r="4" fill="white"/>
+  <circle cx="30" cy="15" r="2.5" fill="#1abc9c"/>
+  <circle cx="30.5" cy="14.5" r="1.2" fill="#1a1a2e"/>
+  <!-- Corna ondulate -->
+  <path d="M26 8 Q24 4 22 2 Q24 5 28 7 Z" fill="#85c1e9"/>
+  <path d="M35 6 Q34 1 32 0 Q35 3 39 5 Z" fill="#85c1e9"/>
+  <!-- Getto acqua dalla bocca -->
+  <path d="M44 19 Q50 16 56 14 Q52 17 56 20 Q51 19 50 23 Q48 19 44 22 Z" fill="#3498db" opacity="0.8"/>
+  <path d="M45 20 Q50 18 54 16 Q51 19 53 21 Z" fill="#d6eaf8" opacity="0.7"/>
+  <!-- Gocce acqua -->
+  <ellipse cx="54" cy="13" rx="2" ry="3" fill="#85c1e9" opacity="0.9"/>
+  <ellipse cx="58" cy="17" rx="1.5" ry="2.5" fill="#3498db" opacity="0.8"/>
+  <!-- Piedini -->
+  <ellipse cx="22" cy="52" rx="5" ry="3" fill="#2980b9"/>
+  <ellipse cx="42" cy="52" rx="5" ry="3" fill="#2980b9"/>
+  <!-- Artigli -->
+  <line x1="19" y1="54" x2="17" y2="57" stroke="#1a6fa8" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="22" y1="55" x2="22" y2="58" stroke="#1a6fa8" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="25" y1="54" x2="27" y2="57" stroke="#1a6fa8" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
