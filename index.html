@@ -1538,9 +1538,9 @@ function updHUD(){
   const hp=G.towerHp/G.maxTowerHp*100;
   document.getElementById('hpn').textContent=Math.ceil(G.towerHp);
   document.getElementById('hpf').style.height=Math.max(0,hp)+'%';
-  const mp=G.mana/G.maxMana*100;
-  document.getElementById('mpn').textContent=Math.floor(G.mana);
-  document.getElementById('mpf').style.height=mp+'%';
+  const mp=Math.max(0,G.mana)/G.maxMana*100;
+  document.getElementById('mpn').textContent=Math.max(0,Math.floor(G.mana));
+  document.getElementById('mpf').style.height=Math.max(0,mp)+'%';
   document.querySelectorAll('.sc').forEach(c=>{
     const def=TD[c.dataset.id];if(!def) return;
     const ok=def.magic?G.mana>=(def.mc||0):G.gold>=def.cost;
