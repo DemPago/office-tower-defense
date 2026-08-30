@@ -415,21 +415,26 @@ function resetG(){
 // ─── PIXI ───────────────────────────────────────────────────────
 let app,CW,CH;
 const L={}; // layer containers
-let bgGfx,roadGfx; // background graphics
 let texCache={}; // texture cache per SVG
 
-async function loadSVGTexture(url){
-  if(texCache[url]) return texCache[url];
-  const tex=await PIXI.Assets.load(url);
-  texCache[url]=tex;
-  return tex;
+// Carica texture da data-URI senza PIXI.Assets (compat Pixi v7)
+function loadSVGTexture(url){
+  if(texCache[url]) return Promise.resolve(texCache[url]);
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const tex=PIXI.Texture.from(img);
+      texCache[url]=tex;
+      resolve(tex);
+    };
+    img.onerror=()=>resolve(null);
+    img.src=url;
+  });
 }
 
 async function initPixi(){
   const wrap=document.getElementById('cw');
   CW=wrap.clientWidth; CH=wrap.clientHeight;
-
-  PIXI.Assets.init({basePath:''});
 
   app=new PIXI.Application({
     width:CW,height:CH,
@@ -905,7 +910,7 @@ function buildProjGfx(p){
   const g=new PIXI.Graphics();
   g.beginFill(p.col,.22);g.drawCircle(0,0,p.sz*2.8);g.endFill();
   g.beginFill(p.col);g.drawCircle(0,0,p.sz);g.endFill();
-  g.filters=[new PIXI.filters.BlurFilter(2)];
+  // Niente BlurFilter per compatibilità
   g.position.set(p.x,p.y);
   L.projs.addChild(g);
   p.gfx=g;
@@ -1454,19 +1459,6 @@ document.querySelectorAll('.sc').forEach(card=>{
     card.addEventListener('mouseleave',()=>document.getElementById('tt').style.display='none');
   }
 });
-
-app && document.getElementById('cw').addEventListener('click',e=>{
-  const rect=e.currentTarget.getBoundingClientRect();
-  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
-  if(G.sellMode){
-    const hit=G.towers.find(t=>Math.hypot(t.x-mx,t.y-my)<26);
-    if(hit){G.gold+=hit.def.sell||20;if(hit.gfx){L.tower.removeChild(hit.gfx);hit.gfx.destroy({children:true});}G.towers=G.towers.filter(x=>x!==hit);G.selTower=null;document.getElementById('tp').style.display='none';G.sellMode=false;document.getElementById('btn-sell').classList.remove('on');buildSlotIndicators();updHUD();}
-    return;
-  }
-  const hit=G.towers.find(t=>Math.hypot(t.x-mx,t.y-my)<26);
-  if(hit){selectTower(hit);return;}
-  G.selTower=null;document.getElementById('tp').style.display='none';
-});
 document.getElementById('btn-sell').addEventListener('click',()=>{G.sellMode=!G.sellMode;document.getElementById('btn-sell').classList.toggle('on',G.sellMode);});
 document.getElementById('btn-pause').addEventListener('click',()=>{
   if(G.over||G.won) return;G.paused=!G.paused;
@@ -1474,6 +1466,29 @@ document.getElementById('btn-pause').addEventListener('click',()=>{
   if(G.paused) showS('s-pause');else document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape') resume();});
+// Click sul canvas — gestione unificata
+document.getElementById('cw').addEventListener('click',e=>{
+  if(!G||G.over||G.won) return;
+  const rect=e.currentTarget.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  if(G.sellMode){
+    const hit=G.towers&&G.towers.find(t=>Math.hypot(t.x-mx,t.y-my)<26);
+    if(hit){
+      G.gold+=hit.def.sell||20;
+      if(hit.gfx){L.tower.removeChild(hit.gfx);hit.gfx.destroy({children:true});}
+      G.towers=G.towers.filter(x=>x!==hit);
+      G.selTower=null;
+      document.getElementById('tp').style.display='none';
+      G.sellMode=false;
+      document.getElementById('btn-sell').classList.remove('on');
+      buildSlotIndicators();updHUD();
+    }
+    return;
+  }
+  const hit=G.towers&&G.towers.find(t=>Math.hypot(t.x-mx,t.y-my)<26);
+  if(hit){selectTower(hit);return;}
+  G.selTower=null;document.getElementById('tp').style.display='none';
+});
 
 // ─── BOOTSTRAP ──────────────────────────────────────────────────
 function showS(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');}
@@ -1498,15 +1513,6 @@ function startGame(){
 function restart(){startGame();}
 function resume(){G.paused=false;document.getElementById('btn-pause').textContent='⏸';document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));}
 function toMenu(){G.over=true;G.won=true;document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));showS('s-title');}
-
-// Bind click canvas dopo init PixiJS
-document.getElementById('cw').addEventListener('click',e=>{
-  if(!app) return;
-  const rect=e.currentTarget.getBoundingClientRect();
-  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
-  const hit=G.towers&&G.towers.find(t=>Math.hypot(t.x-mx,t.y-my)<26);
-  if(hit&&!G.sellMode){selectTower(hit);}
-},{passive:true});
 
 // AVVIA
 (async()=>{await initPixi();})();
