@@ -353,6 +353,18 @@ const ET=[
   {id:'devops',  n:'DevOps',      hp:2300,spd:76, rw:80, col:0xf97316,r:24,type:'melee', wpn:'🔩',wr:0,  wd:1.1,eng:true,respawn:true},
 ];
 
+// ── TROLL DI MORDOR — spawna quando tutte le 12 torri sono piene ──
+const TROLL_TMPL={
+  id:'troll_mordor',
+  n:'🧌 TROLL DI MORDOR',
+  sub:'I nemici chiamano rinforzi!',
+  hp:0,   // calcolato dinamicamente: 3000 * wave
+  spd:35, rw:0,
+  col:0x4a2c0a, r:68,
+  type:'melee', wpn:'🪨', wr:0, wd:8,
+  isTroll:true,
+};
+
 const BOSSES=[
   {wave:10, id:'b_tl', n:'TEAM LEADER',         sub:'Il tiranno delle riunioni',   hp:1100,  spd:52,rw:100, col:0xef4444,r:38,type:'ranged',wpn:'📢',wr:220,wd:1.4},
   {wave:20, id:'b_ca', n:'CAPO AREA',            sub:'Solo acqua minerale',         hp:2800,  spd:48,rw:200, col:0x8b5cf6,r:44,type:'melee', wpn:'🗡️',wr:0,  wd:2.2},
@@ -635,6 +647,8 @@ function buildMainTower(){
   ['mainGfx','gunGfx','mainHpGfx','mainHpFillGfx'].forEach(k=>{
     if(window[k]){ try{L.tower.removeChild(window[k]);window[k].destroy();}catch(e){} window[k]=null; }
   });
+  // Pulisci anche il playerContainer
+  if(window.playerContainer){ try{L.tower.removeChild(window.playerContainer);window.playerContainer.destroy({children:true});}catch(e){} window.playerContainer=null; }
   const cx=CW/2, cy=CH/2;
   mainGfx=new PIXI.Graphics();
 
@@ -708,22 +722,124 @@ function buildMainTower(){
   mainGfx.drawRoundedRect(cx-20,cy-14,40,10,3);
   mainGfx.lineStyle(0);
 
-  // ── DIPENDENTE SULLA CIMA (testa che sporge) ──
-  mainGfx.beginFill(0xfef9c3);
-  mainGfx.drawCircle(cx,cy-80,10); mainGfx.endFill();
-  mainGfx.beginFill(0xf59e0b);
-  mainGfx.drawCircle(cx,cy-80,8.5); mainGfx.endFill();
-  mainGfx.beginFill(0x1e293b);
-  mainGfx.drawCircle(cx-2.5,cy-82,1.8); mainGfx.drawCircle(cx+2.5,cy-82,1.8); mainGfx.endFill();
+  // ── DIPENDENTE SULLA CIMA — omino vero ──
+  // Usa un container separato così può essere animato
+  const playerCont = new PIXI.Container();
+  playerCont.position.set(cx, cy-72);
 
-  // Canna (ruotante)
+  const pg = new PIXI.Graphics();
+  const pr = 14; // scala omino
+
+  // Ombra
+  pg.beginFill(0x000000,.25);
+  pg.drawEllipse(0,pr*.9,pr*.7,pr*.2);
+  pg.endFill();
+
+  // Gambe
+  pg.beginFill(0x1e3a5f);
+  pg.drawRoundedRect(-pr*.3,pr*.22,pr*.26,pr*.65,pr*.1);
+  pg.drawRoundedRect(pr*.04,pr*.22,pr*.26,pr*.65,pr*.1);
+  pg.endFill();
+  // Scarpe (arancio)
+  pg.beginFill(0xf59e0b);
+  pg.drawEllipse(-pr*.17,pr*.87,pr*.22,pr*.11);
+  pg.drawEllipse(pr*.17,pr*.87,pr*.22,pr*.11);
+  pg.endFill();
+
+  // Corpo — giacca blu scuro con colletto
+  pg.beginFill(0x1e3a5f);
+  pg.drawRoundedRect(-pr*.42,-pr*.18,pr*.84,pr*.44,pr*.12);
+  pg.endFill();
+  // Camicia interna (bianca)
+  pg.beginFill(0xf8fafc);
+  pg.drawRoundedRect(-pr*.18,-pr*.14,pr*.36,pr*.32,pr*.06);
+  pg.endFill();
+  // Cravatta rossa
+  pg.beginFill(0xe94560);
+  pg.drawPolygon([
+    -pr*.05,-pr*.12,  pr*.05,-pr*.12,
+     pr*.04, pr*.08,  0,pr*.22, -pr*.04,pr*.08
+  ]);
+  pg.endFill();
+
+  // Braccia
+  pg.beginFill(0x1e3a5f);
+  pg.drawRoundedRect(-pr*.72,-pr*.15,pr*.32,pr*.5,pr*.1);
+  pg.drawRoundedRect(pr*.4,-pr*.15,pr*.32,pr*.5,pr*.1);
+  pg.endFill();
+  // Mani gialle
+  pg.beginFill(0xfde68a);
+  pg.drawCircle(-pr*.56,pr*.38,pr*.14);
+  pg.drawCircle( pr*.56,pr*.38,pr*.14);
+  pg.endFill();
+
+  // Collo
+  pg.beginFill(0xfde68a);
+  pg.drawRoundedRect(-pr*.11,-pr*.35,pr*.22,pr*.2,pr*.05);
+  pg.endFill();
+
+  // Testa
+  pg.beginFill(0xfde68a);
+  pg.drawCircle(0,-pr*.65,pr*.38);
+  pg.endFill();
+  // Capelli castani
+  pg.beginFill(0x78350f,.95);
+  pg.drawEllipse(0,-pr*.95,pr*.38,pr*.18);
+  pg.drawEllipse(-pr*.3,-pr*.82,pr*.14,pr*.12);
+  pg.drawEllipse( pr*.3,-pr*.82,pr*.14,pr*.12);
+  pg.endFill();
+  // Occhi
+  pg.beginFill(0xffffff);
+  pg.drawCircle(-pr*.14,-pr*.68,pr*.12);
+  pg.drawCircle( pr*.14,-pr*.68,pr*.12);
+  pg.endFill();
+  pg.beginFill(0x1e293b);
+  pg.drawCircle(-pr*.14,-pr*.67,pr*.07);
+  pg.drawCircle( pr*.14,-pr*.67,pr*.07);
+  pg.endFill();
+  // Pupille (guardano avanti)
+  pg.beginFill(0x000000);
+  pg.drawCircle(-pr*.12,-pr*.66,pr*.035);
+  pg.drawCircle( pr*.16,-pr*.66,pr*.035);
+  pg.endFill();
+  // Sorriso spaventato/determinato
+  pg.lineStyle(pr*.055,0x7f1d1d,1);
+  pg.moveTo(-pr*.12,-pr*.55);
+  pg.lineTo( pr*.12,-pr*.52);
+  pg.lineStyle(0);
+  // Sopracciglia preoccupate
+  pg.lineStyle(pr*.07,0x78350f,1);
+  pg.moveTo(-pr*.22,-pr*.8); pg.lineTo(-pr*.06,-pr*.75);
+  pg.moveTo( pr*.22,-pr*.8); pg.lineTo( pr*.06,-pr*.75);
+  pg.lineStyle(0);
+
+  // Elmetto da ufficio (casco giallo)
+  pg.beginFill(0xfbbf24,.95);
+  pg.drawEllipse(0,-pr*.88,pr*.42,pr*.21);
+  pg.endFill();
+  pg.beginFill(0xf59e0b);
+  pg.drawRect(-pr*.42,-pr*.9,pr*.84,pr*.09);
+  pg.endFill();
+  // Visiera
+  pg.beginFill(0xfbbf24,.4);
+  pg.drawRoundedRect(-pr*.18,-pr*.72,pr*.36,pr*.09,pr*.03);
+  pg.endFill();
+
+  playerCont.addChild(pg);
+  playerCont._gfx=pg;
+  L.tower.addChild(playerCont);
+  // Salva ref globale per animarlo
+  window.playerContainer=playerCont;
+
+  // Canna (ruotante, parte dalla mano destra del personaggio)
   gunGfx=new PIXI.Graphics();
-  gunGfx.lineStyle(5,0x94a3b8,1); gunGfx.moveTo(0,0); gunGfx.lineTo(28,0); gunGfx.lineStyle(0);
-  gunGfx.beginFill(0xe2e8f0); gunGfx.drawCircle(28,0,4.5); gunGfx.endFill();
-  // Flash punta canna
-  gunGfx.beginFill(0xfbbf24,.0); gunGfx._muzzleFlash=true;
-  gunGfx.drawCircle(28,0,7); gunGfx.endFill();
-  gunGfx.position.set(cx,cy-80);
+  gunGfx.lineStyle(5,0x64748b,1); gunGfx.moveTo(0,0); gunGfx.lineTo(30,0); gunGfx.lineStyle(0);
+  // Corpo del fucile
+  gunGfx.beginFill(0x334155); gunGfx.drawRoundedRect(-2,-3,28,6,3); gunGfx.endFill();
+  gunGfx.beginFill(0x475569); gunGfx.drawRoundedRect(8,-5,14,4,2); gunGfx.endFill();
+  // Canna
+  gunGfx.beginFill(0x94a3b8); gunGfx.drawCircle(30,0,4); gunGfx.endFill();
+  gunGfx.position.set(cx, cy-72+pr*.38); // altezza mani
   gunGfx.rotation=gunAngle;
 
   // HP bar
@@ -1263,13 +1379,38 @@ function _tick(dt){
 
   // Torre principale spara
   G.mainTowerCd=Math.max(0,G.mainTowerCd-dt);
+
+  // Animazione idle: il personaggio respira (bob verticale leggero)
+  if(window.playerContainer){
+    const bob=Math.sin(Date.now()/800)*.8;
+    window.playerContainer.y=(CH/2-72)+bob;
+  }
+
   if(G.mainTowerCd<=0){
     const tgt=nearestEnemy(CW/2,CH/2,290);
     if(tgt){
-      gunAngle=Math.atan2(tgt.y-CH/2,tgt.x-CW/2);
+      gunAngle=Math.atan2(tgt.y-(CH/2-72+(14*.38)), tgt.x-CW/2);
       if(gunGfx) gunGfx.rotation=gunAngle;
-      fireProj(CW/2,CH/2-80,tgt,{pc:0xfbbf24,ps:5,pspd:340,id:'main'},null,22+(G.gUpg.dmg||0)*2.6);
+
+      // Sparo dal punto corretto
+      const gunX=CW/2, gunY=CH/2-72+(14*.38);
+      fireProj(gunX,gunY,tgt,{pc:0xfbbf24,ps:5,pspd:340,id:'main'},null,22+(G.gUpg.dmg||0)*2.6);
       G.mainTowerCd=580;
+
+      // Animazione rinculo personaggio
+      if(window.playerContainer){
+        const recoilX=-Math.cos(gunAngle)*4;
+        const recoilY=-Math.sin(gunAngle)*4;
+        window.playerContainer.x=(CW/2)+recoilX;
+        setTimeout(()=>{ if(window.playerContainer) window.playerContainer.x=CW/2; },80);
+      }
+
+      // Muzzle flash (particella gialla alla punta della canna)
+      if(gunGfx){
+        const fx=CW/2+Math.cos(gunAngle)*34;
+        const fy=(CH/2-72+(14*.38))+Math.sin(gunAngle)*34;
+        burstParticles(fx,fy,0xfbbf24,5);
+      }
     }
   }
 
@@ -1314,6 +1455,18 @@ function updateSpawn(dt){
     }
   } else if(G.enemies.every(e=>e.dead||e.reached)){
     waveComplete();
+  }
+
+  // ── TROLL DI MORDOR: spawna quando tutte le torri sono piene ──
+  if(G.running && !G.trollActive &&
+     G.towers.length>=MAX_SLOTS &&
+     G.enemies.filter(e=>!e.dead&&!e.reached).length>0){
+    G.trollActive=true;
+    spawnTroll();
+  }
+  // Reset flag quando il troll muore
+  if(G.trollActive && !G.enemies.find(e=>e.tmpl?.isTroll&&!e.dead&&!e.reached)){
+    G.trollActive=false;
   }
 }
 
