@@ -1,0 +1,157 @@
+'use strict';
+// DATA.JS
+// ─── DATI ───────────────────────────────────────────────────────
+
+const UPG_NAMES=['Junior','Middle','Professional','Senior','👑 King'];
+const UPG_M=[
+  {d:1.0,r:1.0,f:1.0},{d:1.5,r:1.1,f:.87},
+  {d:2.2,r:1.2,f:.75},{d:3.2,r:1.35,f:.63},{d:4.8,r:1.5,f:.52}
+];
+const UPG_COST=[null,100,200,400,800];
+
+const TD={
+  pm:     {n:'Proj. Manager',ico:'📊',cost:80, dmg:26,rng:175,rate:680, pc:0xef4444,ps:5,pspd:330,sell:40,magic:false,desc:'Laser a raffica. Gittata alta.'},
+  sm:     {n:'Serv. Manager',ico:'🎯',cost:120,dmg:60,rng:160,rate:1500,pc:0x10b981,ps:6,pspd:285,sell:60,magic:false,slow:.55,slowD:1800,desc:'Balestra — danno alto + rallenta.'},
+  dev:    {n:'Dev',          ico:'💻',cost:150,dmg:48,rng:145,rate:1900,pc:0x8b5cf6,ps:9,pspd:255,sell:75,magic:false,aoe:62,desc:'PC volante — danno ad area.'},
+  m_agile:{n:'Mago Agile',  ico:'🏃',cost:0,mc:60, rng:140,magic:true,bt:'rate', bv:.4, mps:2,sell:30,adef:true, desc:'+40% vel.fuoco torri vicine. 2MP/s'},
+  m_scrum:{n:'Mago Scrum',  ico:'📋',cost:0,mc:80, rng:125,magic:true,bt:'dmg',  bv:.5, mps:3,sell:40,adef:true, desc:'+50% danno torri vicine. 3MP/s'},
+  m_itil: {n:'Mago ITIL',   ico:'📚',cost:0,mc:120,rng:115,magic:true,bt:'nocd', bv:1,  mps:5,sell:60,adef:false,desc:'Azzera cooldown torri vicine. 5MP/s'},
+  m_vision:{n:'Mago Vision',ico:'🔭',cost:0,mc:40, rng:155,magic:true,bt:'range',bv:.35,mps:1,sell:20,adef:true, desc:'+35% raggio torri vicine. 1MP/s'},
+};
+
+const GL_UPGS=[
+  {id:'dmg',  n:'⚔️ Danno',      col:'#ef4444',per:.12},
+  {id:'rate', n:'⚡ Velocità',    col:'#fbbf24',per:.10},
+  {id:'rng',  n:'📡 Raggio',      col:'#60a5fa',per:.08},
+  {id:'armor',n:'🛡️ Armatura',   col:'#34d399',per:.08},
+  {id:'pspd', n:'🚀 Proiettile',  col:'#a78bfa',per:.10},
+];
+const MAX_GL=10;
+const glCost=lv=>60*(lv+1);
+
+// Sprite SVG per i draghetti
+const DRAGON_SPRITES={"fire":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8IS0tIENvZGEgLS0+CiAgPHBhdGggZD0iTTggNDQgUTQgNTIgMTAgNTYgUTE0IDU4IDE2IDU0IFExMiA1MCAxNCA0NCBaIiBmaWxsPSIjYzAzOTJiIi8+CiAgPCEtLSBDb3JwbyAtLT4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSI0MCIgcng9IjE4IiByeT0iMTQiIGZpbGw9IiNlNzRjM2MiLz4KICA8IS0tIFBhbmNpYSAtLT4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSI0NCIgcng9IjExIiByeT0iOCIgZmlsbD0iI2ZhZGJkOCIvPgogIDwhLS0gQWxpIC0tPgogIDxwYXRoIGQ9Ik0xNCAzNiBRNiAyMCAxOCAyOCBMMjIgMzQgWiIgZmlsbD0iI2MwMzkyYiIgb3BhY2l0eT0iMC44NSIvPgogIDxwYXRoIGQ9Ik01MCAzNiBRNTggMjAgNDYgMjggTDQyIDM0IFoiIGZpbGw9IiNjMDM5MmIiIG9wYWNpdHk9IjAuODUiLz4KICA8IS0tIENvbGxvIC0tPgogIDxlbGxpcHNlIGN4PSIzMiIgY3k9IjI2IiByeD0iOSIgcnk9IjciIGZpbGw9IiNlNzRjM2MiLz4KICA8IS0tIFRlc3RhIC0tPgogIDxlbGxpcHNlIGN4PSIzMiIgY3k9IjE4IiByeD0iMTMiIHJ5PSIxMSIgZmlsbD0iI2U3NGMzYyIvPgogIDwhLS0gTXVzbyAtLT4KICA8ZWxsaXBzZSBjeD0iNDAiIGN5PSIyMCIgcng9IjciIHJ5PSI1IiBmaWxsPSIjYzAzOTJiIi8+CiAgPCEtLSBPY2NoaW8gLS0+CiAgPGNpcmNsZSBjeD0iMjkiIGN5PSIxNSIgcj0iNCIgZmlsbD0id2hpdGUiLz4KICA8Y2lyY2xlIGN4PSIzMCIgY3k9IjE1IiByPSIyLjUiIGZpbGw9IiNmMWM0MGYiLz4KICA8Y2lyY2xlIGN4PSIzMC41IiBjeT0iMTQuNSIgcj0iMS4yIiBmaWxsPSIjMWExYTJlIi8+CiAgPCEtLSBDb3JubyAtLT4KICA8cG9seWdvbiBwb2ludHM9IjI2LDggMjIsMiAzMCw3IiBmaWxsPSIjZjFjNDBmIi8+CiAgPHBvbHlnb24gcG9pbnRzPSIzNSw2IDMyLDAgMzksNSIgZmlsbD0iI2YxYzQwZiIvPgogIDwhLS0gTmFyaWNpIGZ1b2NvIC0tPgogIDxjaXJjbGUgY3g9IjM4IiBjeT0iMjEiIHI9IjEuNSIgZmlsbD0iIzkyMmIyMSIvPgogIDxjaXJjbGUgY3g9IjQzIiBjeT0iMjAiIHI9IjEuNSIgZmlsbD0iIzkyMmIyMSIvPgogIDwhLS0gRmlhbW1lIGRhbGxhIGJvY2NhIC0tPgogIDxwYXRoIGQ9Ik00NCAxOSBRNTIgMTYgNTYgMTIgUTUwIDE4IDU0IDIyIFE0OCAyMCA0NiAyNCBRNDYgMTggNDIgMjEgWiIgZmlsbD0iI2U2N2UyMiIgb3BhY2l0eT0iMC45Ii8+CiAgPHBhdGggZD0iTTQ1IDIwIFE1MSAxOCA1MyAxNSBRNDkgMjAgNTEgMjMgUTQ3IDIxIDQ1IDI0IFoiIGZpbGw9IiNmMWM0MGYiIG9wYWNpdHk9IjAuOCIvPgogIDwhLS0gUGllZGluaSAtLT4KICA8ZWxsaXBzZSBjeD0iMjIiIGN5PSI1MiIgcng9IjUiIHJ5PSIzIiBmaWxsPSIjYzAzOTJiIi8+CiAgPGVsbGlwc2UgY3g9IjQyIiBjeT0iNTIiIHJ4PSI1IiByeT0iMyIgZmlsbD0iI2MwMzkyYiIvPgogIDwhLS0gQXJ0aWdsaSAtLT4KICA8bGluZSB4MT0iMTkiIHkxPSI1NCIgeDI9IjE3IiB5Mj0iNTciIHN0cm9rZT0iIzkyMmIyMSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxsaW5lIHgxPSIyMiIgeTE9IjU1IiB4Mj0iMjIiIHkyPSI1OCIgc3Ryb2tlPSIjOTIyYjIxIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjI1IiB5MT0iNTQiIHgyPSIyNyIgeTI9IjU3IiBzdHJva2U9IiM5MjJiMjEiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==","lightning":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8IS0tIENvZGEgLS0+CiAgPHBhdGggZD0iTTggNDQgUTQgNTIgMTAgNTYgUTE0IDU4IDE2IDU0IFExMiA1MCAxNCA0NCBaIiBmaWxsPSIjZDRhYzBkIi8+CiAgPCEtLSBDb3JwbyAtLT4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSI0MCIgcng9IjE4IiByeT0iMTQiIGZpbGw9IiNmMWM0MGYiLz4KICA8IS0tIFBhbmNpYSAtLT4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSI0NCIgcng9IjExIiByeT0iOCIgZmlsbD0iI2ZlZjljMyIvPgogIDwhLS0gQWxpIC0tPgogIDxwYXRoIGQ9Ik0xNCAzNiBRNiAyMCAxOCAyOCBMMjIgMzQgWiIgZmlsbD0iI2Q0YWMwZCIgb3BhY2l0eT0iMC44NSIvPgogIDxwYXRoIGQ9Ik01MCAzNiBRNTggMjAgNDYgMjggTDQyIDM0IFoiIGZpbGw9IiNkNGFjMGQiIG9wYWNpdHk9IjAuODUiLz4KICA8IS0tIENvbGxvIC0tPgogIDxlbGxpcHNlIGN4PSIzMiIgY3k9IjI2IiByeD0iOSIgcnk9IjciIGZpbGw9IiNmMWM0MGYiLz4KICA8IS0tIFRlc3RhIC0tPgogIDxlbGxpcHNlIGN4PSIzMiIgY3k9IjE4IiByeD0iMTMiIHJ5PSIxMSIgZmlsbD0iI2YxYzQwZiIvPgogIDwhLS0gTXVzbyAtLT4KICA8ZWxsaXBzZSBjeD0iNDAiIGN5PSIyMCIgcng9IjciIHJ5PSI1IiBmaWxsPSIjZDRhYzBkIi8+CiAgPCEtLSBPY2NoaW8gLS0+CiAgPGNpcmNsZSBjeD0iMjkiIGN5PSIxNSIgcj0iNCIgZmlsbD0id2hpdGUiLz4KICA8Y2lyY2xlIGN4PSIzMCIgY3k9IjE1IiByPSIyLjUiIGZpbGw9IiNlNzRjM2MiLz4KICA8Y2lyY2xlIGN4PSIzMC41IiBjeT0iMTQuNSIgcj0iMS4yIiBmaWxsPSIjMWExYTJlIi8+CiAgPCEtLSBDb3JuYSAtLT4KICA8cG9seWdvbiBwb2ludHM9IjI2LDggMjIsMiAzMCw3IiBmaWxsPSIjZjM5YzEyIi8+CiAgPHBvbHlnb24gcG9pbnRzPSIzNSw2IDMyLDAgMzksNSIgZmlsbD0iI2YzOWMxMiIvPgogIDwhLS0gRnVsbWluaSBkYWxsYSBib2NjYSAtLT4KICA8cGF0aCBkPSJNNDQgMTggTDUwIDE0IEw0NyAxOCBMNTQgMTMgTDUwIDE4IEw1NiAxNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik00NCAyMCBMNDkgMTcgTDQ3IDIwIEw1MiAxNyIgc3Ryb2tlPSIjZmVmMDhhIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPCEtLSBTY2ludGlsbGUgLS0+CiAgPGNpcmNsZSBjeD0iNTIiIGN5PSIxMiIgcj0iMiIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC45Ii8+CiAgPGNpcmNsZSBjeD0iNTUiIGN5PSIxNiIgcj0iMS41IiBmaWxsPSIjZmVmMDhhIiBvcGFjaXR5PSIwLjgiLz4KICA8IS0tIFBpZWRpbmkgLS0+CiAgPGVsbGlwc2UgY3g9IjIyIiBjeT0iNTIiIHJ4PSI1IiByeT0iMyIgZmlsbD0iI2Q0YWMwZCIvPgogIDxlbGxpcHNlIGN4PSI0MiIgY3k9IjUyIiByeD0iNSIgcnk9IjMiIGZpbGw9IiNkNGFjMGQiLz4KICA8IS0tIEFydGlnbGkgLS0+CiAgPGxpbmUgeDE9IjE5IiB5MT0iNTQiIHgyPSIxNyIgeTI9IjU3IiBzdHJva2U9IiNiNzk1MGIiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8bGluZSB4MT0iMjIiIHkxPSI1NSIgeDI9IjIyIiB5Mj0iNTgiIHN0cm9rZT0iI2I3OTUwYiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxsaW5lIHgxPSIyNSIgeTE9IjU0IiB4Mj0iMjciIHkyPSI1NyIgc3Ryb2tlPSIjYjc5NTBiIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=","water":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8IS0tIFNjdWRvIGFjcXVhIChhdXJhKSAtLT4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNSIgcng9IjI0IiByeT0iMjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM0OThkYiIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjUiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPgogIDwhLS0gQ29kYSAtLT4KICA8cGF0aCBkPSJNOCA0NCBRNCA1MiAxMCA1NiBRMTQgNTggMTYgNTQgUTEyIDUwIDE0IDQ0IFoiIGZpbGw9IiMyOTgwYjkiLz4KICA8IS0tIENvcnBvIC0tPgogIDxlbGxpcHNlIGN4PSIzMiIgY3k9IjQwIiByeD0iMTgiIHJ5PSIxNCIgZmlsbD0iIzM0OThkYiIvPgogIDwhLS0gUGFuY2lhIC0tPgogIDxlbGxpcHNlIGN4PSIzMiIgY3k9IjQ0IiByeD0iMTEiIHJ5PSI4IiBmaWxsPSIjZDZlYWY4Ii8+CiAgPCEtLSBBbGkgLS0+CiAgPHBhdGggZD0iTTE0IDM2IFE2IDIwIDE4IDI4IEwyMiAzNCBaIiBmaWxsPSIjMjk4MGI5IiBvcGFjaXR5PSIwLjg1Ii8+CiAgPHBhdGggZD0iTTUwIDM2IFE1OCAyMCA0NiAyOCBMNDIgMzQgWiIgZmlsbD0iIzI5ODBiOSIgb3BhY2l0eT0iMC44NSIvPgogIDwhLS0gQ29sbG8gLS0+CiAgPGVsbGlwc2UgY3g9IjMyIiBjeT0iMjYiIHJ4PSI5IiByeT0iNyIgZmlsbD0iIzM0OThkYiIvPgogIDwhLS0gVGVzdGEgLS0+CiAgPGVsbGlwc2UgY3g9IjMyIiBjeT0iMTgiIHJ4PSIxMyIgcnk9IjExIiBmaWxsPSIjMzQ5OGRiIi8+CiAgPCEtLSBNdXNvIC0tPgogIDxlbGxpcHNlIGN4PSI0MCIgY3k9IjIwIiByeD0iNyIgcnk9IjUiIGZpbGw9IiMyOTgwYjkiLz4KICA8IS0tIE9jY2hpbyAtLT4KICA8Y2lyY2xlIGN4PSIyOSIgY3k9IjE1IiByPSI0IiBmaWxsPSJ3aGl0ZSIvPgogIDxjaXJjbGUgY3g9IjMwIiBjeT0iMTUiIHI9IjIuNSIgZmlsbD0iIzFhYmM5YyIvPgogIDxjaXJjbGUgY3g9IjMwLjUiIGN5PSIxNC41IiByPSIxLjIiIGZpbGw9IiMxYTFhMmUiLz4KICA8IS0tIENvcm5hIG9uZHVsYXRlIC0tPgogIDxwYXRoIGQ9Ik0yNiA4IFEyNCA0IDIyIDIgUTI0IDUgMjggNyBaIiBmaWxsPSIjODVjMWU5Ii8+CiAgPHBhdGggZD0iTTM1IDYgUTM0IDEgMzIgMCBRMzUgMyAzOSA1IFoiIGZpbGw9IiM4NWMxZTkiLz4KICA8IS0tIEdldHRvIGFjcXVhIGRhbGxhIGJvY2NhIC0tPgogIDxwYXRoIGQ9Ik00NCAxOSBRNTAgMTYgNTYgMTQgUTUyIDE3IDU2IDIwIFE1MSAxOSA1MCAyMyBRNDggMTkgNDQgMjIgWiIgZmlsbD0iIzM0OThkYiIgb3BhY2l0eT0iMC44Ii8+CiAgPHBhdGggZD0iTTQ1IDIwIFE1MCAxOCA1NCAxNiBRNTEgMTkgNTMgMjEgWiIgZmlsbD0iI2Q2ZWFmOCIgb3BhY2l0eT0iMC43Ii8+CiAgPCEtLSBHb2NjZSBhY3F1YSAtLT4KICA8ZWxsaXBzZSBjeD0iNTQiIGN5PSIxMyIgcng9IjIiIHJ5PSIzIiBmaWxsPSIjODVjMWU5IiBvcGFjaXR5PSIwLjkiLz4KICA8ZWxsaXBzZSBjeD0iNTgiIGN5PSIxNyIgcng9IjEuNSIgcnk9IjIuNSIgZmlsbD0iIzM0OThkYiIgb3BhY2l0eT0iMC44Ii8+CiAgPCEtLSBQaWVkaW5pIC0tPgogIDxlbGxpcHNlIGN4PSIyMiIgY3k9IjUyIiByeD0iNSIgcnk9IjMiIGZpbGw9IiMyOTgwYjkiLz4KICA8ZWxsaXBzZSBjeD0iNDIiIGN5PSI1MiIgcng9IjUiIHJ5PSIzIiBmaWxsPSIjMjk4MGI5Ii8+CiAgPCEtLSBBcnRpZ2xpIC0tPgogIDxsaW5lIHgxPSIxOSIgeTE9IjU0IiB4Mj0iMTciIHkyPSI1NyIgc3Ryb2tlPSIjMWE2ZmE4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjIyIiB5MT0iNTUiIHgyPSIyMiIgeTI9IjU4IiBzdHJva2U9IiMxYTZmYTgiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8bGluZSB4MT0iMjUiIHkxPSI1NCIgeDI9IjI3IiB5Mj0iNTciIHN0cm9rZT0iIzFhNmZhOCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K","rock":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8IS0tIEFybWF0dXJhIHJvY2NpYSAocGlhc3RyZSkgLS0+CiAgPGVsbGlwc2UgY3g9IjMyIiBjeT0iNDAiIHJ4PSIyMiIgcnk9IjE3IiBmaWxsPSIjN2Y4YzhkIiBvcGFjaXR5PSIwLjUiLz4KICA8IS0tIENvZGEgLS0+CiAgPHBhdGggZD0iTTggNDQgUTQgNTIgMTAgNTYgUTE0IDU4IDE2IDU0IFExMiA1MCAxNCA0NCBaIiBmaWxsPSIjNjE2YTZiIi8+CiAgPCEtLSBDb3JwbyAtLT4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSI0MCIgcng9IjE5IiByeT0iMTUiIGZpbGw9IiM3ZjhjOGQiLz4KICA8IS0tIFBpYXN0cmUgYXJtYXR1cmEgY29ycG8gLS0+CiAgPHBhdGggZD0iTTE2IDM2IFEyMCAzMiAyNCAzNSBRMjAgMzggMTYgMzYgWiIgZmlsbD0iIzk1YTVhNiIvPgogIDxwYXRoIGQ9Ik00MCAzNSBRNDQgMzIgNDggMzYgUTQ0IDM4IDQwIDM1IFoiIGZpbGw9IiM5NWE1YTYiLz4KICA8cGF0aCBkPSJNMjggNDQgUTMyIDQwIDM2IDQ0IFEzMiA0OCAyOCA0NCBaIiBmaWxsPSIjOTVhNWE2Ii8+CiAgPCEtLSBQYW5jaWEgLS0+CiAgPGVsbGlwc2UgY3g9IjMyIiBjeT0iNDQiIHJ4PSIxMSIgcnk9IjgiIGZpbGw9IiNiZGMzYzciLz4KICA8IS0tIEFsaSAocm9jY2lvc2UsIHNwZXp6YXRlKSAtLT4KICA8cGF0aCBkPSJNMTQgMzYgUTYgMjIgMTYgMjggTDIwIDM0IFoiIGZpbGw9IiM2MTZhNmIiIG9wYWNpdHk9IjAuOSIvPgogIDxwYXRoIGQ9Ik0xMCAzMCBROCAyNCAxNCAyNyBMMTYgMzAgWiIgZmlsbD0iIzdmOGM4ZCIgb3BhY2l0eT0iMC44Ii8+CiAgPHBhdGggZD0iTTUwIDM2IFE1OCAyMiA0OCAyOCBMNDQgMzQgWiIgZmlsbD0iIzYxNmE2YiIgb3BhY2l0eT0iMC45Ii8+CiAgPHBhdGggZD0iTTU0IDMwIFE1NiAyNCA1MCAyNyBMNDggMzAgWiIgZmlsbD0iIzdmOGM4ZCIgb3BhY2l0eT0iMC44Ii8+CiAgPCEtLSBDb2xsbyAtLT4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIyNiIgcng9IjEwIiByeT0iNyIgZmlsbD0iIzdmOGM4ZCIvPgogIDwhLS0gUGlhc3RyYSBjb2xsbyAtLT4KICA8cGF0aCBkPSJNMjQgMjQgUTMyIDIwIDQwIDI0IFEzMiAyOCAyNCAyNCBaIiBmaWxsPSIjOTVhNWE2Ii8+CiAgPCEtLSBUZXN0YSAtLT4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIxNyIgcng9IjE0IiByeT0iMTEiIGZpbGw9IiM3ZjhjOGQiLz4KICA8IS0tIFBpYXN0cmEgdGVzdGEgLS0+CiAgPHBhdGggZD0iTTIyIDEzIFEzMiA5IDQyIDEzIFEzMiAxNyAyMiAxMyBaIiBmaWxsPSIjOTVhNWE2Ii8+CiAgPCEtLSBNdXNvIC0tPgogIDxlbGxpcHNlIGN4PSI0MSIgY3k9IjE5IiByeD0iNyIgcnk9IjUiIGZpbGw9IiM2MTZhNmIiLz4KICA8IS0tIE9jY2hpbyBjb3JhenphdG8gLS0+CiAgPGNpcmNsZSBjeD0iMjgiIGN5PSIxNCIgcj0iNSIgZmlsbD0iIzJjM2U1MCIvPgogIDxjaXJjbGUgY3g9IjI4IiBjeT0iMTQiIHI9IjMuNSIgZmlsbD0id2hpdGUiLz4KICA8Y2lyY2xlIGN4PSIyOC41IiBjeT0iMTMuNSIgcj0iMiIgZmlsbD0iI2U3NGMzYyIvPgogIDxjaXJjbGUgY3g9IjI5IiBjeT0iMTMiIHI9IjEiIGZpbGw9IiMxYTFhMmUiLz4KICA8IS0tIENvcm5hIGRpIHJvY2NpYSAtLT4KICA8cG9seWdvbiBwb2ludHM9IjI1LDcgMjAsMSAyOCw2IiBmaWxsPSIjNjE2YTZiIi8+CiAgPHBvbHlnb24gcG9pbnRzPSIzNiw1IDMzLC0xIDQwLDQiIGZpbGw9IiM2MTZhNmIiLz4KICA8IS0tIFRleHR1cmUgY3JlcGF0dXJlIC0tPgogIDxsaW5lIHgxPSIyMiIgeTE9IjQwIiB4Mj0iMjYiIHkyPSI0NCIgc3Ryb2tlPSIjOTVhNWE2IiBzdHJva2Utd2lkdGg9IjAuOCIgb3BhY2l0eT0iMC42Ii8+CiAgPGxpbmUgeDE9IjM4IiB5MT0iMzgiIHgyPSIzNSIgeTI9IjQzIiBzdHJva2U9IiM5NWE1YTYiIHN0cm9rZS13aWR0aD0iMC44IiBvcGFjaXR5PSIwLjYiLz4KICA8IS0tIFNhc3NpIHNjYWdsaWF0aSBkYWxsYSBib2NjYSAtLT4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjE3IiByPSI0IiBmaWxsPSIjN2Y4YzhkIi8+CiAgPGNpcmNsZSBjeD0iNTYiIGN5PSIxMyIgcj0iMyIgZmlsbD0iIzk1YTVhNiIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjAiIHI9IjIuNSIgZmlsbD0iIzYxNmE2YiIvPgogIDwhLS0gUGllZGluaSBjb3JhenphdGkgLS0+CiAgPGVsbGlwc2UgY3g9IjIxIiBjeT0iNTMiIHJ4PSI2IiByeT0iNCIgZmlsbD0iIzYxNmE2YiIvPgogIDxlbGxpcHNlIGN4PSI0MyIgY3k9IjUzIiByeD0iNiIgcnk9IjQiIGZpbGw9IiM2MTZhNmIiLz4KICA8IS0tIEFydGlnbGkgcGVzYW50aSAtLT4KICA8bGluZSB4MT0iMTciIHkxPSI1NSIgeDI9IjE1IiB5Mj0iNTkiIHN0cm9rZT0iIzRhNGE0YSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8bGluZSB4MT0iMjEiIHkxPSI1NyIgeDI9IjIxIiB5Mj0iNjEiIHN0cm9rZT0iIzRhNGE0YSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8bGluZSB4MT0iMjUiIHkxPSI1NSIgeDI9IjI3IiB5Mj0iNTkiIHN0cm9rZT0iIzRhNGE0YSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg=="};
+
+// Tipi nemici
+const ET=[
+  {id:'stagista', n:'Stagista',    hp:80,  spd:75, rw:5,  col:0x60a5fa,r:22,type:'melee', wpn:'📁',wr:0,   wd:.06},
+  {id:'impiegato',n:'Impiegato',   hp:130, spd:68, rw:8,  col:0x34d399,r:22,type:'ranged',wpn:'☕',wr:155, wd:.10},
+  {id:'hr',       n:'Resp.HR',     hp:200, spd:62, rw:10, col:0xfb923c,r:22,type:'melee', wpn:'📋',wr:0,   wd:.16},
+  {id:'contabile',n:'Contabile',   hp:280, spd:56, rw:12, col:0xc084fc,r:23,type:'melee', wpn:'⚖️',wr:0,  wd:.22},
+  {id:'avvocato', n:'Avvocato',    hp:370, spd:60, rw:15, col:0x2dd4bf,r:23,type:'ranged',wpn:'⚖️',wr:170,wd:.28},
+  {id:'consulente',n:'Consulente', hp:470, spd:70, rw:18, col:0xf87171,r:23,type:'ranged',wpn:'💼',wr:165, wd:.35},
+  {id:'pm_e',     n:'Proj.Manager',hp:620, spd:65, rw:22, col:0xfbbf24,r:24,type:'ranged',wpn:'📱',wr:160, wd:.44},
+  {id:'vice',     n:'Vice-Dir.',   hp:830, spd:58, rw:28, col:0x475569,r:25,type:'melee', wpn:'🗡️',wr:0,  wd:.55},
+  // draghetti — usano sprite SVG
+  {id:'d_fire',  n:'Drago 🔥',    hp:1500,spd:68, rw:55, col:0xef4444,r:26,type:'ranged',wpn:'🔥',wr:185,wd:.75,dragon:true,elem:'fire',   shield:false},
+  {id:'d_elec',  n:'Drago ⚡',    hp:1300,spd:75, rw:50, col:0xfbbf24,r:25,type:'ranged',wpn:'⚡',wr:190,wd:.70,dragon:true,elem:'lightning',shield:false},
+  {id:'d_water', n:'Drago 💧',    hp:1400,spd:70, rw:52, col:0x60a5fa,r:25,type:'melee', wpn:'💧',wr:0,  wd:.72,dragon:true,elem:'water',  shield:true},
+  {id:'d_rock',  n:'Drago 🪨',    hp:2100,spd:52, rw:60, col:0x94a3b8,r:28,type:'melee', wpn:'🪨',wr:0,  wd:.88,dragon:true,elem:'rock',   armor:.3},
+  // ingegneri
+  {id:'eng_j',   n:'Ing.Junior',  hp:950, spd:82, rw:45, col:0x34d399,r:23,type:'melee', wpn:'🔧',wr:0,  wd:.65,eng:true},
+  {id:'eng_s',   n:'Ing.Senior',  hp:1900,spd:66, rw:65, col:0x059669,r:25,type:'ranged',wpn:'🪛',wr:155,wd:1.0,eng:true},
+  {id:'tech_l',  n:'Tech Lead',   hp:2900,spd:58, rw:90, col:0x7c3aed,r:21,type:'ranged',wpn:'💾',wr:165,wd:1.3,eng:true},
+  {id:'devops',  n:'DevOps',      hp:2300,spd:76, rw:80, col:0xf97316,r:24,type:'melee', wpn:'🔩',wr:0,  wd:1.1,eng:true,respawn:true},
+];
+
+// ── TROLL DI MORDOR — spawna quando tutte le 12 torri sono piene ──
+const TROLL_TMPL={
+  id:'troll_mordor',
+  n:'🧌 TROLL DI MORDOR',
+  sub:'I nemici chiamano rinforzi!',
+  hp:0,   // calcolato dinamicamente: 3000 * wave
+  spd:35, rw:0,
+  col:0x4a2c0a, r:68,
+  type:'melee', wpn:'🪨', wr:0, wd:8,
+  isTroll:true,
+};
+
+const BOSSES=[
+  {wave:10, id:'b_tl', n:'TEAM LEADER',         sub:'Il tiranno delle riunioni',   hp:1100,  spd:52,rw:100, col:0xef4444,r:38,type:'ranged',wpn:'📢',wr:220,wd:1.4},
+  {wave:20, id:'b_ca', n:'CAPO AREA',            sub:'Solo acqua minerale',         hp:2800,  spd:48,rw:200, col:0x8b5cf6,r:44,type:'melee', wpn:'🗡️',wr:0,  wd:2.2},
+  {wave:30, id:'b_dd', n:'DIR.DIPARTIMENTO',     sub:'Poltrona da 4000€',           hp:5500,  spd:44,rw:350, col:0x334155,r:50,type:'melee', wpn:'⚔️',wr:0,  wd:3.2},
+  {wave:40, id:'b_lt', n:'LEADERSHIP TEAM',      sub:'Arrivano in Tesla',           hp:3400,  spd:56,rw:500, col:0xdc2626,r:40,type:'ranged',wpn:'🏹',wr:210,wd:2.8,grp:4},
+  {wave:50, id:'b_dg', n:'DIRETTORE GENERALE',   sub:'Bonus > stipendio',           hp:11000, spd:40,rw:700, col:0x0f172a,r:56,type:'ranged',wpn:'💥',wr:230,wd:4.5},
+  {wave:60, id:'b_cda',n:'10 MBR CONSIGLIO',     sub:'Solo grafici a torta',        hp:4200,  spd:50,rw:900, col:0x1d4ed8,r:36,type:'ranged',wpn:'📜',wr:215,wd:3.8,grp:10},
+  {wave:70, id:'b_ceo',n:'CEO',                  sub:'"Disruption & Synergy"',      hp:24000, spd:36,rw:1200,col:0xb45309,r:62,type:'ranged',wpn:'🚀',wr:240,wd:6.5},
+  {wave:80, id:'b_dra',n:'IL GRANDE DRAGO SOCIO',sub:'51% delle quote',             hp:58000, spd:30,rw:2000,col:0x166534,r:80,type:'ranged',wpn:'🔥',wr:255,wd:11,
+    dragon:true,elem:'fire',
+    phases:[{t:.75,elem:'fire',c:0xef4444},{t:.5,elem:'lightning',c:0xfbbf24},{t:.25,elem:'water',c:0x60a5fa},{t:0,elem:'rock',c:0x94a3b8}]},
+  {wave:90, id:'b_doc',n:'DOC BROWN',            sub:'"GRANDE SCOTT!"',             hp:78000, spd:36,rw:3000,col:0xe2e8f0,r:70,type:'ranged',wpn:'⚡',wr:245,wd:9.5,doc:true},
+  {wave:100,id:'b_gal',n:'DIRETTORE GALATTICO',  sub:'Influenza cosmica',           hp:145000,spd:26,rw:5000,col:0x1e1b4b,r:84,type:'ranged',wpn:'☄️',wr:260,wd:18},
+];
+
+const SEASONS=[
+  {n:'🌸 Primavera', sky:[0x1a0a2e,0x3d1a5c],ground:0x2a4a1a,road:0x2a1e12,accent:0xff80ab,gridAlpha:.04},
+  {n:'☀️ Estate',    sky:[0x0a1a3a,0x1a4060],ground:0x1e3a10,road:0x2e2010,accent:0xffd700,gridAlpha:.03},
+  {n:'🍂 Autunno',   sky:[0x1a0e06,0x3a2010],ground:0x2a1e0a,road:0x261808,accent:0xe67e22,gridAlpha:.05},
+  {n:'❄️ Inverno',   sky:[0x050d1e,0x0a1a3a],ground:0xb8d0e0,road:0x7080a0,accent:0xddeeff,gridAlpha:.06},
+  {n:'🌩️ Temporale',sky:[0x050808,0x0a1414],ground:0x141e10,road:0x1a1a18,accent:0x60a5fa,gridAlpha:.04},
+  {n:'🌺 Primavera+',sky:[0x1e0a30,0x4a2060],ground:0x2a4a18,road:0x2a2014,accent:0xf472b6,gridAlpha:.04},
+  {n:'🌋 Magma',     sky:[0x1a0400,0x3a0800],ground:0x2a1004,road:0x2a1008,accent:0xf97316,gridAlpha:.05},
+  {n:'🐉 Draghi',    sky:[0x100428,0x28086a],ground:0x1e0a2a,road:0x1e1028,accent:0xa855f7,gridAlpha:.04},
+  {n:'🔬 Ingegneri', sky:[0x020e0a,0x041c14],ground:0x020e08,road:0x040e08,accent:0x34d399,gridAlpha:.08},
+  {n:'🌌 Galattica', sky:[0x000005,0x02000f],ground:0x05020f,road:0x0a0520,accent:0xa5b4fc,gridAlpha:.03},
+];
+
+const QUOTES=[
+  '"La tua posizione è stata eliminata per motivi strutturali."',
+  '"Grazie per il contributo. Buona fortuna."',
+  '"Il contratto non è stato rinnovato."',
+  '"Sei un talento straordinario. Prova altrove."',
+];
+
+const ABILITIES={bomb:{mana:40,cd:5000},coffee:{mana:30,cd:8000},meeting:{mana:60,cd:12000},audit:{mana:80,cd:18000}};
+const WALL_INCOME=10;
+const MAX_SLOTS=12;
+const SLOT_RING_FRAC=0.30; // % del min(W,H) — usato solo per fallback
+
+// ── COORDINATE ISOMETRICHE 3/4 ──────────────────────────────────
+// La scena è vista in prospettiva 3/4:
+// - Torre principale al centro-destra
+// - Piano di gioco inclinato (asse Y compressa al 60%)
+// - 12 slot disposti in arco semicircolare davanti alla torre
+// - Nemici arrivano dai bordi su 8 direzioni
+const ISO = {
+  // Converti coordinate "mondo" in pixel schermo isometrici
+  toScreen(wx, wy){
+    return { x: wx, y: wy * 0.6 };
+  },
+  // Fattore di schiacciamento verticale
+  yFactor: 0.6,
+};
+
+// Posizioni slot: semicerchio davanti alla torre (angolo 120°–420°)
+// I 12 slot sono distribuiti in arco attorno alla torre centrale
+function getSlotPos(idx){
+  const cx=CW/2, cy=CH*0.52;
+  const totalArc = Math.PI * 1.55; // 280° di arco
+  const startAng = -Math.PI/2 - totalArc/2;
+  const a = startAng + (idx/(MAX_SLOTS-1))*totalArc;
+  const rx = Math.min(CW,CH)*0.32; // raggio orizzontale
+  const ry = rx * ISO.yFactor;     // schiacciato per effetto iso
+  return {
+    x: cx + Math.cos(a)*rx,
+    y: cy + Math.sin(a)*ry,
+    angle: a,
+  };
+}
+
+// ─── STATO ──────────────────────────────────────────────────────
+let G={};
+function resetG(){
+  G={
+    gold:150,mana:30,maxMana:400,manaAcc:0,incomeAcc:0,regenAcc:0,
+    towerHp:100,maxTowerHp:100,
+    wave:0,kills:0,
+    towers:[],enemies:[],projs:[],eprojs:[],
+    gUpg:{dmg:0,rate:0,rng:0,armor:0,pspd:0},
+    selDefId:null,selTower:null,sellMode:false,
+    running:false,queue:[],spawnAcc:0,nextAutoUpg:15,
+    paused:false,over:false,won:false,
+    cdActive:false,cdMs:0,cdWave:1,
+    cdBomb:0,cdCoffee:0,cdMeeting:0,cdAudit:0,
+    lastSeasonIdx:-1,
+    mainTowerCd:0,
+  };
+}
