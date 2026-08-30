@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Office Tower Defense</title>
+  <link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+  <!-- SCHERMATA TITOLO -->
+  <div id="screen-title" class="screen active">
+    <div class="title-container">
+      <div class="title-badge">🏢</div>
+      <h1 class="game-title">OFFICE<br><span>TOWER DEFENSE</span></h1>
+      <p class="game-subtitle">Difendi la tua scrivania dalla gerarchia aziendale!</p>
+      <div class="title-chars">
+        <div class="char-preview enemy-type-0"></div>
+        <div class="char-preview player-preview"></div>
+        <div class="char-preview enemy-type-1"></div>
+      </div>
+      <button id="btn-start" class="btn-main">▶ INIZIA</button>
+      <button id="btn-howto" class="btn-secondary">? COME SI GIOCA</button>
+      <div class="version">v1.0 — by Office Survivor</div>
+    </div>
+  </div>
+
+  <!-- SCHERMATA ISTRUZIONI -->
+  <div id="screen-howto" class="screen">
+    <div class="howto-container">
+      <h2>Come si Gioca</h2>
+      <div class="howto-grid">
+        <div class="howto-item">
+          <span class="howto-icon">🖱️</span>
+          <strong>Piazza le torri</strong>
+          <p>Clicca sul negozio in basso, scegli una torre e cliccala sulla mappa per posizionarla</p>
+        </div>
+        <div class="howto-item">
+          <span class="howto-icon">👾</span>
+          <strong>Ferma i nemici</strong>
+          <p>I nemici seguono il percorso verso la tua scrivania. Se arrivano perdi vita!</p>
+        </div>
+        <div class="howto-item">
+          <span class="howto-icon">💰</span>
+          <strong>Guadagna budget</strong>
+          <p>Ogni nemico eliminato ti da' budget aziendale per comprare altre torri</p>
+        </div>
+        <div class="howto-item">
+          <span class="howto-icon">💀</span>
+          <strong>Boss ogni 10 ondate</strong>
+          <p>Ogni 10 ondate arriva un boss gerarchico sempre piu' potente!</p>
+        </div>
+      </div>
+      <h3>Torri disponibili</h3>
+      <div class="towers-preview">
+        <div class="tower-info"><span>☕</span><strong>Caffettiera</strong><br>Danno medio, fuoco rapido</div>
+        <div class="tower-info"><span>📎</span><strong>Spillatrice</strong><br>Danno alto, fuoco lento</div>
+        <div class="tower-info"><span>🖨️</span><strong>Stampante</strong><br>Danno area, rallenta i nemici</div>
+        <div class="tower-info"><span>📞</span><strong>Centralino</strong><br>Stordisce i nemici</div>
+      </div>
+      <button id="btn-back" class="btn-secondary">← INDIETRO</button>
+    </div>
+  </div>
+
+  <!-- SCHERMATA GIOCO -->
+  <div id="screen-game" class="screen">
+    <!-- HUD TOP -->
+    <div id="hud">
+      <div class="hud-left">
+        <div class="hud-item" id="hud-wave">
+          <span class="hud-label">ONDATA</span>
+          <span class="hud-value" id="wave-display">0/100</span>
+        </div>
+        <div class="hud-item" id="hud-budget">
+          <span class="hud-label">💰 ORO</span>
+          <span class="hud-value" id="budget-display">150</span>
+        </div>
+        <div class="hud-item" id="hud-mana">
+          <span class="hud-label">💧 MANA</span>
+          <div id="mana-bar-container"><div id="mana-bar"></div></div>
+          <span class="hud-value" id="mana-display">30</span>
+        </div>
+      </div>
+      <div class="hud-center">
+        <div id="wave-banner" class="wave-banner hidden"></div>
+      </div>
+      <div class="hud-right">
+        <div class="hud-item">
+          <span class="hud-label">❤️ VITA BASE</span>
+          <div id="lives-bar-container"><div id="lives-bar"></div></div>
+          <span class="hud-value" id="lives-display">20</span>
+        </div>
+        <button id="btn-pause" class="btn-icon">⏸</button>
+      </div>
+    </div>
+
+    <!-- CANVAS -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- SHOP BOTTOM -->
+    <div id="shop">
+      <div class="shop-title">🛒 ARMERIA UFFICIO</div>
+      <div class="shop-items" id="shop-items">
+        <!-- generato da JS -->
+      </div>
+      <div class="shop-right">
+        <button id="btn-sell" class="btn-sell">🗑️ VENDI</button>
+        <button id="btn-next-wave" class="btn-wave">▶ ONDATA</button>
+      </div>
+    </div>
+
+    <!-- TOOLTIP -->
+    <div id="tooltip" class="hidden"></div>
+  </div>
+
+  <!-- SCHERMATA PAUSA -->
+  <div id="screen-pause" class="screen overlay-screen">
+    <div class="popup-box">
+      <h2>⏸ PAUSA</h2>
+      <p>Il tuo ufficio sta aspettando...</p>
+      <button id="btn-resume" class="btn-main">▶ RIPRENDI</button>
+      <button id="btn-quit-pause" class="btn-secondary">🏠 MENU</button>
+    </div>
+  </div>
+
+  <!-- SCHERMATA GAME OVER -->
+  <div id="screen-gameover" class="screen overlay-screen">
+    <div class="popup-box gameover">
+      <div class="go-icon">💼</div>
+      <h2>SEI STATO LICENZIATO!</h2>
+      <p id="go-wave-text">Sei arrivato all'ondata <strong>1</strong></p>
+      <p id="go-kills-text">Nemici eliminati: <strong>0</strong></p>
+      <div class="go-quote" id="go-quote"></div>
+      <button id="btn-restart" class="btn-main">🔄 RIPROVA</button>
+      <button id="btn-quit-go" class="btn-secondary">🏠 MENU</button>
+    </div>
+  </div>
+
+  <!-- SCHERMATA VITTORIA -->
+  <div id="screen-victory" class="screen overlay-screen">
+    <div class="popup-box victory">
+      <div class="v-icon">🏆</div>
+      <h2>HAI SCONFITTO L'AZIENDA!</h2>
+      <p>Anche il Direttore Galattico ha firmato le dimissioni.</p>
+      <p id="v-kills-text">Nemici eliminati: <strong>0</strong></p>
+      <div class="v-quote">"Il vero capo sei tu."</div>
+      <button id="btn-restart-v" class="btn-main">🔄 GIOCA ANCORA</button>
+      <button id="btn-quit-v" class="btn-secondary">🏠 MENU</button>
+    </div>
+  </div>
+
+  <script src="src/data.js"></script>
+  <script src="src/renderer.js"></script>
+  <script src="src/tower.js"></script>
+  <script src="src/enemy.js"></script>
+  <script src="src/projectile.js"></script>
+  <script src="src/wave.js"></script>
+  <script src="src/game.js"></script>
+  <script src="src/ui.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
