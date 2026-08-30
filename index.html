@@ -437,6 +437,10 @@ function loadSVGTexture(url){
 }
 
 async function initPixi(){
+  // Inizializza G subito prima di qualsiasi chiamata grafica
+  resetG();
+  G._floatTexts=[];
+
   const wrap=document.getElementById('cw');
   CW=wrap.clientWidth; CH=wrap.clientHeight;
 
@@ -474,7 +478,7 @@ async function initPixi(){
 }
 
 // ─── BACKGROUND ─────────────────────────────────────────────────
-function getSeason(){ return SEASONS[Math.min(Math.floor(Math.max(0,G.wave-1)/10),9)]; }
+function getSeason(){ return SEASONS[Math.min(Math.floor(Math.max(0,(G.wave||0)-1)/10),9)]; }
 
 function buildBG(){
   const s=getSeason();
