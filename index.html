@@ -414,6 +414,10 @@ function resetG(){
 
 // ─── PIXI ───────────────────────────────────────────────────────
 let app,CW,CH;
+let bgGfx=null, roadGfx=null;
+let mainGfx=null, gunGfx=null, mainHpGfx=null, mainHpFillGfx=null;
+let slotGfx=null;
+let gunAngle=0;
 const L={}; // layer containers
 let texCache={}; // texture cache per SVG
 
@@ -551,8 +555,6 @@ function buildBG(){
 function getSpawnR(){ return Math.min(CW,CH)*.48; }
 
 // ─── TORRE PRINCIPALE ───────────────────────────────────────────
-let mainGfx,gunGfx,mainHpGfx,mainHpFillGfx;
-let gunAngle=0;
 
 function buildMainTower(){
   ['mainGfx','gunGfx','mainHpGfx','mainHpFillGfx'].forEach(k=>{
@@ -638,7 +640,6 @@ function updateMainHpBar(){
 }
 
 // ─── SLOT INDICATORI ────────────────────────────────────────────
-let slotGfx=null;
 function buildSlotIndicators(){
   if(slotGfx){ L.tower.removeChild(slotGfx);slotGfx.destroy(); }
   slotGfx=new PIXI.Graphics();
@@ -1495,27 +1496,38 @@ function showS(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remo
 
 function startGame(){
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-  resetG();G._floatTexts=[];
-  if(app){
-    L.enemies.removeChildren().forEach(c=>c.destroy({children:true}));
-    L.tower.removeChildren().forEach(c=>c.destroy({children:true}));
-    L.walls.removeChildren().forEach(c=>c.destroy({children:true}));
-    L.projs.removeChildren().forEach(c=>c.destroy({children:true}));
-    L.fx.removeChildren().forEach(c=>c.destroy({children:true}));
-    L.hud2.removeChildren().forEach(c=>c.destroy({children:true}));
-  }
-  buildBG();buildMainTower();buildSlotIndicators();
-  updHUD();renderUpgPanel();
+
+  // Aspetta che PixiJS sia pronto
+  if(!app){ setTimeout(startGame, 100); return; }
+
+  resetG();
+  G._floatTexts=[];
+
+  // Pulisci layer (tranne bg e roads che vengono ricostruiti)
+  ['enemies','tower','walls','projs','fx','hud2'].forEach(k=>{
+    if(L[k]) L[k].removeChildren().forEach(c=>{try{c.destroy({children:true});}catch(e){}});
+  });
+
+  buildBG();
+  buildMainTower();
+  buildSlotIndicators();
+  updHUD();
+  renderUpgPanel();
   document.getElementById('tp').style.display='none';
   document.getElementById('btn-sell').classList.remove('on');
-  setTimeout(()=>startCountdown(1),600);
+  document.getElementById('wb').classList.remove('on');
+  startCountdown(1);
 }
 function restart(){startGame();}
 function resume(){G.paused=false;document.getElementById('btn-pause').textContent='⏸';document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));}
 function toMenu(){G.over=true;G.won=true;document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));showS('s-title');}
 
-// AVVIA
-(async()=>{await initPixi();})();
+// ─── AVVIO: PixiJS si inizializza subito, poi mostra titolo ─────
+(async()=>{
+  await initPixi();
+  // PixiJS pronto — ora il click su INIZIA funzionerà
+  // La schermata titolo è già visibile (on nel HTML)
+})();
 </script>
 </body>
 </html>
