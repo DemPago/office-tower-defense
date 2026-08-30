@@ -5,7 +5,10 @@
 // ================================================================
 
 function drawHumanGfx(g, r, col, isEng, isBoss){
-  const pg=g;
+  // g è un PIXI.Container — creiamo un Graphics interno
+  const pg=new PIXI.Graphics();
+  g.addChild(pg);
+  g._body=pg; // ref per tinting
 
   // OMBRA PROIETTATA
   pg.beginFill(0x000000,.32);
@@ -123,7 +126,9 @@ function drawHumanGfx(g, r, col, isEng, isBoss){
 
 // Draghetto procedurale qualità alta
 function drawDragonGfx(g, r, col){
-  const pg=g;
+  const pg=new PIXI.Graphics();
+  g.addChild(pg);
+  g._body=pg;
   const c2=darkenC(col,.55);
 
   pg.beginFill(0x000000,.3);pg.drawEllipse(r*.1,r*.85,r*.9,r*.28);pg.endFill();
