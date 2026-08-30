@@ -1618,18 +1618,24 @@ function updateMana(dt){
 function updateIncome(dt){
   G.incomeAcc+=dt;
   while(G.incomeAcc>=1000){
-    G.gold+=G.towers.length*WALL_INCOME;
-    // Riparazione torri laterali: +2 HP/s
-    G.towers.forEach(t=>{ if(t.hp<t.maxHp) t.hp=Math.min(t.maxHp, t.hp+2); });
+    // Reddito muri
+    G.gold+=G.towers.filter(t=>!t.collapsed).length*WALL_INCOME;
     G.incomeAcc-=1000;
   }
   // Rigenerazione torre principale: +1 HP ogni 2 secondi
   if(!G.regenAcc) G.regenAcc=0;
   G.regenAcc+=dt;
   while(G.regenAcc>=2000){
+    // Torre principale +1 HP ogni 2s
     if(G.towerHp<G.maxTowerHp && G.towerHp>0){
       G.towerHp=Math.min(G.maxTowerHp, G.towerHp+1);
     }
+    // Torri laterali +1 HP ogni 2s (solo quelle non distrutte)
+    G.towers.forEach(t=>{
+      if(!t.collapsed && t.hp>0 && t.hp<t.maxHp){
+        t.hp=Math.min(t.maxHp, t.hp+1);
+      }
+    });
     G.regenAcc-=2000;
   }
 }
@@ -1729,35 +1735,52 @@ function updateEnemies(dt){
     if(e.dead||e.reached) return;
     if(e.stunT>0){e.stunT-=dt;return;}
     if(e.slowT>0) e.slowT-=dt; else e.slowFactor=1;
-    const cx=CW/2,cy=CH/2;
-    const dx=cx-e.x,dy=cy-e.y,dist=Math.sqrt(dx*dx+dy*dy);
 
-    if(e.tmpl.type==='ranged'&&dist<=e.tmpl.wr&&e.tmpl.wr>0){
-      // Ferma e spara
-      e.atkCd=(e.atkCd||0)-dt;
-      if(e.atkCd<=0){e.atkCd=680+Math.random()*280;fireEProj(e);}
-    } else if(e.tmpl.type==='melee'&&dist<=56){
-      // Colpisce
+    const cx=CW/2, cy=CH/2;
+
+    // Trova il bersaglio più vicino: torri laterali attive o torre centrale
+    const target=findEnemyTarget(e);
+    const tdx=target.x-e.x, tdy=target.y-e.y;
+    const tdist=Math.sqrt(tdx*tdx+tdy*tdy);
+    const attackRange=target.isTower ? 55 :
+                      e.tmpl.type==='ranged'&&e.tmpl.wr>0 ? e.tmpl.wr : 56;
+
+    if(tdist<=attackRange){
+      // Attacca il bersaglio
       e.atkCd=(e.atkCd||0)-dt;
       if(e.atkCd<=0){
-        e.atkCd=580+Math.random()*380;
+        e.atkCd=(e.tmpl.type==='ranged'?650:540)+Math.random()*300;
         const dmg=e.tmpl.wd*(1+G.wave*.04);
-        damageTower(dmg);
-        floatText(`-${dmg.toFixed(1)}❤️`,cx+(Math.random()-.5)*40,cy-65,'#ef4444');
+        if(target.isTower){
+          // Danno alla torre laterale
+          damageSideTower(target.tower, dmg, e.x, e.y);
+        } else {
+          // Danno alla torre centrale
+          damageTower(dmg);
+          floatText(`-${dmg.toFixed(1)}❤️`, cx+(Math.random()-.5)*40, cy-65, '#ef4444');
+        }
+        // Proiettile visivo
+        if(e.tmpl.type==='ranged'){
+          const ang=Math.atan2(target.y-e.y,target.x-e.x);
+          const p={x:e.x,y:e.y,dead:false,ang,spd:195,ico:e.tmpl.wpn,sz:17,
+            dmg:0, // danno già applicato sopra
+            tx:target.x,ty:target.y,gfx:null};
+          buildEProjGfx(p);G.eprojs.push(p);
+        }
       }
     } else {
+      // Avanza verso il bersaglio
       const spd=e.tmpl.spd*(1+(G.wave-1)*.008)*e.slowFactor*(dt/1000);
-      e.x+=dx/dist*spd;e.y+=dy/dist*spd;
+      e.x+=tdx/tdist*spd; e.y+=tdy/tdist*spd;
     }
 
-    // Fase boss drago
+    // Fasi boss drago
     if(e.tmpl.phases){
       const ratio=e.hp/e.maxHp;
       for(let i=0;i<e.tmpl.phases.length;i++){
         if(ratio<=e.tmpl.phases[i].t+.26||i===e.tmpl.phases.length-1){
           if(e.phase!==i){
             e.phase=i;
-            // Cambia tint sprite
             if(e.gfx&&e.gfx._sprite) e.gfx._sprite.tint=e.tmpl.phases[i].c;
           }
           break;
@@ -1765,6 +1788,96 @@ function updateEnemies(dt){
       }
     }
   });
+}
+
+// Trova il bersaglio più vicino per un nemico
+// Priorità: torri laterali non distrutte nel cammino verso il centro
+function findEnemyTarget(e){
+  const cx=CW/2, cy=CH/2;
+  let best=null, bestDist=Infinity;
+
+  G.towers.filter(t=>!t.collapsed).forEach(t=>{
+    const d=Math.hypot(t.x-e.x, t.y-e.y);
+    // Solo torri che sono "tra" il nemico e il centro (o raggiungibili)
+    const toCenterDist=Math.hypot(cx-e.x, cy-e.y);
+    const towToCenterDist=Math.hypot(cx-t.x, cy-t.y);
+    // Considera la torre se è più vicina del centro O se blocca il percorso
+    if(d<toCenterDist*1.1 && d<bestDist){
+      best=t; bestDist=d;
+    }
+  });
+
+  if(best && bestDist<Math.hypot(cx-e.x,cy-e.y)+20){
+    return {x:best.x, y:best.y-20, isTower:true, tower:best};
+  }
+  return {x:cx, y:cy, isTower:false};
+}
+
+// Danneggia una torre laterale
+function damageSideTower(tower, dmg, ex, ey){
+  if(tower.collapsed) return;
+  tower.hp=Math.max(0, tower.hp-dmg);
+  floatText(`-${Math.round(dmg)}`,tower.x,tower.y-40,'#ef4444');
+
+  // Flash rosso sulla torre
+  if(tower.gfx&&tower.gfx._body){
+    tower.gfx._body.tint=0xff4444;
+    setTimeout(()=>{if(tower.gfx&&tower.gfx._body)tower.gfx._body.tint=0xffffff;},120);
+  }
+
+  if(tower.hp<=0) destroySideTower(tower);
+}
+
+// Distrugge una torre laterale con animazione
+function destroySideTower(tower){
+  if(tower.collapsed) return;
+  tower.collapsed=true;
+  tower.hp=0;
+
+  floatText('💥 TORRE DISTRUTTA!', tower.x, tower.y-60, '#ef4444', 15);
+
+  // Burst di particelle esplosione
+  for(let i=0;i<20;i++) burstParticles(
+    tower.x+(Math.random()-.5)*30,
+    tower.y+(Math.random()-.5)*30,
+    [0xef4444,0xf97316,0xfbbf24][Math.floor(Math.random()*3)], 3
+  );
+
+  // Animazione crollo: fade out + shake
+  if(tower.gfx){
+    let t=0;
+    const shake=setInterval(()=>{
+      t+=60;
+      if(!tower.gfx){clearInterval(shake);return;}
+      tower.gfx.x=tower.x+(Math.random()-.5)*8*(1-t/400);
+      tower.gfx.y=tower.y+(Math.random()-.5)*8*(1-t/400);
+      tower.gfx.alpha=Math.max(0,1-t/400);
+      if(t>=400){
+        clearInterval(shake);
+        // Rimpiazza con macerie
+        if(tower.gfx){
+          tower.gfx.alpha=1;
+          tower.gfx.x=tower.x;
+          tower.gfx.y=tower.y;
+          // Pulisci grafica e mostra macerie
+          tower.gfx.removeChildren().forEach(c=>{try{c.destroy({children:true});}catch(e2){}});
+          const rubble=new PIXI.Graphics();
+          rubble.beginFill(0x334155,.9); rubble.drawCircle(-10,2,8);
+          rubble.beginFill(0x475569,.8); rubble.drawCircle(6,-3,6);
+          rubble.beginFill(0x1e293b,.7); rubble.drawCircle(-2,8,5);
+          rubble.endFill();
+          tower.gfx.addChild(rubble);
+          // Testo macerie
+          const txt=new PIXI.Text('🪨',{fontSize:20,resolution:2});
+          txt.anchor.set(.5);rubble.addChild(txt);
+        }
+        updateAllWalls();
+      }
+    },60);
+  }
+
+  // Aggiorna muri — connessioni perse
+  updateAllWalls();
 }
 
 function fireProj(x,y,tgt,def,tower,dmg){
