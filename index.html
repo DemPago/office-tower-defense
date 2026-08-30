@@ -409,7 +409,7 @@ const SLOT_RING_FRAC=0.30; // % del min(W,H)
 let G={};
 function resetG(){
   G={
-    gold:150,mana:30,maxMana:400,manaAcc:0,incomeAcc:0,
+    gold:150,mana:30,maxMana:400,manaAcc:0,incomeAcc:0,regenAcc:0,
     towerHp:100,maxTowerHp:100,
     wave:0,kills:0,
     towers:[],enemies:[],projs:[],eprojs:[],
@@ -1434,11 +1434,18 @@ function updateIncome(dt){
   G.incomeAcc+=dt;
   while(G.incomeAcc>=1000){
     G.gold+=G.towers.length*WALL_INCOME;
-    // Riparazione automatica torri: +2 HP/s quando non sotto attacco
-    G.towers.forEach(t=>{
-      if(t.hp<t.maxHp) t.hp=Math.min(t.maxHp, t.hp+2);
-    });
+    // Riparazione torri laterali: +2 HP/s
+    G.towers.forEach(t=>{ if(t.hp<t.maxHp) t.hp=Math.min(t.maxHp, t.hp+2); });
     G.incomeAcc-=1000;
+  }
+  // Rigenerazione torre principale: +1 HP ogni 2 secondi
+  if(!G.regenAcc) G.regenAcc=0;
+  G.regenAcc+=dt;
+  while(G.regenAcc>=2000){
+    if(G.towerHp<G.maxTowerHp && G.towerHp>0){
+      G.towerHp=Math.min(G.maxTowerHp, G.towerHp+1);
+    }
+    G.regenAcc-=2000;
   }
 }
 function updateAbCDs(dt){
@@ -1635,7 +1642,11 @@ function killEnemy(e){
 }
 function damageTower(dmg){
   const armorR=(G.gUpg.armor||0)*GL_UPGS.find(u=>u.id==='armor').per;
-  G.towerHp=Math.max(0,G.towerHp-dmg*(1-armorR));
+  // Danno minimo garantito: almeno 1 HP anche con armatura massima
+  const actual=Math.max(1, dmg*(1-armorR));
+  G.towerHp=Math.max(0,G.towerHp-actual);
+  // Flash rosso sull'edificio
+  if(mainGfx){ mainGfx.tint=0xff4444; setTimeout(()=>{ if(mainGfx) mainGfx.tint=0xffffff; },120); }
   if(G.towerHp<=0) gameOver();
 }
 
