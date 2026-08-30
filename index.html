@@ -403,7 +403,38 @@ const QUOTES=[
 const ABILITIES={bomb:{mana:40,cd:5000},coffee:{mana:30,cd:8000},meeting:{mana:60,cd:12000},audit:{mana:80,cd:18000}};
 const WALL_INCOME=10;
 const MAX_SLOTS=12;
-const SLOT_RING_FRAC=0.30; // % del min(W,H)
+const SLOT_RING_FRAC=0.30; // % del min(W,H) — usato solo per fallback
+
+// ── COORDINATE ISOMETRICHE 3/4 ──────────────────────────────────
+// La scena è vista in prospettiva 3/4:
+// - Torre principale al centro-destra
+// - Piano di gioco inclinato (asse Y compressa al 60%)
+// - 12 slot disposti in arco semicircolare davanti alla torre
+// - Nemici arrivano dai bordi su 8 direzioni
+const ISO = {
+  // Converti coordinate "mondo" in pixel schermo isometrici
+  toScreen(wx, wy){
+    return { x: wx, y: wy * 0.6 };
+  },
+  // Fattore di schiacciamento verticale
+  yFactor: 0.6,
+};
+
+// Posizioni slot: semicerchio davanti alla torre (angolo 120°–420°)
+// I 12 slot sono distribuiti in arco attorno alla torre centrale
+function getSlotPos(idx){
+  const cx=CW/2, cy=CH*0.52;
+  const totalArc = Math.PI * 1.55; // 280° di arco
+  const startAng = -Math.PI/2 - totalArc/2;
+  const a = startAng + (idx/(MAX_SLOTS-1))*totalArc;
+  const rx = Math.min(CW,CH)*0.32; // raggio orizzontale
+  const ry = rx * ISO.yFactor;     // schiacciato per effetto iso
+  return {
+    x: cx + Math.cos(a)*rx,
+    y: cy + Math.sin(a)*ry,
+    angle: a,
+  };
+}
 
 // ─── STATO ──────────────────────────────────────────────────────
 let G={};
@@ -498,131 +529,131 @@ function buildBG(){
   if(roadGfx){ try{L.roads.removeChild(roadGfx);roadGfx.destroy();}catch(e){} roadGfx=null; }
   bgGfx=new PIXI.Graphics();
   roadGfx=new PIXI.Graphics();
-  const cx=CW/2, cy=CH/2;
-  const maxR=Math.max(CW,CH)*1.1;
-  const spR=getSpawnR();
 
-  // ── TERRENO BASE ──────────────────────────────────────────────
-  // Sfondo (cielo/notte)
-  bgGfx.beginFill(s.sky[0]); bgGfx.drawRect(0,0,CW,CH); bgGfx.endFill();
+  const cx=CW/2, cy=CH*0.52;   // punto di fuga centrale
+  const groundY=CH*0.72;        // linea orizzonte terreno
+  const yf=ISO.yFactor;
 
-  // Terreno principale (erba/terra) — texture a macchie
-  const tileSize=40;
-  for(let tx=0;tx<CW;tx+=tileSize){
-    for(let ty=0;ty<CH;ty+=tileSize){
-      // Variazione colore per texture
-      const seed=(tx*7+ty*13)%100;
-      const bright=seed>.7?0.08:seed>.4?0.05:0;
-      const col=lerpColor(s.ground, s.sky[1], .3+Math.sin(tx*.08+ty*.06)*.12);
-      bgGfx.beginFill(col,.95+bright);
-      bgGfx.drawRect(tx,ty,tileSize,tileSize);
-      bgGfx.endFill();
+  // ── CIELO (gradiente simulato) ─────────────────────────────
+  bgGfx.beginFill(s.sky[0]); bgGfx.drawRect(0,0,CW,groundY); bgGfx.endFill();
+  // Fascia orizzonte più chiara
+  bgGfx.beginFill(lerpColor(s.sky[0],s.sky[1],.5),.6);
+  bgGfx.drawRect(0,groundY-40,CW,60); bgGfx.endFill();
+
+  // Stelle/luna (se previste dalla stagione)
+  if(s.stars||s.sky[0]<0x100000){
+    bgGfx.fillStyle=0xffffff;
+    for(let i=0;i<50;i++){
+      const sx=(Math.sin(i*7.3)*.5+.5)*CW;
+      const sy=(Math.sin(i*3.1)*.5+.5)*groundY*.75;
+      bgGfx.beginFill(0xffffff, .4+Math.sin(i*.7)*.3);
+      bgGfx.drawCircle(sx,sy,i%5===0?1.5:.7); bgGfx.endFill();
     }
   }
 
-  // Cerchio di terreno più chiaro intorno alla torre (piazzale)
-  const plazaGrad=roadGfx; // usa roadGfx come layer sotto
-  roadGfx.beginFill(s.ground,.55);
-  roadGfx.drawCircle(cx,cy,spR*1.1);
-  roadGfx.endFill();
-
-  // ── PERCORSI (8 strade) ──────────────────────────────────────
-  // 4 percorsi principali (visibili) — cardinali
-  const mainPaths=[0,2,4,6]; // N E S W
-  // 4 percorsi secondari (mimetizzati) — diagonali
-  const hiddenPaths=[1,3,5,7];
-
-  // Strade principali — ben visibili
-  mainPaths.forEach(i=>{
-    const a=i*Math.PI/4;
-    // Fondo strada (terra battuta)
-    roadGfx.lineStyle(42,s.road,.92);
-    roadGfx.moveTo(cx,cy);
-    roadGfx.lineTo(cx+Math.cos(a)*maxR, cy+Math.sin(a)*maxR);
-    // Bordi strada
-    roadGfx.lineStyle(2,lerpColor(s.road,0xffffff,.15),.4);
-    const perp=a+Math.PI/2;
-    roadGfx.moveTo(cx+Math.cos(perp)*21,cy+Math.sin(perp)*21);
-    roadGfx.lineTo(cx+Math.cos(a)*maxR+Math.cos(perp)*21,cy+Math.sin(a)*maxR+Math.sin(perp)*21);
-    roadGfx.moveTo(cx-Math.cos(perp)*21,cy-Math.sin(perp)*21);
-    roadGfx.lineTo(cx+Math.cos(a)*maxR-Math.cos(perp)*21,cy+Math.sin(a)*maxR-Math.sin(perp)*21);
-  });
-
-  // Strade secondarie — quasi mimetizzate (stessa tonalità del terreno)
-  hiddenPaths.forEach(i=>{
-    const a=i*Math.PI/4;
-    const hiddenCol=lerpColor(s.ground, s.road, .35); // quasi uguale al terreno
-    roadGfx.lineStyle(32,hiddenCol,.7);
-    roadGfx.moveTo(cx,cy);
-    roadGfx.lineTo(cx+Math.cos(a)*maxR, cy+Math.sin(a)*maxR);
-  });
-  roadGfx.lineStyle(0);
-
-  // ── VEGETAZIONE DENSA (mimetizza le strade secondarie) ──────
-  const rng=(seed,mn,mx)=> mn+(Math.sin(seed*137.508+seed*2.399)*.5+.5)*(mx-mn);
-  const treeCol1=lerpColor(s.ground, 0x166534, .6);
-  const treeCol2=lerpColor(s.ground, 0x14532d, .7);
-  const treeCol3=lerpColor(s.ground, 0x052e16, .8);
-
-  // Pianta alberi su una griglia sparsa
-  for(let ti=0;ti<180;ti++){
-    const angle=rng(ti,0,Math.PI*2);
-    const dist=rng(ti*3,80,spR*.95);
-    const tx2=cx+Math.cos(angle)*dist;
-    const ty2=cy+Math.sin(angle)*dist;
-    const tsize=rng(ti*7,5,14);
-
-    // Controlla se su percorso principale (lascia spazio)
-    const onMain=mainPaths.some(i=>{
-      const a=i*Math.PI/4;
-      const dx=tx2-cx, dy2=ty2-cy;
-      const along=dx*Math.cos(a)+dy2*Math.sin(a);
-      const perp2=Math.abs(-dx*Math.sin(a)+dy2*Math.cos(a));
-      return along>0 && perp2<28;
-    });
-    if(onMain) continue;
-
-    // Albero: ombra + chioma
-    roadGfx.beginFill(0x000000,.12);
-    roadGfx.drawEllipse(tx2+tsize*.3,ty2+tsize*.4,tsize*.9,tsize*.35);
-    roadGfx.endFill();
-    roadGfx.beginFill(treeCol3,.8);
-    roadGfx.drawCircle(tx2,ty2,tsize);
-    roadGfx.endFill();
-    roadGfx.beginFill(treeCol1,.9);
-    roadGfx.drawCircle(tx2-tsize*.18,ty2-tsize*.18,tsize*.72);
-    roadGfx.endFill();
-    roadGfx.beginFill(treeCol2,.6);
-    roadGfx.drawCircle(tx2+tsize*.08,ty2-tsize*.25,tsize*.5);
-    roadGfx.endFill();
-    // Highlight chioma
-    roadGfx.beginFill(0xffffff,.06);
-    roadGfx.drawEllipse(tx2-tsize*.2,ty2-tsize*.35,tsize*.4,tsize*.2);
-    roadGfx.endFill();
+  // Sole/luna/astro stagionale
+  if(s.sun){
+    const {x:sx,y:sy,r,col,glow}=s.sun;
+    const sg=bgGfx;
+    sg.beginFill(parseInt(glow?.replace('#',''),16)||0xffd700,.18);
+    sg.drawCircle(CW*sx,groundY*sy,r*3); sg.endFill();
+    sg.beginFill(col||0xffd700);
+    sg.drawCircle(CW*sx,groundY*sy,r); sg.endFill();
   }
 
-  // ── SPAWN POINT MARKERS ──────────────────────────────────────
-  // Solo sui percorsi principali li rendiamo visibili
-  mainPaths.forEach(i=>{
-    const a=i*Math.PI/4;
-    const sx=cx+Math.cos(a)*spR, sy=cy+Math.sin(a)*spR;
-    roadGfx.beginFill(0xe94560,.18); roadGfx.drawCircle(sx,sy,18); roadGfx.endFill();
-    roadGfx.lineStyle(2,0xe94560,.55); roadGfx.drawCircle(sx,sy,18); roadGfx.lineStyle(0);
-    roadGfx.beginFill(0xe94560,.8); roadGfx.drawCircle(sx,sy,5); roadGfx.endFill();
-  });
-  // Percorsi nascosti: marker appena accennato
-  hiddenPaths.forEach(i=>{
-    const a=i*Math.PI/4;
-    const sx=cx+Math.cos(a)*spR, sy=cy+Math.sin(a)*spR;
-    roadGfx.beginFill(0xe94560,.06); roadGfx.drawCircle(sx,sy,14); roadGfx.endFill();
+  // Montagne sfondo (isometriche)
+  const mCol=lerpColor(s.sky[1],s.ground,.3);
+  [[.05,.85],[.15,.7],[.28,.78],[.4,.65],[.55,.75],[.7,.68],[.85,.8]].forEach(([x,y])=>{
+    bgGfx.beginFill(mCol,.7);
+    bgGfx.beginFill(lerpColor(mCol,0x000000,.2),.5);
+    const mx=CW*x, mTop=groundY*y;
+    bgGfx.moveTo(mx-50,groundY); bgGfx.lineTo(mx,mTop); bgGfx.lineTo(mx+50,groundY);
+    bgGfx.endFill();
+    // neve cime
+    bgGfx.beginFill(0xffffff,.3);
+    bgGfx.moveTo(mx-12,mTop+18); bgGfx.lineTo(mx,mTop); bgGfx.lineTo(mx+12,mTop+18);
+    bgGfx.endFill();
   });
 
-  // ── CERCHI DI DISTANZA (sottili, quasi invisibili) ───────────
-  [120,220,340,480].forEach((r,i)=>{
-    roadGfx.lineStyle(1,s.accent,.04+i*.01);
-    roadGfx.drawCircle(cx,cy,r);
-  });
+  // ── TERRENO ISOMETRICO ────────────────────────────────────
+  // Piano inclinato con prospettiva
+  const ground=bgGfx;
+  // Colore terreno base
+  ground.beginFill(s.ground); ground.drawRect(0,groundY,CW,CH-groundY); ground.endFill();
+  // Linee di prospettiva (griglia isometrica sul terreno)
+  const gridLines=12;
+  for(let i=0;i<=gridLines;i++){
+    const xpos=CW*(i/gridLines);
+    roadGfx.lineStyle(1,s.accent,.05);
+    roadGfx.moveTo(xpos,groundY);
+    roadGfx.lineTo(cx+(xpos-cx)*.1, groundY+(CH-groundY)*.95);
+  }
+  // Linee orizzontali terreno
+  for(let d=0;d<5;d++){
+    const ypos=groundY+d*(CH-groundY)/5;
+    roadGfx.lineStyle(1,s.accent,.04);
+    roadGfx.moveTo(0,ypos); roadGfx.lineTo(CW,ypos);
+  }
   roadGfx.lineStyle(0);
+
+  // ── STRADE (percorsi nemici in prospettiva) ────────────────
+  // 8 percorsi che convergono verso il centro dalla prospettiva
+  const spawnR=getSpawnR();
+  for(let i=0;i<8;i++){
+    const a=i*Math.PI/4;
+    const ex=cx+Math.cos(a)*CW, ey=cy+Math.sin(a)*spawnR*1.05;
+    const isMain=[0,2,4,6].includes(i);
+    roadGfx.lineStyle(isMain?40:28, s.road, isMain?.9:.55);
+    roadGfx.moveTo(cx,cy); roadGfx.lineTo(ex,ey);
+    // Bordi strada principale
+    if(isMain){
+      const perp=a+Math.PI/2;
+      roadGfx.lineStyle(2,lerpColor(s.road,0xffffff,.15),.35);
+      roadGfx.moveTo(cx+Math.cos(perp)*20,cy+Math.sin(perp)*20);
+      roadGfx.lineTo(ex+Math.cos(perp)*20,ey+Math.sin(perp)*20);
+    }
+  }
+  roadGfx.lineStyle(0);
+
+  // ── VEGETAZIONE (alberi in prospettiva) ───────────────────
+  const tC1=lerpColor(s.ground,0x166534,.65);
+  const tC2=lerpColor(s.ground,0x14532d,.75);
+  const rng=(seed,mn,mx)=>mn+(Math.sin(seed*137.508+seed*2.399)*.5+.5)*(mx-mn);
+  for(let ti=0;ti<160;ti++){
+    const ang=rng(ti,0,Math.PI*2);
+    const dist=rng(ti*3,100,spawnR*.9);
+    const tx=cx+Math.cos(ang)*dist;
+    const ty=cy+Math.sin(ang)*dist*yf;
+    const tsize=rng(ti*7,6,15);
+    const onMain=[0,2,4,6].some(i=>{
+      const a=i*Math.PI/4;
+      const dx2=tx-cx,dy2=ty-cy;
+      const along=dx2*Math.cos(a)+dy2*Math.sin(a);
+      return along>0&&Math.abs(-dx2*Math.sin(a)+dy2*Math.cos(a))<30;
+    });
+    if(onMain) continue;
+    // Tronco
+    roadGfx.lineStyle(tsize*.3,lerpColor(tC2,0x000000,.4),1);
+    roadGfx.moveTo(tx,ty); roadGfx.lineTo(tx,ty-tsize*1.5);
+    roadGfx.lineStyle(0);
+    // Chioma
+    roadGfx.beginFill(0x000000,.15); roadGfx.drawEllipse(tx+tsize*.25,ty-tsize*.8,tsize*.9,tsize*.3); roadGfx.endFill();
+    roadGfx.beginFill(tC2,.85); roadGfx.drawCircle(tx,ty-tsize*1.8,tsize); roadGfx.endFill();
+    roadGfx.beginFill(tC1,.9); roadGfx.drawCircle(tx-tsize*.15,ty-tsize*2.0,tsize*.72); roadGfx.endFill();
+    roadGfx.beginFill(0xffffff,.05); roadGfx.drawEllipse(tx-tsize*.18,ty-tsize*2.18,tsize*.38,tsize*.18); roadGfx.endFill();
+  }
+
+  // ── SPAWN MARKER ──────────────────────────────────────────
+  for(let i=0;i<8;i++){
+    const a=i*Math.PI/4;
+    const sx=cx+Math.cos(a)*spawnR, sy=cy+Math.sin(a)*spawnR*yf;
+    const isMain=[0,2,4,6].includes(i);
+    roadGfx.beginFill(0xe94560,isMain?.2:.06); roadGfx.drawCircle(sx,sy,isMain?18:12); roadGfx.endFill();
+    if(isMain){
+      roadGfx.lineStyle(2,0xe94560,.55); roadGfx.drawCircle(sx,sy,18); roadGfx.lineStyle(0);
+      roadGfx.beginFill(0xe94560,.8); roadGfx.drawCircle(sx,sy,5); roadGfx.endFill();
+    }
+  }
 
   L.bg.addChild(bgGfx);
   L.roads.addChild(roadGfx);
@@ -639,7 +670,8 @@ function lerpColor(a,b,t){
   return (r<<16)|(g<<8)|bl;
 }
 
-function getSpawnR(){ return Math.min(CW,CH)*.48; }
+function getSpawnR(){ return Math.min(CW,CH)*.46; }
+function mainTowerCenter(){ return {x:CW/2, y:CH*0.72}; } // base torre
 
 // ─── TORRE PRINCIPALE ───────────────────────────────────────────
 
@@ -647,224 +679,239 @@ function buildMainTower(){
   ['mainGfx','gunGfx','mainHpGfx','mainHpFillGfx'].forEach(k=>{
     if(window[k]){ try{L.tower.removeChild(window[k]);window[k].destroy();}catch(e){} window[k]=null; }
   });
-  // Pulisci anche il playerContainer
   if(window.playerContainer){ try{L.tower.removeChild(window.playerContainer);window.playerContainer.destroy({children:true});}catch(e){} window.playerContainer=null; }
-  const cx=CW/2, cy=CH/2;
+
+  const cx=CW/2, groundY=CH*0.72;
+  // Torre al centro X, base a groundY
+  const TW=110, floors=5, fH=52;
+  const totalH=floors*fH;
+  const bx=cx-TW/2, by=groundY-totalH;
+
   mainGfx=new PIXI.Graphics();
 
-  // ── OMBRA EDIFICIO ──
+  // Ombra base
   mainGfx.beginFill(0x000000,.35);
-  mainGfx.drawEllipse(cx+8,cy+12,58,20);
+  mainGfx.drawEllipse(cx+6,groundY+5,TW*.6,14);
   mainGfx.endFill();
 
-  // ── EDIFICIO ISOMETRICO (simulato top-down con profondità) ──
-  // Lato sinistro (faccia ovest — più scura)
-  mainGfx.beginFill(0x0f2035);
-  mainGfx.drawPolygon([cx-44,cy+10, cx-44,cy-52, cx,cy-62, cx,cy]);
+  // ── FACCIATA FRONTALE (vista di lato) ──
+  // Faccia laterale destra (più scura)
+  mainGfx.beginFill(0x0a1a2e);
+  mainGfx.drawRect(bx+TW,by,18,totalH);
   mainGfx.endFill();
+  // Faccia frontale principale
+  const wg=mainGfx;
+  wg.beginFill(0x162840);
+  wg.drawRect(bx,by,TW,totalH);
+  wg.endFill();
+  // Variazione per piano (alternato chiaro/scuro)
+  for(let f=0;f<floors;f++){
+    const fy=by+f*fH;
+    wg.beginFill(f%2===0?0x1e3a5f:0x162840,.3);
+    wg.drawRect(bx,fy,TW,fH);
+    wg.endFill();
+    // Linea separazione piani
+    wg.lineStyle(1,0x0a1528,.8);
+    wg.moveTo(bx,fy); wg.lineTo(bx+TW,fy);
+    wg.lineStyle(0);
+  }
 
-  // Lato destro (faccia est — media)
-  mainGfx.beginFill(0x162840);
-  mainGfx.drawPolygon([cx+44,cy+10, cx+44,cy-52, cx,cy-62, cx,cy]);
-  mainGfx.endFill();
-
-  // Tetto (faccia superiore — più chiara)
-  mainGfx.beginFill(0x1e3a5f);
-  mainGfx.drawPolygon([cx-44,cy-52, cx,cy-72, cx+44,cy-52, cx,cy-32]);
-  mainGfx.endFill();
-  // Highlight tetto
-  mainGfx.beginFill(0x2563eb,.4);
-  mainGfx.drawPolygon([cx-44,cy-52, cx,cy-72, cx+44,cy-52, cx,cy-32]);
-  mainGfx.endFill();
-
-  // ── FINESTRE ──
-  // Finestre lato sinistro
-  [[-28,cy-40],[-28,cy-20],[-12,cy-30]].forEach(([ox,oy])=>{
-    const lit=Math.sin(Date.now()/1100+ox*.1)>.0;
-    mainGfx.beginFill(lit?0xfef08a:0x0a1a30,.9);
-    mainGfx.drawRoundedRect(cx+ox-7,oy-5,14,9,2);
-    mainGfx.endFill();
-    if(lit){ mainGfx.beginFill(0xfef08a,.15); mainGfx.drawRoundedRect(cx+ox-9,oy-7,18,13,3); mainGfx.endFill(); }
-  });
-  // Finestre lato destro
-  [[12,cy-40],[12,cy-20],[28,cy-30]].forEach(([ox,oy])=>{
-    const lit=Math.sin(Date.now()/900+ox*.15+1)>.0;
-    mainGfx.beginFill(lit?0xfbbf24:0x0a1a30,.9);
-    mainGfx.drawRoundedRect(cx+ox-7,oy-5,14,9,2);
-    mainGfx.endFill();
-    if(lit){ mainGfx.beginFill(0xfbbf24,.12); mainGfx.drawRoundedRect(cx+ox-9,oy-7,18,13,3); mainGfx.endFill(); }
-  });
+  // ── FINESTRE (3 per piano) ──
+  const winW=20, winH=18, winGap=(TW-3*winW)/4;
+  for(let f=0;f<floors;f++){
+    const fy=by+f*fH+fH/2-winH/2;
+    for(let w=0;w<3;w++){
+      const wx=bx+winGap*(w+1)+winW*w;
+      const lit=Math.sin(Date.now()/900+f*2.1+w*1.3)>.05;
+      const litCol=f===0?0xfbbf24:f===floors-1?0xfef08a:0xfde68a;
+      // Cornice finestra
+      wg.beginFill(0x0a1528);
+      wg.drawRoundedRect(wx-2,fy-2,winW+4,winH+4,3);
+      wg.endFill();
+      // Vetro
+      wg.beginFill(lit?litCol:0x0a1222,.9);
+      wg.drawRoundedRect(wx,fy,winW,winH,2);
+      wg.endFill();
+      // Bagliore finestra accesa
+      if(lit){
+        wg.beginFill(litCol,.12);
+        wg.drawRoundedRect(wx-4,fy-4,winW+8,winH+8,4);
+        wg.endFill();
+      }
+      // Telaio finestra
+      wg.lineStyle(1,0x1e3a5f,.5);
+      wg.moveTo(wx+winW/2,fy); wg.lineTo(wx+winW/2,fy+winH);
+      wg.moveTo(wx,fy+winH/2); wg.lineTo(wx+winW,fy+winH/2);
+      wg.lineStyle(0);
+    }
+  }
 
   // ── BORDI EDIFICIO ──
-  mainGfx.lineStyle(2,0x3b82f6,.5);
-  mainGfx.moveTo(cx-44,cy-52); mainGfx.lineTo(cx-44,cy+10); // spigolo sx
-  mainGfx.moveTo(cx+44,cy-52); mainGfx.lineTo(cx+44,cy+10); // spigolo dx
-  mainGfx.moveTo(cx-44,cy+10); mainGfx.lineTo(cx+44,cy+10); // base
-  mainGfx.moveTo(cx,cy-62);   mainGfx.lineTo(cx-44,cy-52);   // tetto sx
-  mainGfx.moveTo(cx,cy-62);   mainGfx.lineTo(cx+44,cy-52);   // tetto dx
-  mainGfx.lineStyle(0);
+  wg.lineStyle(3,0x2563eb,.7);
+  wg.drawRect(bx,by,TW,totalH);
+  wg.lineStyle(1,0x1e3a5f,.4);
+  wg.drawRect(bx+TW,by,18,totalH); // lato
+  wg.lineStyle(0);
+  // Bordo superiore lato
+  wg.lineStyle(2,0x3b82f6,.5);
+  wg.moveTo(bx,by); wg.lineTo(bx+TW,by);
+  wg.moveTo(bx+TW,by); wg.lineTo(bx+TW+18,by+8);
+  wg.lineStyle(0);
+
+  // ── TETTO / TERRAZZA ──
+  // Parapetto
+  wg.beginFill(0x1e3a5f);
+  wg.drawRect(bx-4,by-14,TW+8,14);
+  wg.endFill();
+  // Merli tetto
+  for(let m=0;m<7;m++){
+    const mx=bx-4+m*(TW+8)/7;
+    wg.beginFill(0x2563eb,.8);
+    wg.drawRect(mx+2,by-28,12,14);
+    wg.endFill();
+  }
+  // Copertura tetto
+  wg.beginFill(0x0f2040);
+  wg.drawRect(bx-4,by-28,TW+8,4);
+  wg.endFill();
 
   // ── ANTENNA ──
-  mainGfx.lineStyle(2,0x64748b,.8);
-  mainGfx.moveTo(cx,cy-72); mainGfx.lineTo(cx,cy-96);
-  mainGfx.lineStyle(0);
-  // Lucina antenna
-  const blink=Math.sin(Date.now()/400)>0;
-  mainGfx.beginFill(blink?0xe74c3c:0x7f1d1d,.9);
-  mainGfx.drawCircle(cx,cy-97,4);
-  mainGfx.endFill();
+  wg.lineStyle(2,0x64748b,.9);
+  wg.moveTo(cx-10,by-28); wg.lineTo(cx-10,by-65);
+  wg.moveTo(cx+10,by-28); wg.lineTo(cx+10,by-58);
+  wg.lineStyle(0);
+  // Luce rossa lampeggiante
+  const blink=Math.sin(Date.now()/500)>0;
+  wg.beginFill(blink?0xe74c3c:0x7f1d1d,.9);
+  wg.drawCircle(cx-10,by-66,4);
+  wg.endFill();
 
-  // ── INSEGNA ──
-  mainGfx.beginFill(0xfbbf24,.9);
-  mainGfx.drawRoundedRect(cx-20,cy-14,40,10,3);
-  mainGfx.endFill();
-  mainGfx.lineStyle(1,0xf59e0b,.8);
-  mainGfx.drawRoundedRect(cx-20,cy-14,40,10,3);
-  mainGfx.lineStyle(0);
+  // ── INSEGNA CORP. ──
+  wg.beginFill(0xfbbf24,.95);
+  wg.drawRoundedRect(cx-28,by+totalH-28,56,16,4);
+  wg.endFill();
+  wg.lineStyle(2,0xf59e0b,.8);
+  wg.drawRoundedRect(cx-28,by+totalH-28,56,16,4);
+  wg.lineStyle(0);
 
-  // ── DIPENDENTE SULLA CIMA — omino vero ──
-  // Usa un container separato così può essere animato
-  const playerCont = new PIXI.Container();
-  playerCont.position.set(cx, cy-72);
+  // ── PORTA INGRESSO ──
+  wg.beginFill(0x0a1020);
+  wg.drawRoundedRect(cx-16,groundY-42,32,42,4);
+  wg.endFill();
+  wg.lineStyle(2,0x1e3a5f,.6);
+  wg.drawRoundedRect(cx-16,groundY-42,32,42,4);
+  wg.lineStyle(0);
+  // Maniglia
+  wg.beginFill(0xfbbf24,.8);
+  wg.drawCircle(cx+10,groundY-20,2.5);
+  wg.endFill();
 
-  const pg = new PIXI.Graphics();
-  const pr = 14; // scala omino
+  L.tower.addChild(mainGfx);
+  window.mainGfx=mainGfx;
+
+  // ── DIPENDENTE SUL TETTO ──
+  const playerCont=new PIXI.Container();
+  playerCont.position.set(cx, by-28);
+  const pg=new PIXI.Graphics();
+  const pr=14;
 
   // Ombra
-  pg.beginFill(0x000000,.25);
-  pg.drawEllipse(0,pr*.9,pr*.7,pr*.2);
-  pg.endFill();
-
+  pg.beginFill(0x000000,.25); pg.drawEllipse(0,pr*.9,pr*.7,pr*.2); pg.endFill();
   // Gambe
   pg.beginFill(0x1e3a5f);
   pg.drawRoundedRect(-pr*.3,pr*.22,pr*.26,pr*.65,pr*.1);
   pg.drawRoundedRect(pr*.04,pr*.22,pr*.26,pr*.65,pr*.1);
   pg.endFill();
-  // Scarpe (arancio)
   pg.beginFill(0xf59e0b);
   pg.drawEllipse(-pr*.17,pr*.87,pr*.22,pr*.11);
   pg.drawEllipse(pr*.17,pr*.87,pr*.22,pr*.11);
   pg.endFill();
-
-  // Corpo — giacca blu scuro con colletto
+  // Corpo
   pg.beginFill(0x1e3a5f);
   pg.drawRoundedRect(-pr*.42,-pr*.18,pr*.84,pr*.44,pr*.12);
   pg.endFill();
-  // Camicia interna (bianca)
   pg.beginFill(0xf8fafc);
   pg.drawRoundedRect(-pr*.18,-pr*.14,pr*.36,pr*.32,pr*.06);
   pg.endFill();
-  // Cravatta rossa
   pg.beginFill(0xe94560);
-  pg.drawPolygon([
-    -pr*.05,-pr*.12,  pr*.05,-pr*.12,
-     pr*.04, pr*.08,  0,pr*.22, -pr*.04,pr*.08
-  ]);
+  pg.drawPolygon([-pr*.05,-pr*.12, pr*.05,-pr*.12, pr*.04,pr*.08, 0,pr*.22, -pr*.04,pr*.08]);
   pg.endFill();
-
   // Braccia
   pg.beginFill(0x1e3a5f);
-  pg.drawRoundedRect(-pr*.72,-pr*.15,pr*.32,pr*.5,pr*.1);
-  pg.drawRoundedRect(pr*.4,-pr*.15,pr*.32,pr*.5,pr*.1);
+  pg.drawRoundedRect(-pr*.72,-pr*.12,pr*.32,pr*.52,pr*.1);
+  pg.drawRoundedRect(pr*.4,-pr*.12,pr*.32,pr*.52,pr*.1);
   pg.endFill();
-  // Mani gialle
   pg.beginFill(0xfde68a);
   pg.drawCircle(-pr*.56,pr*.38,pr*.14);
-  pg.drawCircle( pr*.56,pr*.38,pr*.14);
+  pg.drawCircle(pr*.56,pr*.38,pr*.14);
   pg.endFill();
-
   // Collo
   pg.beginFill(0xfde68a);
   pg.drawRoundedRect(-pr*.11,-pr*.35,pr*.22,pr*.2,pr*.05);
   pg.endFill();
-
   // Testa
-  pg.beginFill(0xfde68a);
-  pg.drawCircle(0,-pr*.65,pr*.38);
-  pg.endFill();
-  // Capelli castani
+  pg.beginFill(0xfde68a); pg.drawCircle(0,-pr*.65,pr*.38); pg.endFill();
+  // Capelli
   pg.beginFill(0x78350f,.95);
   pg.drawEllipse(0,-pr*.95,pr*.38,pr*.18);
   pg.drawEllipse(-pr*.3,-pr*.82,pr*.14,pr*.12);
-  pg.drawEllipse( pr*.3,-pr*.82,pr*.14,pr*.12);
+  pg.drawEllipse(pr*.3,-pr*.82,pr*.14,pr*.12);
   pg.endFill();
   // Occhi
-  pg.beginFill(0xffffff);
-  pg.drawCircle(-pr*.14,-pr*.68,pr*.12);
-  pg.drawCircle( pr*.14,-pr*.68,pr*.12);
-  pg.endFill();
-  pg.beginFill(0x1e293b);
-  pg.drawCircle(-pr*.14,-pr*.67,pr*.07);
-  pg.drawCircle( pr*.14,-pr*.67,pr*.07);
-  pg.endFill();
-  // Pupille (guardano avanti)
-  pg.beginFill(0x000000);
-  pg.drawCircle(-pr*.12,-pr*.66,pr*.035);
-  pg.drawCircle( pr*.16,-pr*.66,pr*.035);
-  pg.endFill();
-  // Sorriso spaventato/determinato
+  pg.beginFill(0xffffff); pg.drawCircle(-pr*.14,-pr*.68,pr*.12); pg.drawCircle(pr*.14,-pr*.68,pr*.12); pg.endFill();
+  pg.beginFill(0x1e293b); pg.drawCircle(-pr*.14,-pr*.67,pr*.07); pg.drawCircle(pr*.14,-pr*.67,pr*.07); pg.endFill();
+  pg.beginFill(0x000000); pg.drawCircle(-pr*.12,-pr*.66,pr*.035); pg.drawCircle(pr*.16,-pr*.66,pr*.035); pg.endFill();
   pg.lineStyle(pr*.055,0x7f1d1d,1);
-  pg.moveTo(-pr*.12,-pr*.55);
-  pg.lineTo( pr*.12,-pr*.52);
-  pg.lineStyle(0);
-  // Sopracciglia preoccupate
+  pg.moveTo(-pr*.12,-pr*.55); pg.lineTo(pr*.12,-pr*.52); pg.lineStyle(0);
   pg.lineStyle(pr*.07,0x78350f,1);
   pg.moveTo(-pr*.22,-pr*.8); pg.lineTo(-pr*.06,-pr*.75);
-  pg.moveTo( pr*.22,-pr*.8); pg.lineTo( pr*.06,-pr*.75);
+  pg.moveTo(pr*.22,-pr*.8); pg.lineTo(pr*.06,-pr*.75);
   pg.lineStyle(0);
-
-  // Elmetto da ufficio (casco giallo)
-  pg.beginFill(0xfbbf24,.95);
-  pg.drawEllipse(0,-pr*.88,pr*.42,pr*.21);
-  pg.endFill();
-  pg.beginFill(0xf59e0b);
-  pg.drawRect(-pr*.42,-pr*.9,pr*.84,pr*.09);
-  pg.endFill();
-  // Visiera
-  pg.beginFill(0xfbbf24,.4);
-  pg.drawRoundedRect(-pr*.18,-pr*.72,pr*.36,pr*.09,pr*.03);
-  pg.endFill();
+  // Elmetto
+  pg.beginFill(0xfbbf24,.95); pg.drawEllipse(0,-pr*.88,pr*.42,pr*.21); pg.endFill();
+  pg.beginFill(0xf59e0b); pg.drawRect(-pr*.42,-pr*.9,pr*.84,pr*.09); pg.endFill();
 
   playerCont.addChild(pg);
   playerCont._gfx=pg;
   L.tower.addChild(playerCont);
-  // Salva ref globale per animarlo
   window.playerContainer=playerCont;
 
-  // Canna (ruotante, parte dalla mano destra del personaggio)
-  gunGfx=new PIXI.Graphics();
-  gunGfx.lineStyle(5,0x64748b,1); gunGfx.moveTo(0,0); gunGfx.lineTo(30,0); gunGfx.lineStyle(0);
-  // Corpo del fucile
-  gunGfx.beginFill(0x334155); gunGfx.drawRoundedRect(-2,-3,28,6,3); gunGfx.endFill();
-  gunGfx.beginFill(0x475569); gunGfx.drawRoundedRect(8,-5,14,4,2); gunGfx.endFill();
   // Canna
+  gunGfx=new PIXI.Graphics();
+  gunGfx.beginFill(0x334155); gunGfx.drawRoundedRect(-1,-2,30,5,2); gunGfx.endFill();
+  gunGfx.beginFill(0x475569); gunGfx.drawRoundedRect(8,-4,14,4,2); gunGfx.endFill();
   gunGfx.beginFill(0x94a3b8); gunGfx.drawCircle(30,0,4); gunGfx.endFill();
-  gunGfx.position.set(cx, cy-72+pr*.38); // altezza mani
+  gunGfx.position.set(cx, by-28+pr*.38);
   gunGfx.rotation=gunAngle;
 
   // HP bar
   mainHpGfx=new PIXI.Graphics();
   mainHpGfx.beginFill(0x000000,.45);
-  mainHpGfx.drawRoundedRect(cx-42,cy-58,84,8,4);mainHpGfx.endFill();
+  mainHpGfx.drawRoundedRect(bx-1,by-42,TW+2,9,4);
+  mainHpGfx.endFill();
   mainHpGfx.beginFill(0x1e293b);
-  mainHpGfx.drawRoundedRect(cx-41,cy-57,82,6,3);mainHpGfx.endFill();
+  mainHpGfx.drawRoundedRect(bx,by-41,TW,7,3);
+  mainHpGfx.endFill();
 
   mainHpFillGfx=new PIXI.Graphics();
 
-  L.tower.addChild(mainGfx,gunGfx,mainHpGfx,mainHpFillGfx);
-  window.mainGfx=mainGfx;window.gunGfx=gunGfx;
-  window.mainHpGfx=mainHpGfx;window.mainHpFillGfx=mainHpFillGfx;
+  L.tower.addChild(gunGfx,mainHpGfx,mainHpFillGfx);
+  window.gunGfx=gunGfx;
+  window.mainHpGfx=mainHpGfx; window.mainHpFillGfx=mainHpFillGfx;
   updateMainHpBar();
 }
 
 function updateMainHpBar(){
   if(!mainHpFillGfx) return;
   mainHpFillGfx.clear();
-  const cx=CW/2,cy=CH/2;
+  const cx=CW/2, groundY=CH*0.72;
+  const floors=5, fH=52, TW=110;
+  const by=groundY-floors*fH;
+  const bx=cx-TW/2;
   const r=Math.max(0,G.towerHp/G.maxTowerHp);
   const c=r>.5?0x22c55e:r>.25?0xf59e0b:0xef4444;
   mainHpFillGfx.beginFill(c);
-  mainHpFillGfx.drawRoundedRect(cx-41,cy-57,82*r,6,3);
+  mainHpFillGfx.drawRoundedRect(bx,by-41,TW*r,7,3);
   mainHpFillGfx.endFill();
 }
 
@@ -872,35 +919,34 @@ function updateMainHpBar(){
 // Ridisegna i muri tra torri laterali adiacenti
 function updateAllWalls(){
   if(!G.towers) return;
-  // Per ogni torre, disegna un muro verso le torri negli slot adiacenti
   G.towers.forEach(t=>{
     if(!t.gfx||!t.gfx._wall) return;
     const wall=t.gfx._wall;
     wall.clear();
-    // Slot adiacenti (±1 nell'anello circolare)
-    const neighbors=[-1,1].map(d=>{
+    if(t.collapsed) return; // torre distrutta: nessun muro
+
+    // Trova vicini adiacenti (slot ±1 nell'anello, wrapping 11→0)
+    [-1,1].forEach(d=>{
       const idx=((t.slotIdx+d)+MAX_SLOTS)%MAX_SLOTS;
-      return G.towers.find(n=>n.slotIdx===idx);
-    }).filter(Boolean);
-    neighbors.forEach(n=>{
-      // Posizione relativa al container della torre t
+      const n=G.towers.find(n=>n.slotIdx===idx && !n.collapsed);
+      if(!n) return;
+
       const dx=n.x-t.x, dy=n.y-t.y;
       const dl=Math.sqrt(dx*dx+dy*dy);
+      if(dl<5) return; // stessa posizione, salta
       const nx2=dx/dl, ny2=dy/dl;
       const perp={x:-ny2,y:nx2};
-      // Muro (doppia linea con merli)
+
+      // Muro spesso
       wall.lineStyle(8,0x1e3a5f,.9);
       wall.moveTo(0,0); wall.lineTo(dx,dy);
-      wall.lineStyle(0);
-      // Corsia interna muro
       wall.lineStyle(4,0x2d4a6a,.5);
       wall.moveTo(0,0); wall.lineTo(dx,dy);
       wall.lineStyle(0);
-      // Merli
+      // Merli ogni 30px
       for(let d2=28;d2<dl-28;d2+=30){
-        const wx=nx2*d2, wy=ny2*d2;
         wall.beginFill(0x2d5a8a,.85);
-        wall.drawRect(wx+perp.x*5-4, wy+perp.y*5-4, 8,8);
+        wall.drawRect(nx2*d2+perp.x*5-4, ny2*d2+perp.y*5-4, 8,8);
         wall.endFill();
       }
     });
@@ -1565,37 +1611,33 @@ function _tick(dt){
   // Torre principale spara
   G.mainTowerCd=Math.max(0,G.mainTowerCd-dt);
 
-  // Animazione idle: il personaggio respira (bob verticale leggero)
+  // Posizione tetto torre (dove sta il personaggio)
+  const groundY=CH*0.72, floors=5, fH=52;
+  const towerTopY=groundY-floors*fH-28; // cima torre
+  const playerY=towerTopY;
+
+  // Animazione idle: bob
   if(window.playerContainer){
     const bob=Math.sin(Date.now()/800)*.8;
-    window.playerContainer.y=(CH/2-72)+bob;
+    window.playerContainer.y=playerY+bob;
   }
+  if(gunGfx) gunGfx.y=playerY+(14*.38);
 
   if(G.mainTowerCd<=0){
-    const tgt=nearestEnemy(CW/2,CH/2,290);
+    const tgt=nearestEnemy(CW/2, groundY, 320);
     if(tgt){
-      gunAngle=Math.atan2(tgt.y-(CH/2-72+(14*.38)), tgt.x-CW/2);
+      gunAngle=Math.atan2(tgt.y-playerY, tgt.x-CW/2);
       if(gunGfx) gunGfx.rotation=gunAngle;
 
-      // Sparo dal punto corretto
-      const gunX=CW/2, gunY=CH/2-72+(14*.38);
+      const gunX=CW/2, gunY=playerY+(14*.38);
       fireProj(gunX,gunY,tgt,{pc:0xfbbf24,ps:5,pspd:340,id:'main'},null,22+(G.gUpg.dmg||0)*2.6);
       G.mainTowerCd=580;
 
-      // Animazione rinculo personaggio
       if(window.playerContainer){
-        const recoilX=-Math.cos(gunAngle)*4;
-        const recoilY=-Math.sin(gunAngle)*4;
-        window.playerContainer.x=(CW/2)+recoilX;
+        window.playerContainer.x=(CW/2)-Math.cos(gunAngle)*4;
         setTimeout(()=>{ if(window.playerContainer) window.playerContainer.x=CW/2; },80);
       }
-
-      // Muzzle flash (particella gialla alla punta della canna)
-      if(gunGfx){
-        const fx=CW/2+Math.cos(gunAngle)*34;
-        const fy=(CH/2-72+(14*.38))+Math.sin(gunAngle)*34;
-        burstParticles(fx,fy,0xfbbf24,5);
-      }
+      burstParticles(CW/2+Math.cos(gunAngle)*34, (playerY+(14*.38))+Math.sin(gunAngle)*34, 0xfbbf24, 5);
     }
   }
 
@@ -1736,7 +1778,8 @@ function updateEnemies(dt){
     if(e.stunT>0){e.stunT-=dt;return;}
     if(e.slowT>0) e.slowT-=dt; else e.slowFactor=1;
 
-    const cx=CW/2, cy=CH/2;
+    const mc=mainTowerCenter();
+    const cx=mc.x, cy=mc.y;
 
     // Trova il bersaglio più vicino: torri laterali attive o torre centrale
     const target=findEnemyTarget(e);
@@ -1791,17 +1834,14 @@ function updateEnemies(dt){
 }
 
 // Trova il bersaglio più vicino per un nemico
-// Priorità: torri laterali non distrutte nel cammino verso il centro
 function findEnemyTarget(e){
-  const cx=CW/2, cy=CH/2;
+  const mc=mainTowerCenter();
+  const cx=mc.x, cy=mc.y;
   let best=null, bestDist=Infinity;
 
   G.towers.filter(t=>!t.collapsed).forEach(t=>{
     const d=Math.hypot(t.x-e.x, t.y-e.y);
-    // Solo torri che sono "tra" il nemico e il centro (o raggiungibili)
     const toCenterDist=Math.hypot(cx-e.x, cy-e.y);
-    const towToCenterDist=Math.hypot(cx-t.x, cy-t.y);
-    // Considera la torre se è più vicina del centro O se blocca il percorso
     if(d<toCenterDist*1.1 && d<bestDist){
       best=t; bestDist=d;
     }
