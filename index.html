@@ -884,97 +884,251 @@ function updateTowerGfx(t){
 }
 
 // ─── NEMICI ─────────────────────────────────────────────────────
-async function buildEnemyGfx(e){
+// buildEnemyGfx — SINCRONO, omini veri con corpo/testa/gambe/braccia
+function buildEnemyGfx(e){
   const g=new PIXI.Container();
   const {tmpl}=e;
+  const r=tmpl.r;  // "raggio" usato come unità di scala
 
-  if(tmpl.dragon){
-    // Usa sprite SVG
-    const url=DRAGON_SPRITES[tmpl.elem];
-    let sprite;
-    if(url && texCache[url]){
-      sprite=new PIXI.Sprite(texCache[url]);
-      const sz=tmpl.r*2.8;
-      sprite.width=sz;sprite.height=sz;
-      sprite.anchor.set(.5,.65);
-    } else {
-      // Fallback: cerchio colorato
-      sprite=new PIXI.Graphics();
-      sprite.beginFill(tmpl.col);sprite.drawCircle(0,0,tmpl.r);sprite.endFill();
-    }
+  if(tmpl.dragon && texCache[DRAGON_SPRITES[tmpl.elem]]){
+    // ── DRAGHETTO CON SPRITE SVG ──
+    const tex=texCache[DRAGON_SPRITES[tmpl.elem]];
+    const sprite=new PIXI.Sprite(tex);
+    const sz=r*3.2;
+    sprite.width=sz; sprite.height=sz;
+    sprite.anchor.set(.5,.7);
     g.addChild(sprite);
     g._sprite=sprite;
+  } else if(tmpl.dragon){
+    // ── DRAGHETTO FALLBACK (grafica procedurale) ──
+    drawDragonGfx(g, r, tmpl.col);
   } else {
-    // Nemico generico: corpo cartoon
-    const body=new PIXI.Graphics();
-    // Ombra
-    body.beginFill(0x000000,.22);
-    body.drawEllipse(0,tmpl.r*.75,tmpl.r*.8,tmpl.r*.28);body.endFill();
-    // Corpo principale con gradiente simulato
-    body.beginFill(darkenC(tmpl.col,.35));body.drawCircle(0,0,tmpl.r);body.endFill();
-    body.beginFill(tmpl.col);body.drawCircle(-tmpl.r*.1,-tmpl.r*.1,tmpl.r*.85);body.endFill();
-    // Highlight
-    body.beginFill(0xffffff,.2);body.drawEllipse(-tmpl.r*.18,-tmpl.r*.3,tmpl.r*.4,tmpl.r*.28);body.endFill();
-    g.addChild(body);g._body=body;
-
-    // Viso
-    const face=new PIXI.Graphics();
-    face.beginFill(0xfef3c7);face.drawCircle(0,-tmpl.r*.32,tmpl.r*.38);face.endFill();
-    // Occhi
-    face.beginFill(0x1e293b);
-    face.drawCircle(-tmpl.r*.13,-tmpl.r*.38,tmpl.r*.1);
-    face.drawCircle(tmpl.r*.13,-tmpl.r*.38,tmpl.r*.1);face.endFill();
-    // Sopracciglia arrabbiati
-    face.lineStyle(tmpl.r*.06,0x1e293b,1);
-    face.moveTo(-tmpl.r*.2,-tmpl.r*.48);face.lineTo(-tmpl.r*.06,-tmpl.r*.42);
-    face.moveTo(tmpl.r*.2,-tmpl.r*.48);face.lineTo(tmpl.r*.06,-tmpl.r*.42);
-    face.lineStyle(0);
-    g.addChild(face);
-
-    // Ingegneri: elmetto
-    if(tmpl.eng){
-      const helm=new PIXI.Graphics();
-      helm.beginFill(0xfbbf24,.95);helm.drawEllipse(0,-tmpl.r*.68,tmpl.r*.4,tmpl.r*.18);helm.endFill();
-      helm.beginFill(0xf59e0b);helm.drawRect(-tmpl.r*.4,-tmpl.r*.7,tmpl.r*.8,tmpl.r*.08);helm.endFill();
-      g.addChild(helm);
-    }
+    // ── OMINO CARTOON ──
+    drawHumanGfx(g, r, tmpl.col, tmpl.eng, tmpl.r>34);
   }
 
-  // Arma (emoji oscillante)
-  const wpn=new PIXI.Text(tmpl.wpn,{fontSize:tmpl.r*.85,resolution:2});
-  wpn.anchor.set(.5);wpn.position.set(tmpl.r*.85,-tmpl.r*.55);g._wpn=wpn;g.addChild(wpn);
+  // Arma (top-right, oscillante)
+  const wpnText=new PIXI.Text(tmpl.wpn,{fontSize:Math.max(10,r*.9),resolution:2});
+  wpnText.anchor.set(.5);
+  wpnText.position.set(r*1.1, -r*.5);
+  g._wpn=wpnText;
+  g.addChild(wpnText);
 
-  // Indicatore tipo: ranged o melee
-  const typeBadge=new PIXI.Text(tmpl.type==='ranged'?'🏹':'⚔️',{fontSize:8,resolution:2});
-  typeBadge.anchor.set(.5);typeBadge.position.set(-tmpl.r*.85,-tmpl.r*.55);g.addChild(typeBadge);
+  // Badge melee/ranged
+  const badge=new PIXI.Text(tmpl.type==='ranged'?'🏹':'⚔️',{fontSize:9,resolution:2});
+  badge.anchor.set(.5);
+  badge.position.set(-r*1.1,-r*.5);
+  g.addChild(badge);
 
   // HP bar
-  const bw=tmpl.r*2.6;
+  const bw=Math.max(r*2.4,36);
   const hpbg=new PIXI.Graphics();
-  hpbg.beginFill(0x000000,.45);hpbg.drawRoundedRect(-bw/2-1,-tmpl.r*1.55-1,bw+2,6+2,3);hpbg.endFill();
-  hpbg.beginFill(0x1e293b);hpbg.drawRoundedRect(-bw/2,-tmpl.r*1.55,bw,6,2);hpbg.endFill();
+  hpbg.beginFill(0x000000,.55);
+  hpbg.drawRoundedRect(-bw/2-1,-r*1.8-1,bw+2,7,3);
+  hpbg.endFill();
+  hpbg.beginFill(0x1e293b);
+  hpbg.drawRoundedRect(-bw/2,-r*1.8,bw,5,2);
+  hpbg.endFill();
   g.addChild(hpbg);
-  const hpfill=new PIXI.Graphics();g._hpfill=hpfill;g._hpbw=bw;g.addChild(hpfill);
+  const hpfill=new PIXI.Graphics();
+  g._hpfill=hpfill; g._hpbw=bw;
+  g.addChild(hpfill);
 
-  // Nome boss
-  if(tmpl.r>34){
-    const nm=new PIXI.Text(tmpl.n,{fontSize:10,fontWeight:'bold',fill:0xffffff,stroke:0x000000,strokeThickness:2,resolution:2});
-    nm.anchor.set(.5,1);nm.position.set(0,-tmpl.r*1.6);g.addChild(nm);
-    // Corona
-    const crown=new PIXI.Text('👑',{fontSize:tmpl.r*.5,resolution:2});
-    crown.anchor.set(.5);crown.position.set(0,-tmpl.r*1.3);g.addChild(crown);
+  // Nome + corona boss
+  if(r>34){
+    const nm=new PIXI.Text(tmpl.n,{
+      fontSize:10,fontWeight:'bold',fill:'#ffffff',
+      stroke:'#000000',strokeThickness:3,resolution:2
+    });
+    nm.anchor.set(.5,1);
+    nm.position.set(0,-r*1.9);
+    g.addChild(nm);
+    const crown=new PIXI.Text('👑',{fontSize:r*.55,resolution:2});
+    crown.anchor.set(.5);
+    crown.position.set(0,-r*1.55);
+    g.addChild(crown);
   }
 
   // Scudo (draghetto acqua)
   if(e.shield){
-    const shieldGfx=new PIXI.Graphics();
-    shieldGfx.lineStyle(2.5,0x60a5fa,.7);shieldGfx.drawCircle(0,0,tmpl.r*1.3);shieldGfx.lineStyle(0);
-    g._shield=shieldGfx;g.addChild(shieldGfx);
+    const sh=new PIXI.Graphics();
+    sh.lineStyle(2.5,0x60a5fa,.75);
+    sh.drawCircle(0,0,r*1.4);
+    sh.lineStyle(0);
+    g._shield=sh;
+    g.addChild(sh);
   }
 
   g.position.set(e.x,e.y);
   L.enemies.addChild(g);
   e.gfx=g;
+}
+
+// Disegna un omino cartoon con corpo/testa/gambe/braccia
+function drawHumanGfx(g, r, col, isEng, isBoss){
+  const s=r/16; // scala base (r=16 → s=1)
+
+  // ── OMBRA ──
+  const sh=new PIXI.Graphics();
+  sh.beginFill(0x000000,.2);
+  sh.drawEllipse(0,r*.9,r*.7,r*.22);
+  sh.endFill();
+  g.addChild(sh);
+
+  // ── GAMBE ──
+  const legs=new PIXI.Graphics();
+  const legCol=darkenC(col,.7);
+  // Gamba sinistra
+  legs.beginFill(legCol);
+  legs.drawRoundedRect(-r*.32,r*.2,r*.28,r*.72,r*.1);
+  legs.endFill();
+  // Gamba destra
+  legs.beginFill(legCol);
+  legs.drawRoundedRect(r*.04,r*.2,r*.28,r*.72,r*.1);
+  legs.endFill();
+  // Piedi
+  legs.beginFill(darkenC(col,.5));
+  legs.drawEllipse(-r*.18,r*.92,r*.22,r*.12);
+  legs.drawEllipse(r*.18,r*.92,r*.22,r*.12);
+  legs.endFill();
+  g.addChild(legs);
+  g._legs=legs;
+
+  // ── CORPO ──
+  const body=new PIXI.Graphics();
+  // Corpo principale (rettangolo arrotondato)
+  body.beginFill(col);
+  body.drawRoundedRect(-r*.42,-r*.15,r*.84,r*.42,r*.14);
+  body.endFill();
+  // Dettaglio camicia/giacca
+  body.beginFill(darkenC(col,.8),.5);
+  body.drawRoundedRect(-r*.28,-r*.1,r*.56,r*.32,r*.08);
+  body.endFill();
+  // Cravatta (per boss)
+  if(isBoss){
+    body.beginFill(0xe74c3c);
+    body.drawPolygon([-r*.05,-r*.12, r*.05,-r*.12, r*.03,r*.18, 0,r*.25, -r*.03,r*.18]);
+    body.endFill();
+  }
+  g.addChild(body);
+  g._body=body;
+
+  // ── BRACCIA ──
+  const arms=new PIXI.Graphics();
+  arms.beginFill(col);
+  // Braccio sinistro
+  arms.drawRoundedRect(-r*.7,-r*.12,r*.3,r*.52,r*.1);
+  // Braccio destro
+  arms.drawRoundedRect(r*.4,-r*.12,r*.3,r*.52,r*.1);
+  arms.endFill();
+  // Mani
+  arms.beginFill(0xfef3c7);
+  arms.drawCircle(-r*.56,r*.42,r*.14);
+  arms.drawCircle(r*.56,r*.42,r*.14);
+  arms.endFill();
+  g.addChild(arms);
+
+  // ── COLLO ──
+  const neck=new PIXI.Graphics();
+  neck.beginFill(0xfef3c7);
+  neck.drawRoundedRect(-r*.12,-r*.32,r*.24,r*.2,r*.06);
+  neck.endFill();
+  g.addChild(neck);
+
+  // ── TESTA ──
+  const head=new PIXI.Graphics();
+  // Cranio
+  head.beginFill(0xfde68a);
+  head.drawCircle(0,-r*.62,r*.38);
+  head.endFill();
+  // Capelli
+  const hairCol=isBoss?0x1e293b:darkenC(col,.4);
+  head.beginFill(hairCol,.95);
+  head.drawEllipse(0,-r*.92,r*.38,r*.18);
+  head.endFill();
+  // Occhi
+  head.beginFill(0xffffff);
+  head.drawCircle(-r*.14,-r*.65,r*.12);
+  head.drawCircle(r*.14,-r*.65,r*.12);
+  head.endFill();
+  head.beginFill(0x1e293b);
+  head.drawCircle(-r*.14,-r*.64,r*.07);
+  head.drawCircle(r*.14,-r*.64,r*.07);
+  head.endFill();
+  // Pupille (direzione verso torre)
+  head.beginFill(0x000000);
+  head.drawCircle(-r*.12,-r*.63,r*.035);
+  head.drawCircle(r*.16,-r*.63,r*.035);
+  head.endFill();
+  // Sopracciglia arrabbiate
+  head.lineStyle(r*.06,0x1e293b,1);
+  head.moveTo(-r*.22,-r*.77); head.lineTo(-r*.06,-r*.72);
+  head.moveTo(r*.22,-r*.77);  head.lineTo(r*.06,-r*.72);
+  head.lineStyle(0);
+  // Bocca (sorriso cattivo o urlo)
+  if(isBoss){
+    head.beginFill(0x7f1d1d);
+    head.drawEllipse(0,-r*.53,r*.12,r*.08);
+    head.endFill();
+  } else {
+    head.lineStyle(r*.055,0x7f1d1d,1);
+    head.moveTo(-r*.1,-r*.55);
+    head.lineTo(r*.1,-r*.52);
+    head.lineStyle(0);
+  }
+  g.addChild(head);
+  g._head=head;
+
+  // ── ELMETTO INGEGNERI ──
+  if(isEng){
+    const helm=new PIXI.Graphics();
+    helm.beginFill(0xfbbf24,.95);
+    helm.drawEllipse(0,-r*.88,r*.44,r*.22);
+    helm.endFill();
+    helm.beginFill(0xf59e0b);
+    helm.drawRect(-r*.44,-r*.9,r*.88,r*.1);
+    helm.endFill();
+    // Visiera
+    helm.beginFill(0xfbbf24,.5);
+    helm.drawRoundedRect(-r*.18,-r*.72,r*.36,r*.1,r*.04);
+    helm.endFill();
+    g.addChild(helm);
+  }
+}
+
+// Disegna draghetto procedurale (fallback se SVG non caricato)
+function drawDragonGfx(g, r, col){
+  const body=new PIXI.Graphics();
+  // Ali
+  body.beginFill(col,.65);
+  body.drawPolygon([-r*.15,-r*.15, -r*.9,-r*.7, -r*.5,r*.05]);
+  body.drawPolygon([r*.15,-r*.15,  r*.9,-r*.7,  r*.5,r*.05]);
+  body.endFill();
+  // Corpo
+  body.beginFill(col);
+  body.drawEllipse(0,0,r*.7,r*.5);
+  body.endFill();
+  // Pancia
+  body.beginFill(0xfef9c3,.8);
+  body.drawEllipse(0,r*.1,r*.42,r*.3);
+  body.endFill();
+  // Testa
+  body.beginFill(col);
+  body.drawEllipse(r*.5,-r*.1,r*.35,r*.28);
+  body.endFill();
+  // Occhio
+  body.beginFill(0xffffff);
+  body.drawCircle(r*.6,-r*.16,r*.12);
+  body.endFill();
+  body.beginFill(0x1e293b);
+  body.drawCircle(r*.62,-r*.16,r*.07);
+  body.endFill();
+  // Corno
+  body.beginFill(0xfbbf24);
+  body.drawPolygon([r*.48,-r*.3, r*.42,-r*.58, r*.56,-r*.3]);
+  body.endFill();
+  g.addChild(body);
+  g._body=body;
 }
 
 function darkenC(col,f){
@@ -986,37 +1140,50 @@ function darkenC(col,f){
 
 function updateEnemyGfx(e){
   if(!e.gfx||e.dead) return;
-  const g=e.gfx,{tmpl}=e;
+  const g=e.gfx, {tmpl}=e;
   g.position.set(e.x,e.y);
 
-  // Ruota sprite verso il centro
-  const cx=CW/2,cy=CH/2;
-  const ang=Math.atan2(cy-e.y,cx-e.x);
-  if(g._sprite) g._sprite.rotation=ang-Math.PI/2;
-  else g.rotation=0; // il corpo non ruota ma l'arma oscillla
+  // Ruota verso il centro (solo sprite drago)
+  const cx=CW/2, cy=CH/2;
+  if(g._sprite){
+    const ang=Math.atan2(cy-e.y,cx-e.x);
+    g._sprite.rotation=ang-Math.PI/2;
+  }
 
   // Wobble arma
   if(g._wpn) g._wpn.rotation=Math.sin(Date.now()/180+e.x*.01)*.28;
 
-  // HP
+  // Animazione camminata gambe (oscillazione)
+  if(g._legs && !e.stunT){
+    const walk=Math.sin(Date.now()/120+e.x*.02);
+    g._legs.skew.x=walk*.08;
+    g._legs.y=walk*1.5;
+  }
+
+  // Leggero bob testa
+  if(g._head){
+    g._head.y=Math.sin(Date.now()/120+e.x*.02)*1.2;
+  }
+
+  // HP bar
   if(g._hpfill){
     g._hpfill.clear();
-    const r=Math.max(0,e.hp/e.maxHp);
-    const c=r>.5?0x22c55e:r>.25?0xf59e0b:0xef4444;
+    const ratio=Math.max(0,e.hp/e.maxHp);
+    const c=ratio>.5?0x22c55e:ratio>.25?0xf59e0b:0xef4444;
     g._hpfill.beginFill(c);
-    g._hpfill.drawRoundedRect(-g._hpbw/2,-tmpl.r*1.55,g._hpbw*r,6,2);
+    g._hpfill.drawRoundedRect(-g._hpbw/2,-tmpl.r*1.8,g._hpbw*ratio,5,2);
     g._hpfill.endFill();
   }
 
-  // Status tint
-  if(!g._sprite){
-    if(e.stunT>0 && g._body) g._body.tint=0xfbbf24;
-    else if(e.slowT>0 && g._body) g._body.tint=0x93c5fd;
-    else if(g._body) g._body.tint=0xffffff;
+  // Tint stato
+  if(g._body){
+    if(e.stunT>0)      g._body.tint=0xfbbf24;
+    else if(e.slowT>0) g._body.tint=0x93c5fd;
+    else               g._body.tint=0xffffff;
   }
 
   // Scudo
-  if(g._shield) g._shield.visible=e.shield;
+  if(g._shield) g._shield.visible=!!e.shield;
 }
 
 // ─── PROIETTILI ─────────────────────────────────────────────────
@@ -1336,7 +1503,7 @@ function updateFloats(dt){
 }
 
 // ─── SPAWN ──────────────────────────────────────────────────────
-async function doSpawn(item){
+function doSpawn(item){
   const tmpl={...item.tmpl};
   const sc=1+(item.wave-1)*.07;
   const hp=Math.round(tmpl.hp*sc);
@@ -1353,7 +1520,7 @@ async function doSpawn(item){
     canRespawn:!!tmpl.respawn,hasRespawned:false,
     atkCd:0,phase:0,gfx:null,
   };
-  await buildEnemyGfx(e);
+  buildEnemyGfx(e);
   G.enemies.push(e);
 }
 
