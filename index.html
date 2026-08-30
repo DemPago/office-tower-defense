@@ -482,7 +482,7 @@ function getSeason(){ return SEASONS[Math.min(Math.floor(Math.max(0,(G.wave||0)-
 
 function buildBG(){
   const s=getSeason();
-  if(bgGfx){ L.bg.removeChild(bgGfx);bgGfx.destroy(); }
+  if(bgGfx){ try{L.bg.removeChild(bgGfx);bgGfx.destroy();}catch(e){} bgGfx=null; }
   bgGfx=new PIXI.Graphics();
   const cx=CW/2,cy=CH/2;
   const maxR=Math.max(CW,CH);
@@ -499,7 +499,7 @@ function buildBG(){
   bgGfx.lineStyle(0);
 
   // 8 percorsi radiali
-  if(roadGfx){ L.roads.removeChild(roadGfx);roadGfx.destroy(); }
+  if(roadGfx){ try{L.roads.removeChild(roadGfx);roadGfx.destroy();}catch(e){} roadGfx=null; }
   roadGfx=new PIXI.Graphics();
   for(let i=0;i<8;i++){
     const a=i*Math.PI/4;
@@ -562,7 +562,7 @@ function getSpawnR(){ return Math.min(CW,CH)*.48; }
 
 function buildMainTower(){
   ['mainGfx','gunGfx','mainHpGfx','mainHpFillGfx'].forEach(k=>{
-    if(window[k]){ L.tower.removeChild(window[k]);window[k].destroy(); }
+    if(window[k]){ try{L.tower.removeChild(window[k]);window[k].destroy();}catch(e){} window[k]=null; }
   });
   const cx=CW/2,cy=CH/2;
 
@@ -645,7 +645,7 @@ function updateMainHpBar(){
 
 // ─── SLOT INDICATORI ────────────────────────────────────────────
 function buildSlotIndicators(){
-  if(slotGfx){ L.tower.removeChild(slotGfx);slotGfx.destroy(); }
+  if(slotGfx){ try{L.tower.removeChild(slotGfx);slotGfx.destroy();}catch(e){} slotGfx=null; }
   slotGfx=new PIXI.Graphics();
   const cx=CW/2,cy=CH/2;
   const sr=Math.min(CW,CH)*SLOT_RING_FRAC;
@@ -950,7 +950,10 @@ function burstParticles(x,y,col,n=8){
 
 // ─── GAME LOOP ──────────────────────────────────────────────────
 function tick(dt){
-  if(G.paused||G.over||G.won) return;
+  try{ _tick(dt); } catch(e){ console.error('tick error:',e.message,e.stack?.split('\n')[1]); }
+}
+function _tick(dt){
+  if(!G||G.paused||G.over||G.won) return;
 
   // Countdown
   if(G.cdActive){
