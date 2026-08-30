@@ -483,77 +483,148 @@ function getSeason(){ return SEASONS[Math.min(Math.floor(Math.max(0,(G.wave||0)-
 function buildBG(){
   const s=getSeason();
   if(bgGfx){ try{L.bg.removeChild(bgGfx);bgGfx.destroy();}catch(e){} bgGfx=null; }
-  bgGfx=new PIXI.Graphics();
-  const cx=CW/2,cy=CH/2;
-  const maxR=Math.max(CW,CH);
-
-  // Cielo (gradiente radiale simulato)
-  bgGfx.beginFill(s.sky[0]);bgGfx.drawRect(0,0,CW,CH);bgGfx.endFill();
-  // Terreno (cerchio centrale più chiaro)
-  bgGfx.beginFill(s.ground,.7);bgGfx.drawCircle(cx,cy,maxR*.55);bgGfx.endFill();
-
-  // Griglia decorativa
-  bgGfx.lineStyle(1,s.accent,s.gridAlpha);
-  for(let x=0;x<CW;x+=64){bgGfx.moveTo(x,0);bgGfx.lineTo(x,CH);}
-  for(let y=0;y<CH;y+=64){bgGfx.moveTo(0,y);bgGfx.lineTo(CW,y);}
-  bgGfx.lineStyle(0);
-
-  // 8 percorsi radiali
   if(roadGfx){ try{L.roads.removeChild(roadGfx);roadGfx.destroy();}catch(e){} roadGfx=null; }
+  bgGfx=new PIXI.Graphics();
   roadGfx=new PIXI.Graphics();
-  for(let i=0;i<8;i++){
-    const a=i*Math.PI/4;
-    roadGfx.lineStyle(46,s.road,.95);
-    roadGfx.moveTo(cx,cy);
-    roadGfx.lineTo(cx+Math.cos(a)*maxR,cy+Math.sin(a)*maxR);
-  }
-  // Trattini centrali sui percorsi
-  for(let i=0;i<8;i++){
-    const a=i*Math.PI/4;
-    const spawnR=getSpawnR();
-    for(let d=90;d<spawnR*.85;d+=52){
-      roadGfx.lineStyle(2,s.accent,.14);
-      roadGfx.moveTo(cx+Math.cos(a)*d,cy+Math.sin(a)*d);
-      roadGfx.lineTo(cx+Math.cos(a)*(d+28),cy+Math.sin(a)*(d+28));
+  const cx=CW/2, cy=CH/2;
+  const maxR=Math.max(CW,CH)*1.1;
+  const spR=getSpawnR();
+
+  // ── TERRENO BASE ──────────────────────────────────────────────
+  // Sfondo (cielo/notte)
+  bgGfx.beginFill(s.sky[0]); bgGfx.drawRect(0,0,CW,CH); bgGfx.endFill();
+
+  // Terreno principale (erba/terra) — texture a macchie
+  const tileSize=40;
+  for(let tx=0;tx<CW;tx+=tileSize){
+    for(let ty=0;ty<CH;ty+=tileSize){
+      // Variazione colore per texture
+      const seed=(tx*7+ty*13)%100;
+      const bright=seed>.7?0.08:seed>.4?0.05:0;
+      const col=lerpColor(s.ground, s.sky[1], .3+Math.sin(tx*.08+ty*.06)*.12);
+      bgGfx.beginFill(col,.95+bright);
+      bgGfx.drawRect(tx,ty,tileSize,tileSize);
+      bgGfx.endFill();
     }
   }
-  roadGfx.lineStyle(0);
 
-  // Cerchi di distanza
-  [100,180,270,380,500].forEach((r,i)=>{
-    roadGfx.lineStyle(1,s.accent,.06+i*.01);
-    roadGfx.drawCircle(cx,cy,r);
+  // Cerchio di terreno più chiaro intorno alla torre (piazzale)
+  const plazaGrad=roadGfx; // usa roadGfx come layer sotto
+  roadGfx.beginFill(s.ground,.55);
+  roadGfx.drawCircle(cx,cy,spR*1.1);
+  roadGfx.endFill();
+
+  // ── PERCORSI (8 strade) ──────────────────────────────────────
+  // 4 percorsi principali (visibili) — cardinali
+  const mainPaths=[0,2,4,6]; // N E S W
+  // 4 percorsi secondari (mimetizzati) — diagonali
+  const hiddenPaths=[1,3,5,7];
+
+  // Strade principali — ben visibili
+  mainPaths.forEach(i=>{
+    const a=i*Math.PI/4;
+    // Fondo strada (terra battuta)
+    roadGfx.lineStyle(42,s.road,.92);
+    roadGfx.moveTo(cx,cy);
+    roadGfx.lineTo(cx+Math.cos(a)*maxR, cy+Math.sin(a)*maxR);
+    // Bordi strada
+    roadGfx.lineStyle(2,lerpColor(s.road,0xffffff,.15),.4);
+    const perp=a+Math.PI/2;
+    roadGfx.moveTo(cx+Math.cos(perp)*21,cy+Math.sin(perp)*21);
+    roadGfx.lineTo(cx+Math.cos(a)*maxR+Math.cos(perp)*21,cy+Math.sin(a)*maxR+Math.sin(perp)*21);
+    roadGfx.moveTo(cx-Math.cos(perp)*21,cy-Math.sin(perp)*21);
+    roadGfx.lineTo(cx+Math.cos(a)*maxR-Math.cos(perp)*21,cy+Math.sin(a)*maxR-Math.sin(perp)*21);
   });
 
-  // Vegetazione decorativa
-  const decorR=Math.min(CW,CH)*.36;
-  for(let i=0;i<16;i++){
-    const a=i*Math.PI/8+.2;
-    const dr=decorR*(0.85+Math.sin(i*1.7)*.12);
-    const tx=cx+Math.cos(a)*dr, ty=cy+Math.sin(a)*dr;
-    // Controlliamo che non stia su un percorso
-    const onRoad=Array.from({length:8},(_,j)=>j*Math.PI/4).some(ra=>{
-      const dot=Math.cos(a-ra); return dot>.9;
+  // Strade secondarie — quasi mimetizzate (stessa tonalità del terreno)
+  hiddenPaths.forEach(i=>{
+    const a=i*Math.PI/4;
+    const hiddenCol=lerpColor(s.ground, s.road, .35); // quasi uguale al terreno
+    roadGfx.lineStyle(32,hiddenCol,.7);
+    roadGfx.moveTo(cx,cy);
+    roadGfx.lineTo(cx+Math.cos(a)*maxR, cy+Math.sin(a)*maxR);
+  });
+  roadGfx.lineStyle(0);
+
+  // ── VEGETAZIONE DENSA (mimetizza le strade secondarie) ──────
+  const rng=(seed,mn,mx)=> mn+(Math.sin(seed*137.508+seed*2.399)*.5+.5)*(mx-mn);
+  const treeCol1=lerpColor(s.ground, 0x166534, .6);
+  const treeCol2=lerpColor(s.ground, 0x14532d, .7);
+  const treeCol3=lerpColor(s.ground, 0x052e16, .8);
+
+  // Pianta alberi su una griglia sparsa
+  for(let ti=0;ti<180;ti++){
+    const angle=rng(ti,0,Math.PI*2);
+    const dist=rng(ti*3,80,spR*.95);
+    const tx2=cx+Math.cos(angle)*dist;
+    const ty2=cy+Math.sin(angle)*dist;
+    const tsize=rng(ti*7,5,14);
+
+    // Controlla se su percorso principale (lascia spazio)
+    const onMain=mainPaths.some(i=>{
+      const a=i*Math.PI/4;
+      const dx=tx2-cx, dy2=ty2-cy;
+      const along=dx*Math.cos(a)+dy2*Math.sin(a);
+      const perp2=Math.abs(-dx*Math.sin(a)+dy2*Math.cos(a));
+      return along>0 && perp2<28;
     });
-    if(!onRoad){
-      roadGfx.beginFill(0x166534,.75);roadGfx.drawCircle(tx,ty,9);roadGfx.endFill();
-      roadGfx.beginFill(0x15803d,.9);roadGfx.drawCircle(tx-1,ty-3,6);roadGfx.endFill();
-    }
+    if(onMain) continue;
+
+    // Albero: ombra + chioma
+    roadGfx.beginFill(0x000000,.12);
+    roadGfx.drawEllipse(tx2+tsize*.3,ty2+tsize*.4,tsize*.9,tsize*.35);
+    roadGfx.endFill();
+    roadGfx.beginFill(treeCol3,.8);
+    roadGfx.drawCircle(tx2,ty2,tsize);
+    roadGfx.endFill();
+    roadGfx.beginFill(treeCol1,.9);
+    roadGfx.drawCircle(tx2-tsize*.18,ty2-tsize*.18,tsize*.72);
+    roadGfx.endFill();
+    roadGfx.beginFill(treeCol2,.6);
+    roadGfx.drawCircle(tx2+tsize*.08,ty2-tsize*.25,tsize*.5);
+    roadGfx.endFill();
+    // Highlight chioma
+    roadGfx.beginFill(0xffffff,.06);
+    roadGfx.drawEllipse(tx2-tsize*.2,ty2-tsize*.35,tsize*.4,tsize*.2);
+    roadGfx.endFill();
   }
 
-  // Spawn point markers
-  const spawnR2=getSpawnR();
-  for(let i=0;i<8;i++){
+  // ── SPAWN POINT MARKERS ──────────────────────────────────────
+  // Solo sui percorsi principali li rendiamo visibili
+  mainPaths.forEach(i=>{
     const a=i*Math.PI/4;
-    const sx=cx+Math.cos(a)*spawnR2, sy=cy+Math.sin(a)*spawnR2;
-    roadGfx.beginFill(0xe94560,.18);roadGfx.drawCircle(sx,sy,22);roadGfx.endFill();
-    roadGfx.lineStyle(2,0xe94560,.45);roadGfx.drawCircle(sx,sy,22);roadGfx.lineStyle(0);
-    roadGfx.beginFill(0xe94560,.7);roadGfx.drawCircle(sx,sy,5);roadGfx.endFill();
-  }
+    const sx=cx+Math.cos(a)*spR, sy=cy+Math.sin(a)*spR;
+    roadGfx.beginFill(0xe94560,.18); roadGfx.drawCircle(sx,sy,18); roadGfx.endFill();
+    roadGfx.lineStyle(2,0xe94560,.55); roadGfx.drawCircle(sx,sy,18); roadGfx.lineStyle(0);
+    roadGfx.beginFill(0xe94560,.8); roadGfx.drawCircle(sx,sy,5); roadGfx.endFill();
+  });
+  // Percorsi nascosti: marker appena accennato
+  hiddenPaths.forEach(i=>{
+    const a=i*Math.PI/4;
+    const sx=cx+Math.cos(a)*spR, sy=cy+Math.sin(a)*spR;
+    roadGfx.beginFill(0xe94560,.06); roadGfx.drawCircle(sx,sy,14); roadGfx.endFill();
+  });
+
+  // ── CERCHI DI DISTANZA (sottili, quasi invisibili) ───────────
+  [120,220,340,480].forEach((r,i)=>{
+    roadGfx.lineStyle(1,s.accent,.04+i*.01);
+    roadGfx.drawCircle(cx,cy,r);
+  });
+  roadGfx.lineStyle(0);
 
   L.bg.addChild(bgGfx);
   L.roads.addChild(roadGfx);
   document.getElementById('hse').textContent=s.n;
+}
+
+// Helper: interpola due colori hex
+function lerpColor(a,b,t){
+  const ar=(a>>16)&0xff, ag=(a>>8)&0xff, ab2=a&0xff;
+  const br=(b>>16)&0xff, bg2=(b>>8)&0xff, bb=b&0xff;
+  const r=Math.round(ar+(br-ar)*t);
+  const g=Math.round(ag+(bg2-ag)*t);
+  const bl=Math.round(ab2+(bb-ab2)*t);
+  return (r<<16)|(g<<8)|bl;
 }
 
 function getSpawnR(){ return Math.min(CW,CH)*.48; }
@@ -564,57 +635,95 @@ function buildMainTower(){
   ['mainGfx','gunGfx','mainHpGfx','mainHpFillGfx'].forEach(k=>{
     if(window[k]){ try{L.tower.removeChild(window[k]);window[k].destroy();}catch(e){} window[k]=null; }
   });
-  const cx=CW/2,cy=CH/2;
-
-  // Ombra
+  const cx=CW/2, cy=CH/2;
   mainGfx=new PIXI.Graphics();
-  mainGfx.beginFill(0x000000,.28);
-  mainGfx.drawEllipse(cx+5,cy+7,50,16);
+
+  // ── OMBRA EDIFICIO ──
+  mainGfx.beginFill(0x000000,.35);
+  mainGfx.drawEllipse(cx+8,cy+12,58,20);
   mainGfx.endFill();
 
-  // Edificio (top-down) - facciata principale
+  // ── EDIFICIO ISOMETRICO (simulato top-down con profondità) ──
+  // Lato sinistro (faccia ovest — più scura)
+  mainGfx.beginFill(0x0f2035);
+  mainGfx.drawPolygon([cx-44,cy+10, cx-44,cy-52, cx,cy-62, cx,cy]);
+  mainGfx.endFill();
+
+  // Lato destro (faccia est — media)
+  mainGfx.beginFill(0x162840);
+  mainGfx.drawPolygon([cx+44,cy+10, cx+44,cy-52, cx,cy-62, cx,cy]);
+  mainGfx.endFill();
+
+  // Tetto (faccia superiore — più chiara)
   mainGfx.beginFill(0x1e3a5f);
-  mainGfx.drawRoundedRect(cx-40,cy-40,80,80,10);
+  mainGfx.drawPolygon([cx-44,cy-52, cx,cy-72, cx+44,cy-52, cx,cy-32]);
+  mainGfx.endFill();
+  // Highlight tetto
+  mainGfx.beginFill(0x2563eb,.4);
+  mainGfx.drawPolygon([cx-44,cy-52, cx,cy-72, cx+44,cy-52, cx,cy-32]);
   mainGfx.endFill();
 
-  // Bordo luminoso
-  mainGfx.lineStyle(3,0x3b82f6,.9);
-  mainGfx.drawRoundedRect(cx-40,cy-40,80,80,10);
-  mainGfx.lineStyle(0);
-
-  // Tetto (più chiaro)
-  mainGfx.beginFill(0x2563eb,.8);
-  mainGfx.drawRoundedRect(cx-30,cy-30,60,60,7);
-  mainGfx.endFill();
-
-  // Finestre 4 lati
-  [[0,-1],[1,0],[0,1],[-1,0]].forEach(([dx,dy],i)=>{
-    const lit=Math.sin(Date.now()/1200+i*1.3)>.05;
-    mainGfx.beginFill(lit?0xfef08a:0x0f2540);
-    mainGfx.drawRoundedRect(cx+dx*24-6,cy+dy*24-5,12,10,3);
+  // ── FINESTRE ──
+  // Finestre lato sinistro
+  [[-28,cy-40],[-28,cy-20],[-12,cy-30]].forEach(([ox,oy])=>{
+    const lit=Math.sin(Date.now()/1100+ox*.1)>.0;
+    mainGfx.beginFill(lit?0xfef08a:0x0a1a30,.9);
+    mainGfx.drawRoundedRect(cx+ox-7,oy-5,14,9,2);
     mainGfx.endFill();
-    mainGfx.lineStyle(1,0x1e3a5f,.6);
-    mainGfx.drawRoundedRect(cx+dx*24-6,cy+dy*24-5,12,10,3);
-    mainGfx.lineStyle(0);
+    if(lit){ mainGfx.beginFill(0xfef08a,.15); mainGfx.drawRoundedRect(cx+ox-9,oy-7,18,13,3); mainGfx.endFill(); }
+  });
+  // Finestre lato destro
+  [[12,cy-40],[12,cy-20],[28,cy-30]].forEach(([ox,oy])=>{
+    const lit=Math.sin(Date.now()/900+ox*.15+1)>.0;
+    mainGfx.beginFill(lit?0xfbbf24:0x0a1a30,.9);
+    mainGfx.drawRoundedRect(cx+ox-7,oy-5,14,9,2);
+    mainGfx.endFill();
+    if(lit){ mainGfx.beginFill(0xfbbf24,.12); mainGfx.drawRoundedRect(cx+ox-9,oy-7,18,13,3); mainGfx.endFill(); }
   });
 
-  // Dipendente (cerchio con viso)
-  mainGfx.beginFill(0xfef9c3);
-  mainGfx.drawCircle(cx,cy,12);mainGfx.endFill();
-  mainGfx.beginFill(0xf59e0b);
-  mainGfx.drawCircle(cx,cy,10);mainGfx.endFill();
-  // Occhi
-  mainGfx.beginFill(0x1e293b);
-  mainGfx.drawCircle(cx-3,cy-2,2.2);mainGfx.drawCircle(cx+3,cy-2,2.2);mainGfx.endFill();
-  // Sorriso
-  mainGfx.lineStyle(1.5,0x1e293b,.8);
-  mainGfx.arc(cx,cy+1,4,.25,Math.PI-.25);mainGfx.lineStyle(0);
+  // ── BORDI EDIFICIO ──
+  mainGfx.lineStyle(2,0x3b82f6,.5);
+  mainGfx.moveTo(cx-44,cy-52); mainGfx.lineTo(cx-44,cy+10); // spigolo sx
+  mainGfx.moveTo(cx+44,cy-52); mainGfx.lineTo(cx+44,cy+10); // spigolo dx
+  mainGfx.moveTo(cx-44,cy+10); mainGfx.lineTo(cx+44,cy+10); // base
+  mainGfx.moveTo(cx,cy-62);   mainGfx.lineTo(cx-44,cy-52);   // tetto sx
+  mainGfx.moveTo(cx,cy-62);   mainGfx.lineTo(cx+44,cy-52);   // tetto dx
+  mainGfx.lineStyle(0);
 
-  // Canna (separata per rotazione)
+  // ── ANTENNA ──
+  mainGfx.lineStyle(2,0x64748b,.8);
+  mainGfx.moveTo(cx,cy-72); mainGfx.lineTo(cx,cy-96);
+  mainGfx.lineStyle(0);
+  // Lucina antenna
+  const blink=Math.sin(Date.now()/400)>0;
+  mainGfx.beginFill(blink?0xe74c3c:0x7f1d1d,.9);
+  mainGfx.drawCircle(cx,cy-97,4);
+  mainGfx.endFill();
+
+  // ── INSEGNA ──
+  mainGfx.beginFill(0xfbbf24,.9);
+  mainGfx.drawRoundedRect(cx-20,cy-14,40,10,3);
+  mainGfx.endFill();
+  mainGfx.lineStyle(1,0xf59e0b,.8);
+  mainGfx.drawRoundedRect(cx-20,cy-14,40,10,3);
+  mainGfx.lineStyle(0);
+
+  // ── DIPENDENTE SULLA CIMA (testa che sporge) ──
+  mainGfx.beginFill(0xfef9c3);
+  mainGfx.drawCircle(cx,cy-80,10); mainGfx.endFill();
+  mainGfx.beginFill(0xf59e0b);
+  mainGfx.drawCircle(cx,cy-80,8.5); mainGfx.endFill();
+  mainGfx.beginFill(0x1e293b);
+  mainGfx.drawCircle(cx-2.5,cy-82,1.8); mainGfx.drawCircle(cx+2.5,cy-82,1.8); mainGfx.endFill();
+
+  // Canna (ruotante)
   gunGfx=new PIXI.Graphics();
-  gunGfx.lineStyle(5,0x94a3b8,1);gunGfx.moveTo(0,0);gunGfx.lineTo(26,0);gunGfx.lineStyle(0);
-  gunGfx.beginFill(0xe2e8f0);gunGfx.drawCircle(26,0,4.5);gunGfx.endFill();
-  gunGfx.position.set(cx,cy);
+  gunGfx.lineStyle(5,0x94a3b8,1); gunGfx.moveTo(0,0); gunGfx.lineTo(28,0); gunGfx.lineStyle(0);
+  gunGfx.beginFill(0xe2e8f0); gunGfx.drawCircle(28,0,4.5); gunGfx.endFill();
+  // Flash punta canna
+  gunGfx.beginFill(0xfbbf24,.0); gunGfx._muzzleFlash=true;
+  gunGfx.drawCircle(28,0,7); gunGfx.endFill();
+  gunGfx.position.set(cx,cy-80);
   gunGfx.rotation=gunAngle;
 
   // HP bar
@@ -992,7 +1101,7 @@ function _tick(dt){
     if(tgt){
       gunAngle=Math.atan2(tgt.y-CH/2,tgt.x-CW/2);
       if(gunGfx) gunGfx.rotation=gunAngle;
-      fireProj(CW/2,CH/2,tgt,{pc:0xfbbf24,ps:5,pspd:340,id:'main'},null,22+(G.gUpg.dmg||0)*2.6);
+      fireProj(CW/2,CH/2-80,tgt,{pc:0xfbbf24,ps:5,pspd:340,id:'main'},null,22+(G.gUpg.dmg||0)*2.6);
       G.mainTowerCd=580;
     }
   }
@@ -1015,7 +1124,14 @@ function updateMana(dt){
 }
 function updateIncome(dt){
   G.incomeAcc+=dt;
-  while(G.incomeAcc>=1000){G.gold+=G.towers.length*WALL_INCOME;G.incomeAcc-=1000;}
+  while(G.incomeAcc>=1000){
+    G.gold+=G.towers.length*WALL_INCOME;
+    // Riparazione automatica torri: +2 HP/s quando non sotto attacco
+    G.towers.forEach(t=>{
+      if(t.hp<t.maxHp) t.hp=Math.min(t.maxHp, t.hp+2);
+    });
+    G.incomeAcc-=1000;
+  }
 }
 function updateAbCDs(dt){
   ['bomb','coffee','meeting','audit'].forEach(k=>{
@@ -1263,7 +1379,7 @@ function getNormalTmpls(w){
   if(w>=71&&w<=79){const n=4+Math.floor((w-70)*1.3);return['d_fire','d_elec','d_water','d_rock'].map(id=>({tmpl:{...ET.find(e=>e.id===id)},count:Math.max(1,Math.ceil(n/2)),interval:1400}));}
   if(w>=81&&w<=89){const n=4+Math.floor((w-80)*1.7);return['eng_j','eng_s','tech_l','devops'].map(id=>({tmpl:{...ET.find(e=>e.id===id)},count:Math.max(1,Math.ceil(n/2)),interval:1300}));}
   const tier=Math.min(Math.floor((w-1)/10),ET.length-1);
-  return[{tmpl:{...ET[tier]},count:5+Math.floor(w*1.3),interval:Math.max(360,1100-w*3)}];
+  return[{tmpl:{...ET[tier]},count:5+(w-1)*10,interval:Math.max(300,1100-w*3)}];
 }
 function getMinionTmpls(wave){
   if(wave===80) return['d_fire','d_elec','d_water','d_rock'].map(id=>({tmpl:{...ET.find(e=>e.id===id)},count:2,interval:1800}));
