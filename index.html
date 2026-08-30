@@ -869,6 +869,44 @@ function updateMainHpBar(){
 }
 
 // ─── SLOT INDICATORI ────────────────────────────────────────────
+// Ridisegna i muri tra torri laterali adiacenti
+function updateAllWalls(){
+  if(!G.towers) return;
+  // Per ogni torre, disegna un muro verso le torri negli slot adiacenti
+  G.towers.forEach(t=>{
+    if(!t.gfx||!t.gfx._wall) return;
+    const wall=t.gfx._wall;
+    wall.clear();
+    // Slot adiacenti (±1 nell'anello circolare)
+    const neighbors=[-1,1].map(d=>{
+      const idx=((t.slotIdx+d)+MAX_SLOTS)%MAX_SLOTS;
+      return G.towers.find(n=>n.slotIdx===idx);
+    }).filter(Boolean);
+    neighbors.forEach(n=>{
+      // Posizione relativa al container della torre t
+      const dx=n.x-t.x, dy=n.y-t.y;
+      const dl=Math.sqrt(dx*dx+dy*dy);
+      const nx2=dx/dl, ny2=dy/dl;
+      const perp={x:-ny2,y:nx2};
+      // Muro (doppia linea con merli)
+      wall.lineStyle(8,0x1e3a5f,.9);
+      wall.moveTo(0,0); wall.lineTo(dx,dy);
+      wall.lineStyle(0);
+      // Corsia interna muro
+      wall.lineStyle(4,0x2d4a6a,.5);
+      wall.moveTo(0,0); wall.lineTo(dx,dy);
+      wall.lineStyle(0);
+      // Merli
+      for(let d2=28;d2<dl-28;d2+=30){
+        const wx=nx2*d2, wy=ny2*d2;
+        wall.beginFill(0x2d5a8a,.85);
+        wall.drawRect(wx+perp.x*5-4, wy+perp.y*5-4, 8,8);
+        wall.endFill();
+      }
+    });
+  });
+}
+
 function buildSlotIndicators(){
   if(slotGfx){ try{L.tower.removeChild(slotGfx);slotGfx.destroy();}catch(e){} slotGfx=null; }
   slotGfx=new PIXI.Graphics();
@@ -915,27 +953,17 @@ function buildTowerGfx(t){
   base.lineStyle(2,col,.85);base.drawRoundedRect(-18,-18,36,36,7);base.lineStyle(0);
   g.addChild(base);
 
-  // Corpo
+  // Corpo (edificio)
   const body=new PIXI.Graphics();
   body.beginFill(col,.9);body.drawRoundedRect(-13,-13,26,26,5);body.endFill();
+  // Finestrina
+  body.beginFill(0xfef08a,.8);body.drawRoundedRect(-4,-8,8,6,2);body.endFill();
   g.addChild(body);
   g._body=body;
-
-  // Icona
-  const ico=new PIXI.Text(def.ico,{fontSize:15,resolution:2});
-  ico.anchor.set(.5);g.addChild(ico);
 
   // Badge livello
   const lv=new PIXI.Text('1',{fontSize:8,fontWeight:'bold',fill:0xfbbf24,stroke:0x000000,strokeThickness:2,resolution:2});
   lv.anchor.set(1,0);lv.position.set(17,-16);g._lv=lv;g.addChild(lv);
-
-  // Canna
-  if(!def.magic){
-    const gun=new PIXI.Graphics();
-    gun.lineStyle(4,0x94a3b8,1);gun.moveTo(0,0);gun.lineTo(20,0);gun.lineStyle(0);
-    gun.beginFill(0xe2e8f0);gun.drawCircle(20,0,3);gun.endFill();
-    g._gun=gun;g.addChild(gun);
-  }
 
   // CD bar
   const cdbar=new PIXI.Graphics();cdbar.position.set(-17,12);g._cdbar=cdbar;g.addChild(cdbar);
@@ -947,24 +975,167 @@ function buildTowerGfx(t){
   g.addChild(hpbg);
   const hpfill=new PIXI.Graphics();g._hpfill=hpfill;g.addChild(hpfill);
 
-  // Muro da torre al centro
-  const wallG=new PIXI.Graphics();
-  const cx=CW/2,cy=CH/2;
-  wallG.lineStyle(7,0x1e3a5f,.8);wallG.moveTo(cx-x,cy-y);wallG.lineTo(0,0);wallG.lineStyle(0);
-  // Dettaglio muro (merli stilizzati)
-  const dx=cx-x,dy=cy-y,dl=Math.sqrt(dx*dx+dy*dy);
-  const nx=dx/dl,ny=dy/dl;
-  for(let d=50;d<dl-35;d+=32){
-    const wx=nx*d-x+x, wy=ny*d-y+y; // relativo al container
-    wallG.beginFill(0x2d4a6a,.8);
-    wallG.drawRect(nx*d - 4 - x + x, ny*d - 4 - y + y, 8, 8);
+  // ── OMINO/OMINA SULLA TORRE ──
+  // PM → uomo in giacca rossa | SM → donna capelli lunghi | Dev → uomo con occhiali
+  // Maghi → omino con cappello | altri → alternato
+  const isFemale=(def.id==='sm'||def.id==='m_agile'||def.id==='m_vision');
+  const operatorG=new PIXI.Container();
+  operatorG.position.set(0,-18); // sopra la torre
+  drawTowerOperator(operatorG, col, isFemale, def.id);
+  g._operator=operatorG;
+  g.addChild(operatorG);
+
+  // Canna (parte dall'omino)
+  if(!def.magic){
+    const gun=new PIXI.Graphics();
+    gun.beginFill(0x334155);gun.drawRoundedRect(-1,-2,18,4,2);gun.endFill();
+    gun.beginFill(0x94a3b8);gun.drawCircle(18,0,3);gun.endFill();
+    gun.position.set(5,-26); // altezza mani omino
+    g._gun=gun;g.addChild(gun);
   }
+
+  // Muro
+  const wallG=new PIXI.Graphics();
   g._wall=wallG;
-  g.addChildAt(wallG,0); // sotto tutto
+  g.addChildAt(wallG,0);
 
   g.position.set(x,y);
   L.tower.addChild(g);
   t.gfx=g;
+  updateAllWalls();
+}
+
+// Disegna operatore (omino/omina) in miniatura sulla torre
+function drawTowerOperator(g, accentCol, female, towerType){
+  const r=9; // scala mini-omino
+  const pg=new PIXI.Graphics();
+
+  // Ombra
+  pg.beginFill(0x000000,.2);
+  pg.drawEllipse(0,r*.85,r*.65,r*.18);
+  pg.endFill();
+
+  // Gambe
+  const legCol=darkenC(accentCol,.65);
+  pg.beginFill(female?0x831843:0x1e3a5f); // gonna corta vs pantaloni
+  if(female){
+    // Gonna
+    pg.drawRoundedRect(-r*.5,r*.15,r,r*.55,r*.15);
+  } else {
+    pg.drawRoundedRect(-r*.28,r*.2,r*.24,r*.6,r*.08);
+    pg.drawRoundedRect(r*.04,r*.2,r*.24,r*.6,r*.08);
+  }
+  pg.endFill();
+  // Piedi/scarpe
+  pg.beginFill(female?0xf9a8d4:0x1e293b);
+  pg.drawEllipse(-r*.15,r*.82,r*.2,r*.1);
+  pg.drawEllipse(r*.15,r*.82,r*.2,r*.1);
+  pg.endFill();
+
+  // Corpo
+  pg.beginFill(accentCol);
+  pg.drawRoundedRect(-r*.4,-r*.15,r*.8,r*.36,r*.1);
+  pg.endFill();
+  // Dettaglio divisa
+  pg.beginFill(0xffffff,.4);
+  pg.drawRoundedRect(-r*.16,-r*.12,r*.32,r*.28,r*.05);
+  pg.endFill();
+
+  // Braccia
+  pg.beginFill(accentCol);
+  pg.drawRoundedRect(-r*.66,-r*.12,r*.28,r*.44,r*.08);
+  pg.drawRoundedRect(r*.38,-r*.12,r*.28,r*.44,r*.08);
+  pg.endFill();
+  pg.beginFill(0xfde68a); // mani
+  pg.drawCircle(-r*.52,r*.34,r*.12);
+  pg.drawCircle( r*.52,r*.34,r*.12);
+  pg.endFill();
+
+  // Collo
+  pg.beginFill(0xfde68a);
+  pg.drawRoundedRect(-r*.1,-r*.3,r*.2,r*.18,r*.04);
+  pg.endFill();
+
+  // Testa
+  pg.beginFill(0xfde68a);
+  pg.drawCircle(0,-r*.6,r*.35);
+  pg.endFill();
+
+  // Capelli (diversi per tipo)
+  const hairStyles={
+    pm:   {col:0x1c1917,female:false},  // capelli neri corti
+    sm:   {col:0xb45309,female:true},   // capelli castani lunghi
+    dev:  {col:0x1c1917,female:false},  // neri con frangetta
+    m_agile:{col:0x7c3aed,female:true}, // viola (maga)
+    m_scrum:{col:0x0f172a,female:false},
+    m_itil: {col:0x4c1d95,female:false},
+    m_vision:{col:0x92400e,female:true},
+  };
+  const hair=hairStyles[towerType]||{col:0x1c1917,female:false};
+  pg.beginFill(hair.col,.95);
+  if(hair.female){
+    // Capelli lunghi
+    pg.drawEllipse(0,-r*.88,r*.36,r*.16);
+    pg.drawRoundedRect(-r*.35,-r*.82,r*.1,r*.55,r*.05); // ciocche sx
+    pg.drawRoundedRect( r*.25,-r*.82,r*.1,r*.55,r*.05); // ciocche dx
+  } else {
+    // Capelli corti
+    pg.drawEllipse(0,-r*.9,r*.36,r*.15);
+    if(towerType==='dev'){
+      // Frangetta
+      pg.drawRoundedRect(-r*.28,-r*.72,r*.56,r*.12,r*.04);
+    }
+  }
+  pg.endFill();
+
+  // Occhi
+  pg.beginFill(0xffffff);
+  pg.drawCircle(-r*.12,-r*.64,r*.1);
+  pg.drawCircle( r*.12,-r*.64,r*.1);
+  pg.endFill();
+  pg.beginFill(0x1e293b);
+  pg.drawCircle(-r*.12,-r*.63,r*.06);
+  pg.drawCircle( r*.12,-r*.63,r*.06);
+  pg.endFill();
+
+  // Ciglia (solo femminile)
+  if(female){
+    pg.lineStyle(r*.06,0x1e293b,1);
+    pg.moveTo(-r*.2,-r*.7); pg.lineTo(-r*.12,-r*.73);
+    pg.moveTo( r*.2,-r*.7); pg.lineTo( r*.12,-r*.73);
+    pg.lineStyle(0);
+  }
+
+  // Bocca determinata
+  pg.lineStyle(r*.05,0x7f1d1d,1);
+  pg.moveTo(-r*.1,-r*.5);pg.lineTo(r*.1,-r*.48);
+  pg.lineStyle(0);
+
+  // Accessori speciali
+  if(towerType==='dev'){
+    // Occhiali
+    pg.lineStyle(r*.06,0x1e293b,.9);
+    pg.drawCircle(-r*.12,-r*.63,r*.11);
+    pg.drawCircle( r*.12,-r*.63,r*.11);
+    pg.moveTo(-r*.01,-r*.63);pg.lineTo(r*.01,-r*.63);
+    pg.lineStyle(0);
+  }
+  if(towerType==='m_agile'||towerType==='m_scrum'||towerType==='m_itil'||towerType==='m_vision'){
+    // Cappello da mago (piccolo)
+    pg.beginFill(0x4c1d95,.95);
+    pg.drawPolygon([0,-r*1.2, -r*.25,-r*.8, r*.25,-r*.8]);
+    pg.endFill();
+    pg.beginFill(0x7c3aed,.7);
+    pg.drawRoundedRect(-r*.28,-r*.82,r*.56,r*.1,r*.04);
+    pg.endFill();
+    // Stellina sul cappello
+    pg.beginFill(0xfbbf24);
+    pg.drawCircle(0,-r*.95,r*.08);
+    pg.endFill();
+  }
+
+  g.addChild(pg);
+  g._pg=pg;
 }
 
 function updateTowerGfx(t){
@@ -972,14 +1143,29 @@ function updateTowerGfx(t){
   const g=t.gfx;
   // Livello badge
   if(g._lv) g._lv.text=t.level===5?'K':String(t.level);
-  // Rotazione canna
-  if(g._gun && t._targetAngle!==undefined) g._gun.rotation=t._targetAngle;
+
+  // Rotazione canna + operatore guarda nella direzione di fuoco
+  if(t._targetAngle!==undefined){
+    if(g._gun) g._gun.rotation=t._targetAngle;
+    // Ribalta l'operatore a seconda del lato verso cui spara
+    if(g._operator){
+      g._operator.scale.x=Math.cos(t._targetAngle)<0?-1:1;
+    }
+  }
+
+  // Bob idle operatore (respira)
+  if(g._operator){
+    const bob=Math.sin(Date.now()/700+t.x*.01)*.8;
+    g._operator.y=-18+bob;
+  }
+
   // CD bar
   if(g._cdbar && t.eRate){
     g._cdbar.clear();
     g._cdbar.beginFill(0x1e293b,.5);g._cdbar.drawRect(0,0,34,3);g._cdbar.endFill();
     g._cdbar.beginFill(0x22c55e);g._cdbar.drawRect(0,0,34*(1-Math.min(1,t.cd/t.eRate)),3);g._cdbar.endFill();
   }
+
   // HP bar
   if(g._hpfill){
     g._hpfill.clear();
@@ -987,16 +1173,15 @@ function updateTowerGfx(t){
     const c=r>.5?0x22c55e:r>.25?0xf59e0b:0xef4444;
     g._hpfill.beginFill(c);g._hpfill.drawRoundedRect(-17,-25,34*r,3,1);g._hpfill.endFill();
   }
-  // Mago glow
-  if(t.def.magic && g._body){
-    g._body.alpha=t.active?.95:.3;
+
+  // Mago: opacità e glow
+  if(t.def.magic){
+    if(g._body) g._body.alpha=t.active?.95:.3;
+    if(g._operator) g._operator.alpha=t.active?1:.4;
   }
-  // Selezione
-  if(t===G.selTower && g._body){
-    g._body.tint=0xffffff;
-  } else if(g._body){
-    g._body.tint=0xffffff;
-  }
+
+  // Selezione highlight
+  if(g._body) g._body.tint=t===G.selTower?0xffe066:0xffffff;
 }
 
 // ─── NEMICI ─────────────────────────────────────────────────────
@@ -1522,8 +1707,20 @@ function updateTowerLogic(dt){
     const tgt=nearestEnemy(t.x,t.y,t.eRng);
     if(!tgt) return;
     t._targetAngle=Math.atan2(tgt.y-t.y,tgt.x-t.x);
-    fireProj(t.x,t.y,tgt,t.def,t,t.eDmg);
+    // Sparo dalla posizione canna (leggermente spostato verso il bersaglio)
+    const gunX=t.x+Math.cos(t._targetAngle)*22;
+    const gunY=t.y-26+Math.sin(t._targetAngle)*22;
+    fireProj(gunX,gunY,tgt,t.def,t,t.eDmg);
     t.cd=t.eRate;
+    // Muzzle flash + rinculo operatore
+    burstParticles(gunX,gunY,t.def.pc||0xfbbf24,4);
+    if(t.gfx&&t.gfx._operator){
+      const rx=-Math.cos(t._targetAngle)*3;
+      const ry=-Math.sin(t._targetAngle)*3;
+      t.gfx._operator.x=rx;
+      t.gfx._operator.y=-18+ry;
+      setTimeout(()=>{ if(t.gfx&&t.gfx._operator){t.gfx._operator.x=0;} },70);
+    }
   });
 }
 
@@ -1707,10 +1904,48 @@ function buildQueue(wave){
   return q;
 }
 function getNormalTmpls(w){
-  if(w>=71&&w<=79){const n=4+Math.floor((w-70)*1.3);return['d_fire','d_elec','d_water','d_rock'].map(id=>({tmpl:{...ET.find(e=>e.id===id)},count:Math.max(1,Math.ceil(n/2)),interval:1400}));}
-  if(w>=81&&w<=89){const n=4+Math.floor((w-80)*1.7);return['eng_j','eng_s','tech_l','devops'].map(id=>({tmpl:{...ET.find(e=>e.id===id)},count:Math.max(1,Math.ceil(n/2)),interval:1300}));}
+  // Ondate speciali
+  if(w>=71&&w<=79){
+    const n=4+Math.floor((w-70)*1.3);
+    return['d_fire','d_elec','d_water','d_rock'].map(id=>({
+      tmpl:{...ET.find(e=>e.id===id)},count:Math.max(1,Math.ceil(n/2)),interval:1400
+    }));
+  }
+  if(w>=81&&w<=89){
+    const n=4+Math.floor((w-80)*1.7);
+    return['eng_j','eng_s','tech_l','devops'].map(id=>({
+      tmpl:{...ET.find(e=>e.id===id)},count:Math.max(1,Math.ceil(n/2)),interval:1300
+    }));
+  }
+
   const tier=Math.min(Math.floor((w-1)/10),ET.length-1);
-  return[{tmpl:{...ET[tier]},count:5+(w-1)*10,interval:Math.max(300,1100-w*3)}];
+  const base={...ET[tier]};
+  const count=5+(w-1)*10;
+  const interval=Math.max(300,1100-w*3);
+
+  // Modificatori visivi e comportamentali per ogni gruppo di 10
+  const decade=Math.floor((w-1)/10); // 0-9
+  switch(decade){
+    case 0: // W1-10: normali, lenti
+      return[{tmpl:{...base},count,interval}];
+    case 1: // W11-20: più veloci (+20%), arancio brillante
+      return[{tmpl:{...base,spd:base.spd*1.2,col:0xfb923c,n:base.n+' Veloce'},count,interval:interval*.85}];
+    case 2: // W21-30: corazzati (armor 20%), blu scuro
+      return[{tmpl:{...base,armor:.2,col:0x1e40af,n:base.n+' Corazzato',r:base.r+3},count,interval}];
+    case 3: // W31-40: doppio tipo (melee + ranged insieme)
+      return[
+        {tmpl:{...base,type:'melee', col:0xdc2626,n:base.n+' Assalto'},count:Math.floor(count/2),interval},
+        {tmpl:{...base,type:'ranged',col:0x7c3aed,n:base.n+' Cecchino',wr:170},count:Math.floor(count/2),interval:interval*1.2},
+      ];
+    case 4: // W41-50: giganti (+50% HP, +4 r), viola
+      return[{tmpl:{...base,hp:base.hp*1.5,col:0x6b21a8,n:base.n+' Gigante',r:base.r+4,spd:base.spd*.85},count,interval:interval*1.1}];
+    case 5: // W51-60: veloci e minuti, sciame fitto
+      return[{tmpl:{...base,hp:base.hp*.7,spd:base.spd*1.4,col:0x059669,n:base.n+' Sciame',r:base.r-3},count:count*2,interval:interval*.5}];
+    case 6: // W61-70: boss-tier normali, scuri e pesanti
+      return[{tmpl:{...base,hp:base.hp*2,wd:base.wd*1.5,col:0x0f172a,n:base.n+' Élite',r:base.r+5},count,interval:interval*1.2}];
+    default:
+      return[{tmpl:{...base},count,interval}];
+  }
 }
 function getMinionTmpls(wave){
   if(wave===80) return['d_fire','d_elec','d_water','d_rock'].map(id=>({tmpl:{...ET.find(e=>e.id===id)},count:2,interval:1800}));
@@ -1815,13 +2050,17 @@ function buyGlobalUpg(id){
 }
 function renderUpgPanel(){
   const p=document.getElementById('ugp');
+  // Costruisce HTML una sola volta con ID stabili — poi updUpgButtons aggiorna i valori
   p.innerHTML=GL_UPGS.map(u=>{
     const lv=G.gUpg[u.id]||0,maxed=lv>=MAX_GL,cost=glCost(lv),pct=lv/MAX_GL*100;
     const can=!maxed&&G.gold>=cost;
     return`<div class="ugi">
-      <div class="ugr"><span class="ugn">${u.n}</span><span class="ugl">Lv.${lv}/${MAX_GL}</span></div>
-      <div class="ugbar"><div class="ugbf" style="width:${pct}%;background:${u.col}"></div></div>
-      <button class="ugbtn" onclick="buyGlobalUpg('${u.id}')" ${maxed||!can?'disabled':''}>${maxed?'✅ MAX':cost+'💰'}</button>
+      <div class="ugr">
+        <span class="ugn">${u.n}</span>
+        <span class="ugl" id="uglv-${u.id}">Lv.${lv}/${MAX_GL}</span>
+      </div>
+      <div class="ugbar"><div class="ugbf" id="ugbar-${u.id}" style="width:${pct}%;background:${u.col}"></div></div>
+      <button id="ugbtn-${u.id}" class="ugbtn" onclick="buyGlobalUpg('${u.id}')" ${maxed||!can?'disabled':''}>${maxed?'✅ MAX':cost+'💰'}</button>
     </div>`;
   }).join('');
 }
@@ -1856,7 +2095,7 @@ function doSell(){
   if(t.gfx){L.tower.removeChild(t.gfx);t.gfx.destroy({children:true});}
   G.towers=G.towers.filter(x=>x!==t);G.selTower=null;
   document.getElementById('tp').style.display='none';
-  buildSlotIndicators();updHUD();
+  buildSlotIndicators();updateAllWalls();updHUD();
 }
 function toggleMage(){const t=G.selTower;if(!t||!t.def.magic) return;t.active=!t.active;selectTower(t);}
 
@@ -1877,7 +2116,26 @@ function updHUD(){
     const ok=def.magic?G.mana>=(def.mc||0):G.gold>=def.cost;
     c.classList.toggle('dim',!ok);
   });
-  renderUpgPanel();
+  // Aggiorna SOLO bottoni upgrade (enabled/disabled) senza ricreare l'HTML
+  updUpgButtons();
+}
+
+function updUpgButtons(){
+  GL_UPGS.forEach(u=>{
+    const btn=document.getElementById('ugbtn-'+u.id);
+    if(!btn) return;
+    const lv=G.gUpg[u.id]||0;
+    const maxed=lv>=MAX_GL;
+    const cost=glCost(lv);
+    const can=!maxed&&G.gold>=cost;
+    btn.disabled=maxed||!can;
+    if(!maxed) btn.textContent=cost+'💰';
+    // Aggiorna barra progresso
+    const bar=document.getElementById('ugbar-'+u.id);
+    if(bar) bar.style.width=(lv/MAX_GL*100)+'%';
+    const lbl=document.getElementById('uglv-'+u.id);
+    if(lbl) lbl.textContent=`Lv.${lv}/${MAX_GL}`;
+  });
 }
 function updAbUI(id){
   const el=document.getElementById('ab-'+id),cd=document.getElementById('cd-'+id);
