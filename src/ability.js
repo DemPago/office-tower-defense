@@ -35,6 +35,8 @@ function placeTower(defId){
   buildTowerGfx(t);
   G.towers.push(t);
   buildSlotIndicators();
+  updateAllWalls(); // ricalcola muri dopo ogni piazzamento
+  onTowerPlaced();  // controlla se il muro è completo
   updHUD();
 }
 

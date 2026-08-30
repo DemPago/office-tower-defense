@@ -30,7 +30,9 @@ function doSell(){
   if(t.gfx){L.tower.removeChild(t.gfx);t.gfx.destroy({children:true});}
   G.towers=G.towers.filter(x=>x!==t);G.selTower=null;
   document.getElementById('tp').style.display='none';
-  buildSlotIndicators();updateAllWalls();updHUD();
+  buildSlotIndicators();updateAllWalls();
+  onTowerDestroyed(); // aggiorna stato muro completo
+  updHUD();
 }
 function toggleMage(){const t=G.selTower;if(!t||!t.def.magic) return;t.active=!t.active;selectTower(t);}
 

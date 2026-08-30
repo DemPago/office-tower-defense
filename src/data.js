@@ -104,38 +104,10 @@ const QUOTES=[
 const ABILITIES={bomb:{mana:40,cd:5000},coffee:{mana:30,cd:8000},meeting:{mana:60,cd:12000},audit:{mana:80,cd:18000}};
 const WALL_INCOME=10;
 const MAX_SLOTS=12;
-const SLOT_RING_FRAC=0.30; // % del min(W,H) — usato solo per fallback
+const SLOT_RING_FRAC=0.30; // % del min(W,H)
 
-// ── COORDINATE ISOMETRICHE 3/4 ──────────────────────────────────
-// La scena è vista in prospettiva 3/4:
-// - Torre principale al centro-destra
-// - Piano di gioco inclinato (asse Y compressa al 60%)
-// - 12 slot disposti in arco semicircolare davanti alla torre
-// - Nemici arrivano dai bordi su 8 direzioni
-const ISO = {
-  // Converti coordinate "mondo" in pixel schermo isometrici
-  toScreen(wx, wy){
-    return { x: wx, y: wy * 0.6 };
-  },
-  // Fattore di schiacciamento verticale
-  yFactor: 0.6,
-};
-
-// Posizioni slot: semicerchio davanti alla torre (angolo 120°–420°)
-// I 12 slot sono distribuiti in arco attorno alla torre centrale
-function getSlotPos(idx){
-  const cx=CW/2, cy=CH*0.52;
-  const totalArc = Math.PI * 1.55; // 280° di arco
-  const startAng = -Math.PI/2 - totalArc/2;
-  const a = startAng + (idx/(MAX_SLOTS-1))*totalArc;
-  const rx = Math.min(CW,CH)*0.32; // raggio orizzontale
-  const ry = rx * ISO.yFactor;     // schiacciato per effetto iso
-  return {
-    x: cx + Math.cos(a)*rx,
-    y: cy + Math.sin(a)*ry,
-    angle: a,
-  };
-}
+// ISO helper
+const ISO = { yFactor: 0.6 };
 
 // ─── STATO ──────────────────────────────────────────────────────
 let G={};
@@ -149,6 +121,7 @@ function resetG(){
     selDefId:null,selTower:null,sellMode:false,
     running:false,queue:[],spawnAcc:0,nextAutoUpg:15,
     paused:false,over:false,won:false,
+    wallComplete:false,nextWaveTrolls:0,
     cdActive:false,cdMs:0,cdWave:1,
     cdBomb:0,cdCoffee:0,cdMeeting:0,cdAudit:0,
     lastSeasonIdx:-1,

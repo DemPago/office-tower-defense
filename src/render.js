@@ -454,11 +454,20 @@ function buildSlotIndicators(){
   L.tower.addChild(slotGfx);
 }
 
+// Posizioni slot: cerchio COMPLETO attorno alla torre centrale
+// Tutti i 12 slot equidistanti → i muri si chiudono sempre
 function getSlotPos(idx){
-  const cx=CW/2,cy=CH/2;
+  const cx=CW/2;
+  const groundY=CH*0.72;           // base torre isometrica
+  const cy=groundY-5*52/2;         // centro torre (metà altezza edificio)
   const sr=Math.min(CW,CH)*SLOT_RING_FRAC;
-  const a=idx*Math.PI*2/MAX_SLOTS - Math.PI/2;
-  return {x:cx+Math.cos(a)*sr,y:cy+Math.sin(a)*sr};
+  // Cerchio completo: 360°/12 = 30° per slot, NESSUN arco aperto
+  const a=idx*(Math.PI*2/MAX_SLOTS) - Math.PI/2;
+  return {
+    x: cx + Math.cos(a)*sr,
+    y: cy + Math.sin(a)*sr*0.65,   // leggero schiacciamento isometrico
+    angle: a,
+  };
 }
 function getFreeSlot(){ const used=new Set(G.towers.map(t=>t.slotIdx)); for(let i=0;i<MAX_SLOTS;i++) if(!used.has(i)) return i; return -1; }
 

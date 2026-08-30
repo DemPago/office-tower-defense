@@ -125,18 +125,6 @@ function updateSpawn(dt){
   } else if(G.enemies.every(e=>e.dead||e.reached)){
     waveComplete();
   }
-
-  // ── TROLL DI MORDOR: spawna quando tutte le torri sono piene ──
-  if(G.running && !G.trollActive &&
-     G.towers.length>=MAX_SLOTS &&
-     G.enemies.filter(e=>!e.dead&&!e.reached).length>0){
-    G.trollActive=true;
-    spawnTroll();
-  }
-  // Reset flag quando il troll muore
-  if(G.trollActive && !G.enemies.find(e=>e.tmpl?.isTroll&&!e.dead&&!e.reached)){
-    G.trollActive=false;
-  }
 }
 
 function calcBuffs(){
@@ -302,6 +290,7 @@ function destroySideTower(tower){
   if(tower.collapsed) return;
   tower.collapsed=true;
   tower.hp=0;
+  onTowerDestroyed(); // aggiorna stato muro completo
 
   floatText('💥 TORRE DISTRUTTA!', tower.x, tower.y-60, '#ef4444', 15);
 
@@ -547,6 +536,10 @@ function startCountdown(wave){
 function launchWave(wn){
   G.wave=wn;G.running=true;
   G.queue=buildQueue(wn);G.spawnAcc=0;
+
+  // Aggiungi troll se il muro era completo alla fine dell'ondata precedente
+  spawnWaveTrolls(wn);
+
   const isBoss=wn%10===0;
   const wb=document.getElementById('wb');
   wb.textContent=isBoss?`⚠ BOSS — ONDATA ${wn}!`:`🌊 ONDATA ${wn}`;
@@ -581,4 +574,75 @@ function waveComplete(){
   const bonus=30+G.wave*5;G.gold+=bonus;
   floatText(`Ondata ${G.wave} OK! +${bonus}💰`,CW/2,CH*.33,'#34d399',14);
   setTimeout(()=>{if(!G.over&&!G.won) startCountdown(G.wave+1);},1800);
+}
+
+// ── MURO COMPLETO & TROLL ────────────────────────────────────────
+
+// Chiamata da ability.js ogni volta che si piazza una torre
+function onTowerPlaced(){
+  const active=G.towers.filter(t=>!t.collapsed).length;
+  if(active>=MAX_SLOTS && !G.wallComplete){
+    G.wallComplete=true;
+    triggerWallComplete();
+  }
+}
+
+// Chiamata quando una torre crolla
+function onTowerDestroyed(){
+  if(G.wallComplete && G.towers.filter(t=>!t.collapsed).length<MAX_SLOTS){
+    G.wallComplete=false;
+  }
+}
+
+function triggerWallComplete(){
+  // Banner visivo
+  const wb=document.getElementById('wb');
+  wb.textContent='🧱 MURO DIFENSIVO COMPLETO! I troll arrivano alla prossima ondata!';
+  wb.className='boss on';
+  setTimeout(()=>wb.classList.remove('on'),5000);
+
+  // Numero troll = numero torri attive
+  G.nextWaveTrolls=G.towers.filter(t=>!t.collapsed).length;
+
+  // Animazione: flash oro su tutti i muri
+  floatText(
+    `🧱 MURO COMPLETO! +${G.nextWaveTrolls} TROLL alla prossima ondata!`,
+    CW/2, CH*0.25, '#fbbf24', 18
+  );
+
+  // Colore muri → dorato per 3 secondi
+  G.towers.forEach(t=>{
+    if(!t.gfx||!t.gfx._wall) return;
+    const wall=t.gfx._wall;
+    // Salva alpha originale e imposta dorato
+    wall.tint=0xfbbf24;
+    setTimeout(()=>{ if(wall) wall.tint=0xffffff; }, 3000);
+  });
+}
+
+// Spawna N troll all'inizio dell'ondata (chiamata da launchWave)
+function spawnWaveTrolls(wn){
+  const n=G.nextWaveTrolls||0;
+  if(n<=0) return;
+  G.nextWaveTrolls=0;
+
+  // Aggiunge i troll alla coda con delay scaglionati
+  for(let i=0;i<n;i++){
+    const tmpl={
+      ...TROLL_TMPL,
+      hp:Math.round(TROLL_TMPL.hp*(1+(wn-1)*0.07)),  // scala con l'ondata
+      n:`🧌 TROLL ${i+1}/${n}`,
+    };
+    G.queue.push({tmpl, wave:wn, delay:4000+i*1500}); // arrivano dopo i normali
+  }
+
+  floatText(
+    `⚠️ ${n} TROLL DI MORDOR in arrivo!`,
+    CW/2, CH*0.3, '#ef4444', 16
+  );
+}
+
+// Spawn singolo troll (usato da spawnWaveTrolls via queue)
+function spawnTroll(){
+  // Non più usato direttamente — i troll entrano via queue
 }
