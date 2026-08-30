@@ -1943,6 +1943,11 @@ function startGame(){
   // Aspetta che PixiJS sia pronto
   if(!app){ setTimeout(startGame, 100); return; }
 
+  // Aggiorna dimensioni canvas (potrebbero essere cambiate dopo il layout)
+  const wrap=document.getElementById('cw');
+  CW=wrap.clientWidth; CH=wrap.clientHeight;
+  app.renderer.resize(CW,CH);
+
   resetG();
   G._floatTexts=[];
 
