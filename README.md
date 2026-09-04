@@ -70,10 +70,13 @@ Poi su GitHub: **Settings → Pages → Source: main / (root)** → Save
 ---
 
 ## 🛠️ Tech stack
-- HTML5 Canvas puro
-- JavaScript vanilla (no dipendenze)
+- PixiJS 7 (rendering WebGL)
+- JavaScript vanilla (no build step)
 - CSS3
 - GitHub Pages per hosting gratuito
+
+## 🎨 Asset grafici
+Personaggi (nemici, boss, protagonista) basati su **RPG Urban Pack** by [Kenney](https://kenney.nl) — licenza [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (pubblico dominio, nessuna attribuzione richiesta, credit fornito per correttezza).
 
 ## 💛 Supporta il progetto
 Se ti diverte: [Ko-fi](https://ko-fi.com) ☕
