@@ -336,6 +336,14 @@ function darkenC(col,f){
   return (r<<16)|(g2<<8)|b;
 }
 
+// Schiarisce un colore (per superfici "tetto" che ricevono più luce)
+function lightenC(col,f){
+  const r=Math.min(255,Math.round(((col>>16)&0xff)*f));
+  const g2=Math.min(255,Math.round(((col>>8)&0xff)*f));
+  const b=Math.min(255,Math.round((col&0xff)*f));
+  return (r<<16)|(g2<<8)|b;
+}
+
 function updateEnemyGfx(e){
   if(!e.gfx||e.dead) return;
   const g=e.gfx, {tmpl}=e;

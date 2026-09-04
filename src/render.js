@@ -167,36 +167,74 @@ function buildMainTower(){
   const totalH=floors*fH;
   const bx=cx-TW/2, by=groundY-totalH;
 
+  // ── VETTORE PROFONDITÀ ISOMETRICA (luce da alto-sinistra, profondità verso dx) ──
+  const D=30;                    // lunghezza profondità
+  const dx=D*0.87, dy=-D*0.5;    // 30° verso l'alto-destra (iso classico 2:1)
+
   mainGfx=new PIXI.Graphics();
 
-  // Ombra base
-  mainGfx.beginFill(0x000000,.35);
-  mainGfx.drawEllipse(cx+6,groundY+5,TW*.6,14);
+  // Ombra base (più ampia per il volume 3D)
+  mainGfx.beginFill(0x000000,.4);
+  mainGfx.drawEllipse(cx+dx*.5,groundY+6,TW*.62,15);
   mainGfx.endFill();
 
-  // ── FACCIATA FRONTALE (vista di lato) ──
-  // Faccia laterale destra (più scura)
-  mainGfx.beginFill(0x0a1a2e);
-  mainGfx.drawRect(bx+TW,by,18,totalH);
-  mainGfx.endFill();
-  // Faccia frontale principale
   const wg=mainGfx;
-  wg.beginFill(0x162840);
-  wg.drawRect(bx,by,TW,totalH);
+
+  // ── FACCIA LATERALE (destra, in ombra — disegnata per prima, sotto) ──
+  wg.beginFill(0x0a1730);
+  wg.drawPolygon([
+    bx+TW,by,  bx+TW+dx,by+dy,
+    bx+TW+dx,by+dy+totalH,  bx+TW,by+totalH,
+  ]);
   wg.endFill();
-  // Variazione per piano (alternato chiaro/scuro)
+  // Bande ombra sulla faccia laterale (profondità percepita)
   for(let f=0;f<floors;f++){
     const fy=by+f*fH;
-    wg.beginFill(f%2===0?0x1e3a5f:0x162840,.3);
+    wg.beginFill(0x000000,.15+f*.03);
+    wg.drawPolygon([
+      bx+TW,fy,  bx+TW+dx,fy+dy,
+      bx+TW+dx,fy+dy+fH,  bx+TW,fy+fH,
+    ]);
+    wg.endFill();
+  }
+  // Finestre laterali (parallelogrammi skewed, spente/riflesso)
+  for(let f=0;f<floors;f++){
+    const fy=by+f*fH+fH*.32;
+    const wH=fH*.36;
+    wg.beginFill(0x0a1524,.85);
+    wg.drawPolygon([
+      bx+TW+dx*.35,fy+dy*.35,        bx+TW+dx*.75,fy+dy*.75,
+      bx+TW+dx*.75,fy+dy*.75+wH*.7,  bx+TW+dx*.35,fy+dy*.35+wH*.7,
+    ]);
+    wg.endFill();
+  }
+
+  // ── FACCIA FRONTALE (illuminata, disegnata sopra) ──
+  wg.beginFill(0x1a3560);
+  wg.drawRect(bx,by,TW,totalH);
+  wg.endFill();
+  // Variazione per piano
+  for(let f=0;f<floors;f++){
+    const fy=by+f*fH;
+    wg.beginFill(f%2===0?0x21437a:0x1a3560,.35);
     wg.drawRect(bx,fy,TW,fH);
     wg.endFill();
-    // Linea separazione piani
-    wg.lineStyle(1,0x0a1528,.8);
+    wg.lineStyle(1,0x0a1830,.8);
     wg.moveTo(bx,fy); wg.lineTo(bx+TW,fy);
     wg.lineStyle(0);
   }
+  // Gradiente ambient occlusion: più scuro verso il basso
+  for(let i=0;i<6;i++){
+    wg.beginFill(0x000000,.05);
+    wg.drawRect(bx,by+totalH-(i+1)*(totalH/6),TW,totalH/6);
+    wg.endFill();
+  }
+  // Luce dall'alto sul fronte (rim light)
+  wg.beginFill(0x5b8def,.1);
+  wg.drawRect(bx,by,TW,totalH*.25);
+  wg.endFill();
 
-  // ── FINESTRE (3 per piano) ──
+  // ── FINESTRE FRONTALI (3 per piano) ──
   const winW=20, winH=18, winGap=(TW-3*winW)/4;
   for(let f=0;f<floors;f++){
     const fy=by+f*fH+fH/2-winH/2;
@@ -204,55 +242,79 @@ function buildMainTower(){
       const wx=bx+winGap*(w+1)+winW*w;
       const lit=Math.sin(Date.now()/900+f*2.1+w*1.3)>.05;
       const litCol=f===0?0xfbbf24:f===floors-1?0xfef08a:0xfde68a;
-      // Cornice finestra
-      wg.beginFill(0x0a1528);
+      wg.beginFill(0x061020);
       wg.drawRoundedRect(wx-2,fy-2,winW+4,winH+4,3);
       wg.endFill();
-      // Vetro
       wg.beginFill(lit?litCol:0x0a1222,.9);
       wg.drawRoundedRect(wx,fy,winW,winH,2);
       wg.endFill();
-      // Bagliore finestra accesa
       if(lit){
-        wg.beginFill(litCol,.12);
-        wg.drawRoundedRect(wx-4,fy-4,winW+8,winH+8,4);
+        wg.beginFill(litCol,.15);
+        wg.drawRoundedRect(wx-5,fy-5,winW+10,winH+10,4);
         wg.endFill();
       }
-      // Telaio finestra
-      wg.lineStyle(1,0x1e3a5f,.5);
+      wg.lineStyle(1,0x2a4a80,.6);
       wg.moveTo(wx+winW/2,fy); wg.lineTo(wx+winW/2,fy+winH);
       wg.moveTo(wx,fy+winH/2); wg.lineTo(wx+winW,fy+winH/2);
       wg.lineStyle(0);
     }
   }
 
-  // ── BORDI EDIFICIO ──
-  wg.lineStyle(3,0x2563eb,.7);
-  wg.drawRect(bx,by,TW,totalH);
-  wg.lineStyle(1,0x1e3a5f,.4);
-  wg.drawRect(bx+TW,by,18,totalH); // lato
+  // ── BORDI EDIFICIO (outline scuro per definizione volume) ──
+  wg.lineStyle(2.5,0x040c1a,.9);
+  wg.drawRect(bx,by,TW,totalH);                              // fronte
+  wg.drawPolygon([bx+TW,by, bx+TW+dx,by+dy, bx+TW+dx,by+dy+totalH, bx+TW,by+totalH]); // lato
   wg.lineStyle(0);
-  // Bordo superiore lato
-  wg.lineStyle(2,0x3b82f6,.5);
+  // Spigolo luminoso (dove fronte e lato si incontrano — riceve più luce)
+  wg.lineStyle(2,0x7ba7f0,.55);
+  wg.moveTo(bx+TW,by); wg.lineTo(bx+TW,by+totalH);
+  wg.lineStyle(0);
+  // Spigolo superiore fronte (rim light forte)
+  wg.lineStyle(2,0x9cc0ff,.6);
   wg.moveTo(bx,by); wg.lineTo(bx+TW,by);
-  wg.moveTo(bx+TW,by); wg.lineTo(bx+TW+18,by+8);
   wg.lineStyle(0);
 
-  // ── TETTO / TERRAZZA ──
-  // Parapetto
+  // ── TETTO (superficie superiore in prospettiva — poligono, non rettangolo) ──
+  wg.beginFill(0x2d5a9f);
+  wg.drawPolygon([
+    bx,by,  bx+TW,by,
+    bx+TW+dx,by+dy,  bx+dx,by+dy,
+  ]);
+  wg.endFill();
+  // Highlight tetto (più luce, superficie rivolta verso l'alto)
+  wg.beginFill(0x6fa3ef,.35);
+  wg.drawPolygon([
+    bx,by,  bx+TW,by,
+    bx+TW+dx*.5,by+dy*.5,  bx+dx*.5,by+dy*.5,
+  ]);
+  wg.endFill();
+  wg.lineStyle(1.5,0x0a1830,.7);
+  wg.drawPolygon([bx,by, bx+TW,by, bx+TW+dx,by+dy, bx+dx,by+dy]);
+  wg.lineStyle(0);
+
+  // Parapetto sul bordo frontale del tetto
   wg.beginFill(0x1e3a5f);
   wg.drawRect(bx-4,by-14,TW+8,14);
   wg.endFill();
-  // Merli tetto
+  wg.lineStyle(1.5,0x040c1a,.7);
+  wg.drawRect(bx-4,by-14,TW+8,14);
+  wg.lineStyle(0);
+  // Merli
   for(let m=0;m<7;m++){
     const mx=bx-4+m*(TW+8)/7;
-    wg.beginFill(0x2563eb,.8);
+    wg.beginFill(0x2563eb,.85);
     wg.drawRect(mx+2,by-28,12,14);
     wg.endFill();
+    wg.lineStyle(1,0x040c1a,.6);
+    wg.drawRect(mx+2,by-28,12,14);
+    wg.lineStyle(0);
   }
-  // Copertura tetto
+  // Bordo laterale parapetto (profondità)
   wg.beginFill(0x0f2040);
-  wg.drawRect(bx-4,by-28,TW+8,4);
+  wg.drawPolygon([
+    bx-4+TW+8,by-14,  bx-4+TW+8+dx*.4,by-14+dy*.4,
+    bx-4+TW+8+dx*.4,by+dy*.4,        bx-4+TW+8,by,
+  ]);
   wg.endFill();
 
   // ── ANTENNA ──
@@ -260,7 +322,6 @@ function buildMainTower(){
   wg.moveTo(cx-10,by-28); wg.lineTo(cx-10,by-65);
   wg.moveTo(cx+10,by-28); wg.lineTo(cx+10,by-58);
   wg.lineStyle(0);
-  // Luce rossa lampeggiante
   const blink=Math.sin(Date.now()/500)>0;
   wg.beginFill(blink?0xe74c3c:0x7f1d1d,.9);
   wg.drawCircle(cx-10,by-66,4);
@@ -281,7 +342,6 @@ function buildMainTower(){
   wg.lineStyle(2,0x1e3a5f,.6);
   wg.drawRoundedRect(cx-16,groundY-42,32,42,4);
   wg.lineStyle(0);
-  // Maniglia
   wg.beginFill(0xfbbf24,.8);
   wg.drawCircle(cx+10,groundY-20,2.5);
   wg.endFill();
@@ -468,21 +528,57 @@ function buildTowerGfx(t){
   const pal={pm:0xef4444,sm:0x10b981,dev:0x8b5cf6,m_agile:0x059669,m_scrum:0x2563eb,m_itil:0x7c3aed,m_vision:0xd97706};
   const col=pal[def.id]||0x60a5fa;
 
-  // Ombra
-  const sh=new PIXI.Graphics();
-  sh.beginFill(0x000000,.25);sh.drawEllipse(0,5,18,6);sh.endFill();g.addChild(sh);
+  // Vettore profondità isometrico (stesso angolo della torre principale, scala ridotta)
+  const D=9, dx=D*0.87, dy=-D*0.5;
 
-  // Base torre
+  // Ombra (più ampia per il volume 3D)
+  const sh=new PIXI.Graphics();
+  sh.beginFill(0x000000,.3);sh.drawEllipse(dx*.4,7,17,6);sh.endFill();g.addChild(sh);
+
+  // ── BASE PIATTAFORMA con volume 3D ──
   const base=new PIXI.Graphics();
-  base.beginFill(0x0f172a);base.drawRoundedRect(-18,-18,36,36,7);base.endFill();
+  // Faccia laterale base (ombra)
+  base.beginFill(0x060c18);
+  base.drawPolygon([18,-18, 18+dx,-18+dy, 18+dx,18+dy, 18,18]);
+  base.endFill();
+  // Faccia frontale base
+  base.beginFill(0x0f172a);
+  base.drawRoundedRect(-18,-18,36,36,7);
+  base.endFill();
+  // Tetto base (piccolo bordo superiore)
+  base.beginFill(lightenC(col,1.3),.4);
+  base.drawPolygon([-18,-18, 18,-18, 18+dx,-18+dy, -18+dx,-18+dy]);
+  base.endFill();
+  base.lineStyle(1.5,0x000000,.6);
+  base.drawPolygon([18,-18, 18+dx,-18+dy, 18+dx,18+dy, 18,18]);
+  base.lineStyle(0);
   base.lineStyle(2,col,.85);base.drawRoundedRect(-18,-18,36,36,7);base.lineStyle(0);
   g.addChild(base);
 
-  // Corpo (edificio)
+  // ── CORPO (edificio) con volume 3D ──
   const body=new PIXI.Graphics();
-  body.beginFill(col,.9);body.drawRoundedRect(-13,-13,26,26,5);body.endFill();
+  // Faccia laterale corpo (più scura)
+  body.beginFill(darkenC(col,.55));
+  body.drawPolygon([13,-13, 13+dx*.8,-13+dy*.8, 13+dx*.8,13+dy*.8, 13,13]);
+  body.endFill();
+  // Faccia frontale corpo
+  body.beginFill(col,.95);body.drawRoundedRect(-13,-13,26,26,5);body.endFill();
+  // Highlight in alto (luce)
+  body.beginFill(0xffffff,.18);
+  body.drawRoundedRect(-13,-13,26,8,3);
+  body.endFill();
+  // Tetto corpo (superficie superiore, più chiara)
+  body.beginFill(lightenC(col,1.4));
+  body.drawPolygon([-13,-13, 13,-13, 13+dx*.8,-13+dy*.8, -13+dx*.8,-13+dy*.8]);
+  body.endFill();
+  // Outline
+  body.lineStyle(1.5,0x000000,.55);
+  body.drawPolygon([13,-13, 13+dx*.8,-13+dy*.8, 13+dx*.8,13+dy*.8, 13,13]);
+  body.drawPolygon([-13,-13, 13,-13, 13+dx*.8,-13+dy*.8, -13+dx*.8,-13+dy*.8]);
+  body.lineStyle(0);
   // Finestrina
-  body.beginFill(0xfef08a,.8);body.drawRoundedRect(-4,-8,8,6,2);body.endFill();
+  body.beginFill(0x0a1528);body.drawRoundedRect(-5,-9,10,7,2);body.endFill();
+  body.beginFill(0xfef08a,.85);body.drawRoundedRect(-4,-8,8,6,2);body.endFill();
   g.addChild(body);
   g._body=body;
 
