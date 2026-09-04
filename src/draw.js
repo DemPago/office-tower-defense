@@ -4,81 +4,64 @@
 //  DISEGNO QUALITÀ PROFESSIONALE — gradiente, outline, ombre, occhi dettagliati
 // ================================================================
 
-function drawHumanGfx(g, r, col, isEng, isBoss){
-  // ── SPRITE BASE (grayscale, tintato col colore del tipo nemico) ──
-  const tex = texCache[WORKER_SPRITE];
-  let pg; // Graphics per overlay dettagli (occhi, elmetto, ecc.)
+function drawHumanGfx(g, r, col, isEng, isBoss, charKey){
+  charKey = charKey || 'green_shirt';
+  const frameUrls = KENNEY_CHARS[charKey];
 
-  if(tex){
-    const sprite=new PIXI.Sprite(tex);
-    sprite.anchor.set(0.5, 0.9375);
-    sprite.height = r*2.17;
-    sprite.width  = sprite.height*(96/128);
-    sprite.position.set(0, r*0.9);
-    sprite.tint = col;
+  if(frameUrls && texCache[frameUrls[0]]){
+    // ── SPRITE PIXEL ART PROFESSIONALE (Kenney CC0) ──
+    const sprite=new PIXI.Sprite(texCache[frameUrls[0]]);
+    sprite.anchor.set(0.5, 0.88);
+    sprite.height = r*2.15;
+    sprite.width  = sprite.height; // frame quadrato 96x96, no deform
+    sprite.position.set(0, r*0.82);
     g.addChild(sprite);
-    g._body=sprite; // ref per tinting/stato (stun/slow overrides tint temporaneamente)
-    g._baseTint=col;
+    g._body=sprite;
+    g._baseTint=0xffffff; // colori nativi dello sprite, nessun tint di base
+    // Frame di camminata per animazione (alternati in updateEnemyGfx)
+    g._walkFrames=[texCache[frameUrls[0]], texCache[frameUrls[1]]];
+    g._walkTimer=Math.random()*300; // sfasa l'animazione tra nemici
   } else {
-    // Fallback raro: se lo sprite non è ancora caricato, disegna un corpo semplice
-    pg=new PIXI.Graphics();
-    g.addChild(pg);
-    g._body=pg;
-    pg.beginFill(col);pg.drawRoundedRect(-r*.44,-r*.5,r*.88,r*1.3,r*.15);pg.endFill();
+    // Fallback: sprite grayscale tintato (se Kenney non ancora caricato)
+    const tex=texCache[WORKER_SPRITE];
+    if(tex){
+      const sprite=new PIXI.Sprite(tex);
+      sprite.anchor.set(0.5, 0.9375);
+      sprite.height=r*2.17; sprite.width=sprite.height*(96/128);
+      sprite.position.set(0, r*0.9);
+      sprite.tint=col;
+      g.addChild(sprite);
+      g._body=sprite; g._baseTint=col;
+    } else {
+      const pg=new PIXI.Graphics();
+      g.addChild(pg); g._body=pg;
+      pg.beginFill(col);pg.drawRoundedRect(-r*.44,-r*.5,r*.88,r*1.3,r*.15);pg.endFill();
+    }
   }
 
   // ── OMBRA A TERRA ──
   const sh=new PIXI.Graphics();
-  sh.beginFill(0x000000,.3);
-  sh.drawEllipse(r*.06,r*1.0,r*.8,r*.2);
+  sh.beginFill(0x000000,.32);
+  sh.drawEllipse(r*.04,r*.95,r*.62,r*.16);
   sh.endFill();
   g.addChildAt(sh,0);
 
-  // ── DETTAGLI OVERLAY (non tintati — sempre leggibili) ──
-  const ov=new PIXI.Graphics();
-  g.addChild(ov);
-
-  // OCCHI con profondità
-  ov.beginFill(0xffffff);ov.drawCircle(-r*.14,-r*.68,r*.12);ov.drawCircle(r*.14,-r*.68,r*.12);ov.endFill();
-  const irisCol=isBoss?0xef4444:0x1e40af;
-  ov.beginFill(irisCol);ov.drawCircle(-r*.14,-r*.67,r*.08);ov.drawCircle(r*.14,-r*.67,r*.08);ov.endFill();
-  ov.beginFill(0x000000);ov.drawCircle(-r*.12,-r*.66,r*.04);ov.drawCircle(r*.16,-r*.66,r*.04);ov.endFill();
-  ov.beginFill(0xffffff,.95);ov.drawCircle(-r*.18,-r*.72,r*.025);ov.drawCircle(r*.1,-r*.72,r*.025);ov.endFill();
-
-  // Sopracciglia
-  const browCol=isBoss?0x1c1917:0x2a2a2a;
-  ov.lineStyle(r*.07,browCol,1);
-  ov.moveTo(-r*.23,-r*.8);ov.lineTo(-r*.06,-r*.75);
-  ov.moveTo(r*.23,-r*.8);ov.lineTo(r*.06,-r*.75);
-  ov.lineStyle(0);
-
-  // Bocca
-  ov.lineStyle(r*.055,0x92400e,1);
-  if(isBoss){ov.moveTo(-r*.12,-r*.56);ov.lineTo(r*.12,-r*.52);}
-  else{ov.moveTo(-r*.1,-r*.55);ov.lineTo(r*.1,-r*.52);}
-  ov.lineStyle(0);
-
-  // ELMETTO INGEGNERE
-  if(isEng){
-    ov.lineStyle(2,0x92400e,.8);
-    ov.beginFill(0xd97706);ov.drawEllipse(0,-r*.9,r*.44,r*.22);ov.endFill();
-    ov.beginFill(0xfbbf24,.65);ov.drawEllipse(-r*.08,-r*.98,r*.28,r*.1);ov.endFill();
-    ov.beginFill(0x92400e);ov.drawRect(-r*.44,-r*.92,r*.88,r*.1);ov.endFill();
-    ov.lineStyle(0);
-    ov.beginFill(0xfef08a,.9);ov.drawCircle(-r*.3,-r*.88,r*.05);ov.endFill();
-  }
-
-  // STELLINA BOSS sul petto
+  // ── OVERLAY BOSS (corona + bordo dorato di risalto) ──
   if(isBoss){
-    ov.beginFill(0xfbbf24,.9);
-    const bx2=r*.22, by2=-r*.02;
-    ov.drawPolygon([
-      bx2,by2-r*.1, bx2+r*.04,by2-r*.03, bx2+r*.1,by2-r*.03,
-      bx2+r*.05,by2+r*.03, bx2+r*.07,by2+r*.1,
-      bx2,by2+r*.06, bx2-r*.07,by2+r*.1,
-      bx2-r*.05,by2+r*.03, bx2-r*.1,by2-r*.03, bx2-r*.04,by2-r*.03
-    ]);
+    const ov=new PIXI.Graphics();
+    // Alone dorato dietro la testa (autorità/importanza)
+    ov.beginFill(0xfbbf24,.18);
+    ov.drawCircle(0,-r*1.5,r*.5);
     ov.endFill();
+    ov.lineStyle(2,0xfbbf24,.5);
+    ov.drawCircle(0,-r*1.5,r*.5);
+    ov.lineStyle(0);
+    g.addChild(ov);
+    // Corona emoji sopra la testa
+    const crownTxt=new PIXI.Text('👑',{fontSize:r*.55,resolution:2});
+    crownTxt.anchor.set(.5);
+    crownTxt.position.set(0,-r*1.55);
+    g.addChild(crownTxt);
   }
 }
 
@@ -359,11 +342,22 @@ function updateEnemyGfx(e){
   // Wobble arma
   if(g._wpn) g._wpn.rotation=Math.sin(Date.now()/180+e.x*.01)*.28;
 
-  // Animazione camminata gambe (oscillazione)
+  // Animazione camminata gambe (fallback vettoriale, se presente)
   if(g._legs && !e.stunT){
     const walk=Math.sin(Date.now()/120+e.x*.02);
     g._legs.skew.x=walk*.08;
     g._legs.y=walk*1.5;
+  }
+
+  // Animazione camminata sprite Kenney (alterna 2 frame ogni ~220ms)
+  if(g._walkFrames && g._body && !e.stunT && (e.reached===false||e.reached===undefined)){
+    g._walkTimer=(g._walkTimer||0)+16;
+    const moving = e.pathIdx===undefined || true; // sempre in movimento salvo stun
+    if(g._walkTimer>220){
+      g._walkTimer=0;
+      g._frameIdx=(g._frameIdx||0)===0?1:0;
+      g._body.texture=g._walkFrames[g._frameIdx];
+    }
   }
 
   // Leggero bob testa

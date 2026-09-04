@@ -10,12 +10,16 @@ const L={}; // layer containers
 let texCache={}; // texture cache per SVG
 
 // Carica texture da data-URI senza PIXI.Assets (compat Pixi v7)
-function loadSVGTexture(url){
+// pixelArt=true forza NEAREST scaling (niente sfocatura su sprite pixel art)
+function loadSVGTexture(url, pixelArt){
   if(texCache[url]) return Promise.resolve(texCache[url]);
   return new Promise((resolve)=>{
     const img=new Image();
     img.onload=()=>{
       const tex=PIXI.Texture.from(img);
+      if(pixelArt && tex.baseTexture){
+        tex.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+      }
       texCache[url]=tex;
       resolve(tex);
     };
@@ -48,9 +52,16 @@ async function initPixi(){
     try{ await loadSVGTexture(url); }
     catch(e){ console.warn('SVG load fail:',url); }
   }
-  // Pre-carica sprite umanoide grayscale (tintabile per ogni nemico/torre)
+  // Pre-carica sprite umanoide grayscale (fallback tintabile)
   try{ await loadSVGTexture(WORKER_SPRITE); }
   catch(e){ console.warn('SVG load fail: worker'); }
+  // Pre-carica personaggi Kenney (pixel art CC0) — NEAREST scaling per nitidezza
+  for(const [name,frames] of Object.entries(KENNEY_CHARS)){
+    for(const url of frames){
+      try{ await loadSVGTexture(url, true); }
+      catch(e){ console.warn('PNG load fail:',name); }
+    }
+  }
 
   // Layer stack
   ['bg','roads','walls','shadows','enemies','tower','projs','fx','hud2']

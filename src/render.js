@@ -349,60 +349,55 @@ function buildMainTower(){
   L.tower.addChild(mainGfx);
   window.mainGfx=mainGfx;
 
-  // ── DIPENDENTE SUL TETTO ──
+  // ── DIPENDENTE SUL TETTO (sprite Kenney — stesso stile dei nemici) ──
   const playerCont=new PIXI.Container();
   playerCont.position.set(cx, by-28);
-  const pr=14;
+  const pr=15;
 
   // Ombra
   const psh=new PIXI.Graphics();
-  psh.beginFill(0x000000,.28); psh.drawEllipse(0,pr*.95,pr*.75,pr*.2); psh.endFill();
+  psh.beginFill(0x000000,.3); psh.drawEllipse(0,pr*.95,pr*.68,pr*.17); psh.endFill();
   playerCont.addChild(psh);
 
-  // ── SPRITE PROFESSIONALE (tintato oro/arancio — il protagonista) ──
-  const ptex=texCache[WORKER_SPRITE];
-  let pg;
-  if(ptex){
-    const sprite=new PIXI.Sprite(ptex);
-    sprite.anchor.set(0.5, 0.9375);
-    sprite.height=pr*2.17;
-    sprite.width=sprite.height*(96/128);
-    sprite.position.set(0, pr*0.9);
-    sprite.tint=0xf59e0b; // arancio/oro — colore distintivo protagonista
+  // ── SPRITE PROFESSIONALE (worker_helmet — il protagonista con elmetto) ──
+  const playerFrames = KENNEY_CHARS['worker_helmet'];
+  if(playerFrames && texCache[playerFrames[0]]){
+    const sprite=new PIXI.Sprite(texCache[playerFrames[0]]);
+    sprite.anchor.set(0.5, 0.88);
+    sprite.height = pr*2.15;
+    sprite.width  = sprite.height;
+    sprite.position.set(0, pr*0.82);
     playerCont.addChild(sprite);
     playerCont._gfx=sprite;
+    playerCont._walkFrames=[texCache[playerFrames[0]], texCache[playerFrames[1]]];
   } else {
-    pg=new PIXI.Graphics();
-    pg.beginFill(0xf59e0b);pg.drawRoundedRect(-pr*.44,-pr*.5,pr*.88,pr*1.3,pr*.15);pg.endFill();
-    playerCont.addChild(pg);
-    playerCont._gfx=pg;
+    const ptex=texCache[WORKER_SPRITE];
+    if(ptex){
+      const sprite=new PIXI.Sprite(ptex);
+      sprite.anchor.set(0.5, 0.9375);
+      sprite.height=pr*2.17; sprite.width=sprite.height*(96/128);
+      sprite.position.set(0, pr*0.9);
+      sprite.tint=0xf59e0b;
+      playerCont.addChild(sprite);
+      playerCont._gfx=sprite;
+    } else {
+      const pg=new PIXI.Graphics();
+      pg.beginFill(0xf59e0b);pg.drawRoundedRect(-pr*.44,-pr*.5,pr*.88,pr*1.3,pr*.15);pg.endFill();
+      playerCont.addChild(pg);
+      playerCont._gfx=pg;
+    }
   }
 
-  // ── DETTAGLI OVERLAY (occhi, cravatta rossa, elmetto — sempre nitidi) ──
+  // ── ALONE DORATO (identifica il protagonista/eroe) ──
   const pov=new PIXI.Graphics();
-  // Occhi
-  pov.beginFill(0xffffff); pov.drawCircle(-pr*.14,-pr*.68,pr*.12); pov.drawCircle(pr*.14,-pr*.68,pr*.12); pov.endFill();
-  pov.beginFill(0x1e293b); pov.drawCircle(-pr*.14,-pr*.67,pr*.07); pov.drawCircle(pr*.14,-pr*.67,pr*.07); pov.endFill();
-  pov.beginFill(0x000000); pov.drawCircle(-pr*.12,-pr*.66,pr*.035); pov.drawCircle(pr*.16,-pr*.66,pr*.035); pov.endFill();
-  // Bocca
-  pov.lineStyle(pr*.055,0x7f1d1d,1);
-  pov.moveTo(-pr*.12,-pr*.55); pov.lineTo(pr*.12,-pr*.52); pov.lineStyle(0);
-  // Sopracciglia
-  pov.lineStyle(pr*.07,0x2a2a2a,1);
-  pov.moveTo(-pr*.22,-pr*.8); pov.lineTo(-pr*.06,-pr*.75);
-  pov.moveTo(pr*.22,-pr*.8); pov.lineTo(pr*.06,-pr*.75);
-  pov.lineStyle(0);
-  // Cravatta rossa distintiva (protagonista)
-  pov.beginFill(0xe94560);
-  pov.drawPolygon([-pr*.05,-pr*.12, pr*.05,-pr*.12, pr*.04,pr*.08, 0,pr*.22, -pr*.04,pr*.08]);
+  pov.beginFill(0xfbbf24,.15);
+  pov.drawCircle(0,-pr*1.4,pr*.55);
   pov.endFill();
-  // Elmetto oro
-  pov.lineStyle(1.5,0x92400e,.8);
-  pov.beginFill(0xfbbf24,.95); pov.drawEllipse(0,-pr*.88,pr*.42,pr*.21); pov.endFill();
-  pov.beginFill(0xf59e0b); pov.drawRect(-pr*.42,-pr*.9,pr*.84,pr*.09); pov.endFill();
+  pov.lineStyle(1.5,0xfbbf24,.4);
+  pov.drawCircle(0,-pr*1.4,pr*.55);
   pov.lineStyle(0);
-
   playerCont.addChild(pov);
+
   L.tower.addChild(playerCont);
   window.playerContainer=playerCont;
 
@@ -829,7 +824,7 @@ function buildEnemyGfx(e){
     drawTrollGfx(g, r, tmpl.col);
   } else {
     // ── OMINO CARTOON ──
-    drawHumanGfx(g, r, tmpl.col, tmpl.eng, tmpl.r>34);
+    drawHumanGfx(g, r, tmpl.col, tmpl.eng, tmpl.r>34, tmpl.char);
   }
 
   // Arma (top-right, oscillante)
