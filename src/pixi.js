@@ -48,6 +48,9 @@ async function initPixi(){
     try{ await loadSVGTexture(url); }
     catch(e){ console.warn('SVG load fail:',url); }
   }
+  // Pre-carica sprite umanoide grayscale (tintabile per ogni nemico/torre)
+  try{ await loadSVGTexture(WORKER_SPRITE); }
+  catch(e){ console.warn('SVG load fail: worker'); }
 
   // Layer stack
   ['bg','roads','walls','shadows','enemies','tower','projs','fx','hud2']

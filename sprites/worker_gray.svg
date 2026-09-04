@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 128" width="96" height="128">
+  <defs>
+    <linearGradient id="bodyG" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5a5a5a"/>
+      <stop offset="45%" stop-color="#b8b8b8"/>
+      <stop offset="100%" stop-color="#4a4a4a"/>
+    </linearGradient>
+    <linearGradient id="limbG" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#454545"/>
+      <stop offset="50%" stop-color="#8a8a8a"/>
+      <stop offset="100%" stop-color="#454545"/>
+    </linearGradient>
+    <linearGradient id="pantsG" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2a2a2a"/>
+      <stop offset="45%" stop-color="#454545"/>
+      <stop offset="100%" stop-color="#2a2a2a"/>
+    </linearGradient>
+    <radialGradient id="headG" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#e5e5e5"/>
+      <stop offset="70%" stop-color="#b0b0b0"/>
+      <stop offset="100%" stop-color="#808080"/>
+    </radialGradient>
+    <linearGradient id="hairG" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3a3a3a"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </linearGradient>
+    <filter id="dshadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <!-- OMBRA A TERRA -->
+  <ellipse cx="48" cy="124" rx="26" ry="6" fill="#000000" opacity="0.3"/>
+
+  <!-- SCARPE -->
+  <ellipse cx="34" cy="115" rx="11" ry="5" fill="#0d0d0d" stroke="#000" stroke-width="1"/>
+  <ellipse cx="62" cy="115" rx="11" ry="5" fill="#0d0d0d" stroke="#000" stroke-width="1"/>
+  <ellipse cx="31" cy="112" rx="4" ry="1.8" fill="#333" opacity="0.6"/>
+  <ellipse cx="59" cy="112" rx="4" ry="1.8" fill="#333" opacity="0.6"/>
+
+  <!-- GAMBE -->
+  <rect x="29" y="82" width="17" height="34" rx="4" fill="url(#pantsG)" stroke="#000" stroke-width="1.8"/>
+  <rect x="50" y="82" width="17" height="34" rx="4" fill="url(#pantsG)" stroke="#000" stroke-width="1.8"/>
+  <rect x="30" y="84" width="5" height="30" rx="2" fill="#ffffff" opacity="0.12"/>
+  <rect x="51" y="84" width="5" height="30" rx="2" fill="#ffffff" opacity="0.12"/>
+
+  <!-- CINTURA -->
+  <rect x="27" y="79" width="42" height="6" rx="2" fill="#151515" stroke="#000" stroke-width="0.8"/>
+  <rect x="44" y="79" width="8" height="6" rx="1" fill="#999"/>
+
+  <!-- CORPO -->
+  <rect x="22" y="46" width="52" height="38" rx="8" fill="url(#bodyG)" stroke="#000000" stroke-width="2.2" filter="url(#dshadow)"/>
+  <!-- Revers -->
+  <path d="M48,48 L38,52 L36,68 L48,65 Z" fill="#3a3a3a" stroke="#000" stroke-width="1"/>
+  <path d="M48,48 L58,52 L60,68 L48,65 Z" fill="#3a3a3a" stroke="#000" stroke-width="1"/>
+  <!-- Camicia -->
+  <path d="M48,48 L42,52 L42,65 L48,65 L54,65 L54,52 Z" fill="#e8e8e8" stroke="#999" stroke-width="0.5"/>
+  <!-- Highlight corpo -->
+  <rect x="24" y="48" width="9" height="34" rx="4" fill="#ffffff" opacity="0.2"/>
+  <!-- Bottoni -->
+  <circle cx="48" cy="72" r="2" fill="#f0f0f0"/>
+  <circle cx="48" cy="78" r="2" fill="#f0f0f0"/>
+  <!-- Taschino -->
+  <rect x="56" y="52" width="10" height="8" rx="2" fill="#3a3a3a" stroke="#000" stroke-width="0.5"/>
+
+  <!-- BRACCIA -->
+  <rect x="6" y="48" width="16" height="30" rx="6" fill="url(#limbG)" stroke="#000" stroke-width="1.8"/>
+  <rect x="74" y="48" width="16" height="30" rx="6" fill="url(#limbG)" stroke="#000" stroke-width="1.8"/>
+  <rect x="7" y="50" width="5" height="26" rx="3" fill="#ffffff" opacity="0.18"/>
+  <rect x="75" y="50" width="5" height="26" rx="3" fill="#ffffff" opacity="0.18"/>
+  <!-- Polsini -->
+  <rect x="7" y="73" width="14" height="5" rx="2" fill="#e8e8e8" stroke="#999" stroke-width="0.5"/>
+  <rect x="75" y="73" width="14" height="5" rx="2" fill="#e8e8e8" stroke="#999" stroke-width="0.5"/>
+
+  <!-- MANI (grigio chiaro neutro — verranno sovrapposte da graphics colore pelle se serve) -->
+  <circle cx="14" cy="82" r="8" fill="#c9c9c9" stroke="#000" stroke-width="1.5"/>
+  <circle cx="82" cy="82" r="8" fill="#c9c9c9" stroke="#000" stroke-width="1.5"/>
+
+  <!-- COLLO -->
+  <rect x="40" y="36" width="16" height="14" rx="4" fill="#c9c9c9" stroke="#000" stroke-width="1"/>
+
+  <!-- TESTA -->
+  <ellipse cx="48" cy="28" rx="24" ry="22" fill="url(#headG)" stroke="#000000" stroke-width="2.2" filter="url(#dshadow)"/>
+
+  <!-- CAPELLI -->
+  <ellipse cx="48" cy="10" rx="24" ry="10" fill="url(#hairG)"/>
+  <ellipse cx="26" cy="18" rx="8" ry="12" fill="url(#hairG)"/>
+  <ellipse cx="70" cy="18" rx="8" ry="12" fill="url(#hairG)"/>
+  <ellipse cx="38" cy="9" rx="8" ry="4" fill="#4a4a4a" opacity="0.6"/>
+
+  <!-- Zona occhi (rimane grigio neutro chiaro, così il tint non altera troppo gli occhi disegnati sopra) -->
+  <ellipse cx="38" cy="26" rx="8" ry="8" fill="#e8e8e8" opacity="0.001"/>
+  <ellipse cx="58" cy="26" rx="8" ry="8" fill="#e8e8e8" opacity="0.001"/>
+</svg>

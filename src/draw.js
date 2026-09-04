@@ -5,122 +5,80 @@
 // ================================================================
 
 function drawHumanGfx(g, r, col, isEng, isBoss){
-  // g è un PIXI.Container — creiamo un Graphics interno
-  const pg=new PIXI.Graphics();
-  g.addChild(pg);
-  g._body=pg; // ref per tinting
+  // ── SPRITE BASE (grayscale, tintato col colore del tipo nemico) ──
+  const tex = texCache[WORKER_SPRITE];
+  let pg; // Graphics per overlay dettagli (occhi, elmetto, ecc.)
 
-  // OMBRA PROIETTATA
-  pg.beginFill(0x000000,.32);
-  pg.drawEllipse(r*.08,r*.98,r*.85,r*.24);
-  pg.endFill();
-
-  // GAMBE con gradiente simulato
-  const legDark=darkenC(col,.5), legMid=darkenC(col,.7);
-  pg.lineStyle(1.5,0x000000,.6);
-  pg.beginFill(legDark);pg.drawRoundedRect(-r*.3,r*.2,r*.26,r*.65,r*.1);pg.endFill();
-  pg.beginFill(legDark);pg.drawRoundedRect(r*.04,r*.2,r*.26,r*.65,r*.1);pg.endFill();
-  pg.lineStyle(0);
-  pg.beginFill(legMid,.55);pg.drawRoundedRect(-r*.3,r*.2,r*.12,r*.65,r*.1);pg.endFill();
-  pg.beginFill(legMid,.55);pg.drawRoundedRect(r*.04,r*.2,r*.12,r*.65,r*.1);pg.endFill();
-  pg.lineStyle(1.5,0x000000,.75);
-  pg.beginFill(0x1c1410);pg.drawEllipse(-r*.17,r*.9,r*.24,r*.11);pg.endFill();
-  pg.beginFill(0x1c1410);pg.drawEllipse(r*.17,r*.9,r*.24,r*.11);pg.endFill();
-  pg.lineStyle(0);
-
-  // CORPO con gradiente e outline
-  const bodyLight=col, bodyDark=darkenC(col,.6);
-  pg.lineStyle(2.5,0x000000,.8);
-  pg.beginFill(bodyDark);pg.drawRoundedRect(-r*.44,-r*.18,r*.88,r*.44,r*.12);pg.endFill();
-  pg.lineStyle(0);
-  pg.beginFill(bodyLight,.85);pg.drawRoundedRect(-r*.44,-r*.18,r*.44,r*.44,r*.12);pg.endFill();
-  pg.beginFill(0xffffff,.18);pg.drawEllipse(-r*.12,-r*.08,r*.32,r*.14);pg.endFill();
-  pg.beginFill(0xffffff,.5);pg.drawRoundedRect(-r*.14,-r*.18,r*.28,r*.1,r*.04);pg.endFill();
-  if(isBoss){
-    pg.lineStyle(1,0x7f0010,.8);
-    pg.beginFill(0xef4444);
-    pg.drawPolygon([-r*.05,-r*.12, r*.05,-r*.12, r*.04,r*.08, 0,r*.22, -r*.04,r*.08]);
-    pg.endFill();pg.lineStyle(0);
-    pg.beginFill(0xfbbf24,.9);pg.drawCircle(0,r*.06,r*.04);pg.endFill();
+  if(tex){
+    const sprite=new PIXI.Sprite(tex);
+    sprite.anchor.set(0.5, 0.9375);
+    sprite.height = r*2.17;
+    sprite.width  = sprite.height*(96/128);
+    sprite.position.set(0, r*0.9);
+    sprite.tint = col;
+    g.addChild(sprite);
+    g._body=sprite; // ref per tinting/stato (stun/slow overrides tint temporaneamente)
+    g._baseTint=col;
   } else {
-    pg.beginFill(0xffffff,.4);
-    pg.drawCircle(0,-r*.08,r*.03);pg.drawCircle(0,r*.04,r*.03);
-    pg.endFill();
+    // Fallback raro: se lo sprite non è ancora caricato, disegna un corpo semplice
+    pg=new PIXI.Graphics();
+    g.addChild(pg);
+    g._body=pg;
+    pg.beginFill(col);pg.drawRoundedRect(-r*.44,-r*.5,r*.88,r*1.3,r*.15);pg.endFill();
   }
 
-  // BRACCIA con outline
-  pg.lineStyle(2,0x000000,.75);
-  pg.beginFill(bodyDark);pg.drawRoundedRect(-r*.74,-r*.14,r*.32,r*.5,r*.1);pg.endFill();
-  pg.beginFill(bodyDark);pg.drawRoundedRect(r*.42,-r*.14,r*.32,r*.5,r*.1);pg.endFill();
-  pg.lineStyle(0);
-  pg.beginFill(bodyLight,.5);pg.drawRoundedRect(-r*.74,-r*.14,r*.14,r*.5,r*.1);pg.endFill();
-  pg.beginFill(bodyLight,.5);pg.drawRoundedRect(r*.42,-r*.14,r*.14,r*.5,r*.1);pg.endFill();
-  pg.lineStyle(1.5,0xb45309,.6);
-  pg.beginFill(0xfde68a);pg.drawCircle(-r*.58,r*.38,r*.15);pg.endFill();
-  pg.beginFill(0xfde68a);pg.drawCircle(r*.58,r*.38,r*.15);pg.endFill();
-  pg.lineStyle(0);
+  // ── OMBRA A TERRA ──
+  const sh=new PIXI.Graphics();
+  sh.beginFill(0x000000,.3);
+  sh.drawEllipse(r*.06,r*1.0,r*.8,r*.2);
+  sh.endFill();
+  g.addChildAt(sh,0);
 
-  // COLLO
-  pg.lineStyle(1,0xb45309,.5);
-  pg.beginFill(0xfde68a);pg.drawRoundedRect(-r*.11,-r*.36,r*.22,r*.2,r*.05);pg.endFill();
-  pg.lineStyle(0);
-
-  // TESTA con gradiente
-  pg.lineStyle(2.5,0xb45309,.65);
-  pg.beginFill(0xfde68a);pg.drawCircle(0,-r*.65,r*.38);pg.endFill();
-  pg.lineStyle(0);
-  pg.beginFill(0xfef9c3,.5);pg.drawEllipse(-r*.1,-r*.82,r*.26,r*.18);pg.endFill();
-  pg.beginFill(0xb45309,.14);pg.drawEllipse(r*.12,-r*.6,r*.18,r*.3);pg.endFill();
-
-  // CAPELLI con volume
-  const hairCol=isBoss?0x1c1917:0x451a03;
-  pg.beginFill(hairCol);
-  pg.drawEllipse(0,-r*.97,r*.4,r*.19);
-  pg.drawEllipse(-r*.32,-r*.84,r*.15,r*.13);
-  pg.drawEllipse(r*.32,-r*.84,r*.15,r*.13);
-  pg.endFill();
-  pg.beginFill(isBoss?0x374151:0x7c2d12,.7);
-  pg.drawEllipse(-r*.05,-r*.98,r*.2,r*.1);
-  pg.endFill();
+  // ── DETTAGLI OVERLAY (non tintati — sempre leggibili) ──
+  const ov=new PIXI.Graphics();
+  g.addChild(ov);
 
   // OCCHI con profondità
-  pg.beginFill(0xffffff);pg.drawCircle(-r*.14,-r*.68,r*.12);pg.drawCircle(r*.14,-r*.68,r*.12);pg.endFill();
+  ov.beginFill(0xffffff);ov.drawCircle(-r*.14,-r*.68,r*.12);ov.drawCircle(r*.14,-r*.68,r*.12);ov.endFill();
   const irisCol=isBoss?0xef4444:0x1e40af;
-  pg.beginFill(irisCol);pg.drawCircle(-r*.14,-r*.67,r*.08);pg.drawCircle(r*.14,-r*.67,r*.08);pg.endFill();
-  pg.beginFill(0x000000);pg.drawCircle(-r*.12,-r*.66,r*.04);pg.drawCircle(r*.16,-r*.66,r*.04);pg.endFill();
-  pg.beginFill(0xffffff,.95);pg.drawCircle(-r*.18,-r*.72,r*.025);pg.drawCircle(r*.1,-r*.72,r*.025);pg.endFill();
+  ov.beginFill(irisCol);ov.drawCircle(-r*.14,-r*.67,r*.08);ov.drawCircle(r*.14,-r*.67,r*.08);ov.endFill();
+  ov.beginFill(0x000000);ov.drawCircle(-r*.12,-r*.66,r*.04);ov.drawCircle(r*.16,-r*.66,r*.04);ov.endFill();
+  ov.beginFill(0xffffff,.95);ov.drawCircle(-r*.18,-r*.72,r*.025);ov.drawCircle(r*.1,-r*.72,r*.025);ov.endFill();
 
-  pg.lineStyle(r*.07,hairCol,1);
-  pg.moveTo(-r*.23,-r*.8);pg.lineTo(-r*.06,-r*.75);
-  pg.moveTo(r*.23,-r*.8);pg.lineTo(r*.06,-r*.75);
-  pg.lineStyle(0);
+  // Sopracciglia
+  const browCol=isBoss?0x1c1917:0x2a2a2a;
+  ov.lineStyle(r*.07,browCol,1);
+  ov.moveTo(-r*.23,-r*.8);ov.lineTo(-r*.06,-r*.75);
+  ov.moveTo(r*.23,-r*.8);ov.lineTo(r*.06,-r*.75);
+  ov.lineStyle(0);
 
-  pg.lineStyle(r*.055,0x92400e,1);
-  if(isBoss){pg.moveTo(-r*.12,-r*.56);pg.lineTo(r*.12,-r*.52);}
-  else{pg.moveTo(-r*.1,-r*.55);pg.lineTo(r*.1,-r*.52);}
-  pg.lineStyle(0);
+  // Bocca
+  ov.lineStyle(r*.055,0x92400e,1);
+  if(isBoss){ov.moveTo(-r*.12,-r*.56);ov.lineTo(r*.12,-r*.52);}
+  else{ov.moveTo(-r*.1,-r*.55);ov.lineTo(r*.1,-r*.52);}
+  ov.lineStyle(0);
 
   // ELMETTO INGEGNERE
   if(isEng){
-    pg.lineStyle(2,0x92400e,.8);
-    pg.beginFill(0xd97706);pg.drawEllipse(0,-r*.9,r*.44,r*.22);pg.endFill();
-    pg.beginFill(0xfbbf24,.65);pg.drawEllipse(-r*.08,-r*.98,r*.28,r*.1);pg.endFill();
-    pg.beginFill(0x92400e);pg.drawRect(-r*.44,-r*.92,r*.88,r*.1);pg.endFill();
-    pg.lineStyle(0);
-    pg.beginFill(0xfef08a,.9);pg.drawCircle(-r*.3,-r*.88,r*.05);pg.endFill();
+    ov.lineStyle(2,0x92400e,.8);
+    ov.beginFill(0xd97706);ov.drawEllipse(0,-r*.9,r*.44,r*.22);ov.endFill();
+    ov.beginFill(0xfbbf24,.65);ov.drawEllipse(-r*.08,-r*.98,r*.28,r*.1);ov.endFill();
+    ov.beginFill(0x92400e);ov.drawRect(-r*.44,-r*.92,r*.88,r*.1);ov.endFill();
+    ov.lineStyle(0);
+    ov.beginFill(0xfef08a,.9);ov.drawCircle(-r*.3,-r*.88,r*.05);ov.endFill();
   }
 
   // STELLINA BOSS sul petto
   if(isBoss){
-    pg.beginFill(0xfbbf24,.9);
+    ov.beginFill(0xfbbf24,.9);
     const bx2=r*.22, by2=-r*.02;
-    pg.drawPolygon([
+    ov.drawPolygon([
       bx2,by2-r*.1, bx2+r*.04,by2-r*.03, bx2+r*.1,by2-r*.03,
       bx2+r*.05,by2+r*.03, bx2+r*.07,by2+r*.1,
       bx2,by2+r*.06, bx2-r*.07,by2+r*.1,
       bx2-r*.05,by2+r*.03, bx2-r*.1,by2-r*.03, bx2-r*.04,by2-r*.03
     ]);
-    pg.endFill();
+    ov.endFill();
   }
 }
 
@@ -417,9 +375,10 @@ function updateEnemyGfx(e){
 
   // Tint stato
   if(g._body){
+    const baseTint = g._baseTint!==undefined ? g._baseTint : 0xffffff;
     if(e.stunT>0)      g._body.tint=0xfbbf24;
     else if(e.slowT>0) g._body.tint=0x93c5fd;
-    else               g._body.tint=0xffffff;
+    else               g._body.tint=baseTint;
   }
 
   // Scudo
