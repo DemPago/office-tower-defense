@@ -178,6 +178,199 @@ function drawDragonGfx(g, r, col){
   pg.lineStyle(0);
   g._body=pg;
 }
+
+// ── TROLL DI MORDOR — massiccio, curvo, clava, pelle verde-marrone ──
+// Design distintivo: testa piccola incassata, spalle enormi, braccia lunghissime,
+// postura curva in avanti, clava di legno, zanne sporgenti
+function drawTrollGfx(g, r, col){
+  const pg=new PIXI.Graphics();
+  g.addChild(pg);
+  g._body=pg;
+
+  const skinDark=darkenC(col,.55);
+  const skinLight=col;
+
+  // OMBRA A TERRA (grande, ellittica)
+  pg.beginFill(0x000000,.4);
+  pg.drawEllipse(r*.1,r*1.05,r*1.1,r*.3);
+  pg.endFill();
+
+  // GAMBE MASSICCE (corte e larghe, tozze)
+  pg.lineStyle(3,0x000000,.6);
+  pg.beginFill(skinDark);
+  pg.drawRoundedRect(-r*.42,r*.35,r*.36,r*.55,r*.12);
+  pg.drawRoundedRect(r*.06,r*.35,r*.36,r*.55,r*.12);
+  pg.endFill();
+  pg.lineStyle(0);
+  // Piedi enormi con artigli
+  pg.beginFill(0x2d2416);
+  pg.drawEllipse(-r*.24,r*.92,r*.32,r*.16);
+  pg.drawEllipse(r*.24,r*.92,r*.32,r*.16);
+  pg.endFill();
+  pg.beginFill(0x1a1610);
+  [-.4,-.22,-.05].forEach(dx=>{pg.drawEllipse(dx*r-r*.05,r*1.0,r*.05,r*.09);});
+  [.05,.22,.4].forEach(dx=>{pg.drawEllipse(dx*r+r*.05,r*1.0,r*.05,r*.09);});
+  pg.endFill();
+
+  // TORSO MASSICCIO curvo in avanti (postura scimmiesca)
+  pg.lineStyle(3,0x000000,.65);
+  pg.beginFill(skinDark);
+  pg.drawEllipse(r*.02,-r*.05,r*.75,r*.62);
+  pg.endFill();
+  pg.lineStyle(0);
+  // Pancia sporgente chiara
+  pg.beginFill(skinLight,.65);
+  pg.drawEllipse(-r*.05,r*.12,r*.5,r*.42);
+  pg.endFill();
+  // Cicatrici/texture pelle
+  pg.lineStyle(2,skinDark,.5);
+  pg.moveTo(-r*.2,-r*.15);pg.lineTo(-r*.05,r*.05);
+  pg.moveTo(r*.15,-r*.25);pg.lineTo(r*.28,-r*.05);
+  pg.lineStyle(0);
+  // Perizoma/cintura rozza
+  pg.beginFill(0x4a3320);
+  pg.drawRoundedRect(-r*.45,r*.28,r*.9,r*.16,r*.05);
+  pg.endFill();
+  pg.beginFill(0x2d2416);
+  pg.drawRect(-r*.08,r*.3,r*.16,r*.12);
+  pg.endFill();
+
+  // BRACCIO SINISTRO enorme che regge la clava (dietro il corpo)
+  pg.lineStyle(3,0x000000,.6);
+  pg.beginFill(skinDark);
+  pg.drawEllipse(-r*.78,-r*.05,r*.24,r*.5);
+  pg.endFill();
+  pg.lineStyle(0);
+  // Avambraccio sx
+  pg.beginFill(skinDark);
+  pg.drawEllipse(-r*.95,r*.42,r*.22,r*.4);
+  pg.endFill();
+  // Pugno sx enorme
+  pg.lineStyle(2,0x000000,.6);
+  pg.beginFill(skinLight,.8);
+  pg.drawCircle(-r*.95,r*.78,r*.26);
+  pg.endFill();
+  pg.lineStyle(0);
+  // Nocche
+  pg.beginFill(skinDark,.5);
+  [-1.08,-.95,-.82].forEach(dx=>{pg.drawCircle(dx*r,r*.72,r*.06);});
+  pg.endFill();
+
+  // CLAVA DI LEGNO (nella mano sinistra)
+  pg.lineStyle(2,0x2d1f0f,.8);
+  pg.beginFill(0x5a3d1f);
+  pg.drawPolygon([
+    -r*1.15,r*.65,  -r*1.05,r*.5,
+    -r*.75,-r*.55,  -r*.6,-r*.4,
+    -r*.85,r*.55
+  ]);
+  pg.endFill();
+  pg.lineStyle(0);
+  // Nodi/chiodi sulla clava
+  pg.beginFill(0x3d2a15);
+  pg.drawCircle(-r*.7,-r*.35,r*.05);
+  pg.drawCircle(-r*.85,-r*.05,r*.05);
+  pg.drawCircle(-r*.95,r*.2,r*.05);
+  pg.endFill();
+  // Punte metalliche clava
+  pg.beginFill(0x94a3b8);
+  pg.drawPolygon([-r*.68,-r*.42,-r*.62,-r*.5,-r*.58,-r*.4]);
+  pg.drawPolygon([-r*.9,r*.02,-r*.98,-r*.02,-r*.94,r*.1]);
+  pg.endFill();
+
+  // BRACCIO DESTRO (avanti, libero, minaccioso)
+  pg.lineStyle(3,0x000000,.6);
+  pg.beginFill(skinLight,.9);
+  pg.drawEllipse(r*.68,r*.05,r*.24,r*.48);
+  pg.endFill();
+  pg.lineStyle(0);
+  pg.beginFill(skinLight);
+  pg.drawEllipse(r*.85,r*.5,r*.2,r*.36);
+  pg.endFill();
+  // Pugno dx
+  pg.lineStyle(2,0x000000,.6);
+  pg.beginFill(skinLight,.95);
+  pg.drawCircle(r*.9,r*.82,r*.24);
+  pg.endFill();
+  pg.lineStyle(0);
+  // Artigli pugno dx
+  pg.beginFill(0x1a1610);
+  [.78,.9,1.02].forEach(dx=>{pg.drawPolygon([dx*r,r*.95,dx*r-r*.03,r*1.08,dx*r+r*.03,r*1.08]);});
+  pg.endFill();
+
+  // TESTA PICCOLA incassata nelle spalle (tipico dei troll)
+  pg.lineStyle(3,0x000000,.65);
+  pg.beginFill(skinDark);
+  pg.drawEllipse(r*.05,-r*.62,r*.34,r*.3);
+  pg.endFill();
+  pg.lineStyle(0);
+  // Fronte sporgente
+  pg.beginFill(skinLight,.7);
+  pg.drawEllipse(r*.02,-r*.72,r*.28,r*.16);
+  pg.endFill();
+
+  // Orecchie a punta
+  pg.beginFill(skinDark);
+  pg.drawPolygon([-r*.22,-r*.68, -r*.36,-r*.82, -r*.2,-r*.55]);
+  pg.drawPolygon([r*.32,-r*.68, r*.46,-r*.82, r*.3,-r*.55]);
+  pg.endFill();
+
+  // Sopracciglia foltissime e minacciose
+  pg.beginFill(0x2d2416);
+  pg.drawPolygon([-r*.24,-r*.68,-r*.02,-r*.62,-r*.2,-r*.58]);
+  pg.drawPolygon([r*.3,-r*.68,r*.08,-r*.62,r*.26,-r*.58]);
+  pg.endFill();
+
+  // Occhi piccoli e cattivi (gialli)
+  pg.beginFill(0xfef08a);
+  pg.drawCircle(-r*.1,-r*.6,r*.07);
+  pg.drawCircle(r*.18,-r*.6,r*.07);
+  pg.endFill();
+  pg.beginFill(0x7c2d12);
+  pg.drawCircle(-r*.1,-r*.6,r*.04);
+  pg.drawCircle(r*.18,-r*.6,r*.04);
+  pg.endFill();
+  pg.beginFill(0x000000);
+  pg.drawCircle(-r*.1,-r*.6,r*.02);
+  pg.drawCircle(r*.18,-r*.6,r*.02);
+  pg.endFill();
+
+  // Naso largo e schiacciato
+  pg.beginFill(skinDark,.6);
+  pg.drawEllipse(r*.04,-r*.5,r*.09,r*.06);
+  pg.endFill();
+
+  // Bocca enorme con zanne
+  pg.beginFill(0x1a0a05);
+  pg.drawEllipse(r*.03,-r*.4,r*.2,r*.1);
+  pg.endFill();
+  // Zanne inferiori
+  pg.beginFill(0xf1f5f9);
+  pg.drawPolygon([-r*.12,-r*.42,-r*.09,-r*.32,-r*.06,-r*.42]);
+  pg.drawPolygon([r*.06,-r*.42,r*.09,-r*.3,r*.12,-r*.42]);
+  pg.endFill();
+  // Zanna superiore
+  pg.drawPolygon([r*.16,-r*.44,r*.19,-r*.36,r*.13,-r*.4]);
+  pg.endFill();
+
+  // Bava/saliva (dettaglio disgustoso ma iconico)
+  pg.beginFill(0x86efac,.4);
+  pg.drawEllipse(r*.02,-r*.32,r*.04,r*.08);
+  pg.endFill();
+
+  // Muschio/licheni sulla schiena (texture troll)
+  pg.beginFill(0x4d7c0f,.5);
+  pg.drawCircle(-r*.3,-r*.1,r*.08);
+  pg.drawCircle(r*.35,r*.15,r*.06);
+  pg.endFill();
+
+  // Rune tribali dipinte sul petto
+  pg.lineStyle(2,0xdc2626,.6);
+  pg.moveTo(-r*.15,-r*.05);pg.lineTo(r*.05,r*.15);
+  pg.moveTo(r*.05,-r*.05);pg.lineTo(-r*.15,r*.15);
+  pg.lineStyle(0);
+}
+
 function darkenC(col,f){
   const r=Math.round(((col>>16)&0xff)*f);
   const g2=Math.round(((col>>8)&0xff)*f);

@@ -738,6 +738,9 @@ function buildEnemyGfx(e){
   } else if(tmpl.dragon){
     // ── DRAGHETTO FALLBACK (grafica procedurale) ──
     drawDragonGfx(g, r, tmpl.col);
+  } else if(tmpl.isTroll){
+    // ── TROLL DI MORDOR (grafica distintiva) ──
+    drawTrollGfx(g, r, tmpl.col);
   } else {
     // ── OMINO CARTOON ──
     drawHumanGfx(g, r, tmpl.col, tmpl.eng, tmpl.r>34);

@@ -59,10 +59,10 @@ const TROLL_TMPL={
   id:'troll_mordor',
   n:'🧌 TROLL DI MORDOR',
   sub:'I nemici chiamano rinforzi!',
-  hp:0,   // calcolato dinamicamente: 3000 * wave
-  spd:35, rw:0,
-  col:0x4a2c0a, r:68,
-  type:'melee', wpn:'🪨', wr:0, wd:8,
+  hp:2800,   // base HP — scalato per ondata in spawnWaveTrolls
+  spd:38, rw:120,
+  col:0x5a6b3a, r:52,
+  type:'melee', wpn:'🪵', wr:0, wd:6,
   isTroll:true,
 };
 

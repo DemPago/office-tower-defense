@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 128" width="96" height="128">
+  <defs>
+    <!-- Gradiente corpo giacca blu -->
+    <linearGradient id="jacket" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1a3a6e"/>
+      <stop offset="45%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1e3a5f"/>
+    </linearGradient>
+    <!-- Gradiente pelle -->
+    <linearGradient id="skin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="70%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <!-- Gradiente elmetto -->
+    <linearGradient id="helmet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="60%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <!-- Gradiente pantaloni -->
+    <linearGradient id="pants" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f2040"/>
+      <stop offset="40%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#0f2040"/>
+    </linearGradient>
+    <!-- Gradiente capelli -->
+    <linearGradient id="hair" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c2d12"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <!-- Drop shadow filter -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- OMBRA A TERRA -->
+  <ellipse cx="48" cy="124" rx="28" ry="6" fill="#000000" opacity="0.25"/>
+
+  <!-- SCARPE -->
+  <ellipse cx="34" cy="115" rx="12" ry="5" fill="#1c1410" stroke="#000" stroke-width="1"/>
+  <ellipse cx="62" cy="115" rx="12" ry="5" fill="#1c1410" stroke="#000" stroke-width="1"/>
+  <!-- highlight scarpe -->
+  <ellipse cx="30" cy="112" rx="5" ry="2" fill="#3d2d1e" opacity="0.6"/>
+  <ellipse cx="58" cy="112" rx="5" ry="2" fill="#3d2d1e" opacity="0.6"/>
+
+  <!-- GAMBE PANTALONI -->
+  <rect x="28" y="82" width="18" height="34" rx="4" fill="url(#pants)" stroke="#0a1628" stroke-width="1.5"/>
+  <rect x="50" y="82" width="18" height="34" rx="4" fill="url(#pants)" stroke="#0a1628" stroke-width="1.5"/>
+  <!-- piega pantaloni highlight -->
+  <rect x="29" y="84" width="6" height="30" rx="3" fill="#2563eb" opacity="0.2"/>
+  <rect x="51" y="84" width="6" height="30" rx="3" fill="#2563eb" opacity="0.2"/>
+
+  <!-- CINTURA -->
+  <rect x="26" y="79" width="44" height="6" rx="2" fill="#0a1628" stroke="#1e3a5f" stroke-width="1"/>
+  <rect x="44" y="79" width="8" height="6" rx="1" fill="#f59e0b"/>
+
+  <!-- CORPO GIACCA -->
+  <rect x="22" y="46" width="52" height="38" rx="8" fill="url(#jacket)" stroke="#0a1628" stroke-width="2" filter="url(#shadow)"/>
+  <!-- Revers giacca -->
+  <path d="M48,48 L38,52 L36,68 L48,65 Z" fill="#1a3a5f" stroke="#0a1628" stroke-width="1"/>
+  <path d="M48,48 L58,52 L60,68 L48,65 Z" fill="#1a3a5f" stroke="#0a1628" stroke-width="1"/>
+  <!-- Camicia bianca -->
+  <path d="M48,48 L42,52 L42,65 L48,65 L54,65 L54,52 Z" fill="#f0f9ff" stroke="#cbd5e1" stroke-width="0.5"/>
+  <!-- Cravatta rossa -->
+  <path d="M46,51 L50,51 L52,62 L48,67 L44,62 Z" fill="#dc2626" stroke="#991b1b" stroke-width="1"/>
+  <path d="M47,53 L49,53 L50,59 L48,61 L46,59 Z" fill="#ef4444" opacity="0.6"/>
+  <!-- Gemello cravatta -->
+  <rect x="46" y="61" width="4" height="2" rx="1" fill="#fbbf24"/>
+  <!-- Highlight giacca -->
+  <rect x="24" y="48" width="8" height="34" rx="4" fill="#3b82f6" opacity="0.15"/>
+  <!-- Bottoni -->
+  <circle cx="48" cy="72" r="2" fill="#f8fafc"/>
+  <circle cx="48" cy="78" r="2" fill="#f8fafc"/>
+  <!-- Taschino -->
+  <rect x="56" y="52" width="10" height="8" rx="2" fill="#1e3a5f" stroke="#0a1628" stroke-width="0.5"/>
+
+  <!-- BRACCIA -->
+  <rect x="6" y="48" width="16" height="30" rx="6" fill="url(#jacket)" stroke="#0a1628" stroke-width="1.5"/>
+  <rect x="74" y="48" width="16" height="30" rx="6" fill="url(#jacket)" stroke="#0a1628" stroke-width="1.5"/>
+  <!-- Highlight braccia -->
+  <rect x="7" y="50" width="5" height="26" rx="3" fill="#3b82f6" opacity="0.18"/>
+  <rect x="75" y="50" width="5" height="26" rx="3" fill="#3b82f6" opacity="0.18"/>
+  <!-- Polsini bianchi -->
+  <rect x="7" y="73" width="14" height="5" rx="2" fill="#f0f9ff" stroke="#cbd5e1" stroke-width="0.5"/>
+  <rect x="75" y="73" width="14" height="5" rx="2" fill="#f0f9ff" stroke="#cbd5e1" stroke-width="0.5"/>
+
+  <!-- MANI -->
+  <circle cx="14" cy="82" r="8" fill="url(#skin)" stroke="#d97706" stroke-width="1.5"/>
+  <circle cx="82" cy="82" r="8" fill="url(#skin)" stroke="#d97706" stroke-width="1.5"/>
+  <!-- highlight mani -->
+  <circle cx="11" cy="79" r="3" fill="#fef9c3" opacity="0.5"/>
+  <circle cx="79" cy="79" r="3" fill="#fef9c3" opacity="0.5"/>
+
+  <!-- COLLO -->
+  <rect x="40" y="36" width="16" height="14" rx="4" fill="url(#skin)" stroke="#d97706" stroke-width="1"/>
+
+  <!-- TESTA -->
+  <ellipse cx="48" cy="28" rx="24" ry="22" fill="url(#skin)" stroke="#d97706" stroke-width="2" filter="url(#shadow)"/>
+  <!-- Luce sulla testa (top-left) -->
+  <ellipse cx="38" cy="18" rx="12" ry="8" fill="#fef9c3" opacity="0.4"/>
+  <!-- Ombra sul lato destro -->
+  <ellipse cx="58" cy="30" rx="10" ry="14" fill="#d97706" opacity="0.2"/>
+
+  <!-- CAPELLI -->
+  <ellipse cx="48" cy="10" rx="24" ry="10" fill="url(#hair)"/>
+  <ellipse cx="26" cy="18" rx="8" ry="12" fill="url(#hair)"/>
+  <ellipse cx="70" cy="18" rx="8" ry="12" fill="url(#hair)"/>
+  <ellipse cx="48" cy="8" rx="18" ry="7" fill="#7c2d12" opacity="0.5"/>
+  <!-- ciuffo highlight -->
+  <ellipse cx="38" cy="9" rx="8" ry="4" fill="#92400e" opacity="0.5"/>
+
+  <!-- SOPRACCIGLIA -->
+  <path d="M32,20 Q36,17 40,20" stroke="#451a03" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M56,20 Q60,17 64,20" stroke="#451a03" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- OCCHI -->
+  <!-- sclera -->
+  <ellipse cx="38" cy="26" rx="7" ry="7" fill="white" stroke="#e2d9c8" stroke-width="0.5"/>
+  <ellipse cx="58" cy="26" rx="7" ry="7" fill="white" stroke="#e2d9c8" stroke-width="0.5"/>
+  <!-- iride -->
+  <circle cx="38" cy="27" r="5" fill="#1d4ed8"/>
+  <circle cx="58" cy="27" r="5" fill="#1d4ed8"/>
+  <!-- pupilla -->
+  <circle cx="39" cy="27" r="3" fill="#0a0a0a"/>
+  <circle cx="59" cy="27" r="3" fill="#0a0a0a"/>
+  <!-- catchlight (luce) -->
+  <circle cx="36" cy="24" r="1.5" fill="white"/>
+  <circle cx="56" cy="24" r="1.5" fill="white"/>
+  <!-- riflesso basso -->
+  <circle cx="40" cy="29" r="0.8" fill="white" opacity="0.6"/>
+  <circle cx="60" cy="29" r="0.8" fill="white" opacity="0.6"/>
+
+  <!-- NASO -->
+  <path d="M45,33 Q48,36 51,33" stroke="#d97706" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- BOCCA sorriso determinato -->
+  <path d="M39,38 Q48,43 57,38" stroke="#7f1d1d" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- labbra -->
+  <path d="M41,38 Q48,41 55,38" stroke="#dc2626" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.4"/>
+
+  <!-- ELMETTO -->
+  <ellipse cx="48" cy="12" rx="25" ry="11" fill="url(#helmet)" stroke="#92400e" stroke-width="2"/>
+  <rect x="23" y="11" width="50" height="5" rx="2" fill="#d97706" stroke="#92400e" stroke-width="1"/>
+  <!-- Visiera elmetto -->
+  <rect x="34" y="15" width="28" height="5" rx="2" fill="#fbbf24" opacity="0.4"/>
+  <!-- Highlight elmetto -->
+  <ellipse cx="38" cy="8" rx="10" ry="5" fill="#fef9c3" opacity="0.4"/>
+  <!-- Lucina frontale elmetto -->
+  <circle cx="28" cy="13" r="3" fill="#fef08a" stroke="#f59e0b" stroke-width="1"/>
+  <circle cx="28" cy="13" r="1.5" fill="white" opacity="0.8"/>
+</svg>
