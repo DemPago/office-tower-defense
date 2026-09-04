@@ -292,67 +292,57 @@ function buildMainTower(){
   // ── DIPENDENTE SUL TETTO ──
   const playerCont=new PIXI.Container();
   playerCont.position.set(cx, by-28);
-  const pg=new PIXI.Graphics();
   const pr=14;
 
   // Ombra
-  pg.beginFill(0x000000,.25); pg.drawEllipse(0,pr*.9,pr*.7,pr*.2); pg.endFill();
-  // Gambe
-  pg.beginFill(0x1e3a5f);
-  pg.drawRoundedRect(-pr*.3,pr*.22,pr*.26,pr*.65,pr*.1);
-  pg.drawRoundedRect(pr*.04,pr*.22,pr*.26,pr*.65,pr*.1);
-  pg.endFill();
-  pg.beginFill(0xf59e0b);
-  pg.drawEllipse(-pr*.17,pr*.87,pr*.22,pr*.11);
-  pg.drawEllipse(pr*.17,pr*.87,pr*.22,pr*.11);
-  pg.endFill();
-  // Corpo
-  pg.beginFill(0x1e3a5f);
-  pg.drawRoundedRect(-pr*.42,-pr*.18,pr*.84,pr*.44,pr*.12);
-  pg.endFill();
-  pg.beginFill(0xf8fafc);
-  pg.drawRoundedRect(-pr*.18,-pr*.14,pr*.36,pr*.32,pr*.06);
-  pg.endFill();
-  pg.beginFill(0xe94560);
-  pg.drawPolygon([-pr*.05,-pr*.12, pr*.05,-pr*.12, pr*.04,pr*.08, 0,pr*.22, -pr*.04,pr*.08]);
-  pg.endFill();
-  // Braccia
-  pg.beginFill(0x1e3a5f);
-  pg.drawRoundedRect(-pr*.72,-pr*.12,pr*.32,pr*.52,pr*.1);
-  pg.drawRoundedRect(pr*.4,-pr*.12,pr*.32,pr*.52,pr*.1);
-  pg.endFill();
-  pg.beginFill(0xfde68a);
-  pg.drawCircle(-pr*.56,pr*.38,pr*.14);
-  pg.drawCircle(pr*.56,pr*.38,pr*.14);
-  pg.endFill();
-  // Collo
-  pg.beginFill(0xfde68a);
-  pg.drawRoundedRect(-pr*.11,-pr*.35,pr*.22,pr*.2,pr*.05);
-  pg.endFill();
-  // Testa
-  pg.beginFill(0xfde68a); pg.drawCircle(0,-pr*.65,pr*.38); pg.endFill();
-  // Capelli
-  pg.beginFill(0x78350f,.95);
-  pg.drawEllipse(0,-pr*.95,pr*.38,pr*.18);
-  pg.drawEllipse(-pr*.3,-pr*.82,pr*.14,pr*.12);
-  pg.drawEllipse(pr*.3,-pr*.82,pr*.14,pr*.12);
-  pg.endFill();
-  // Occhi
-  pg.beginFill(0xffffff); pg.drawCircle(-pr*.14,-pr*.68,pr*.12); pg.drawCircle(pr*.14,-pr*.68,pr*.12); pg.endFill();
-  pg.beginFill(0x1e293b); pg.drawCircle(-pr*.14,-pr*.67,pr*.07); pg.drawCircle(pr*.14,-pr*.67,pr*.07); pg.endFill();
-  pg.beginFill(0x000000); pg.drawCircle(-pr*.12,-pr*.66,pr*.035); pg.drawCircle(pr*.16,-pr*.66,pr*.035); pg.endFill();
-  pg.lineStyle(pr*.055,0x7f1d1d,1);
-  pg.moveTo(-pr*.12,-pr*.55); pg.lineTo(pr*.12,-pr*.52); pg.lineStyle(0);
-  pg.lineStyle(pr*.07,0x78350f,1);
-  pg.moveTo(-pr*.22,-pr*.8); pg.lineTo(-pr*.06,-pr*.75);
-  pg.moveTo(pr*.22,-pr*.8); pg.lineTo(pr*.06,-pr*.75);
-  pg.lineStyle(0);
-  // Elmetto
-  pg.beginFill(0xfbbf24,.95); pg.drawEllipse(0,-pr*.88,pr*.42,pr*.21); pg.endFill();
-  pg.beginFill(0xf59e0b); pg.drawRect(-pr*.42,-pr*.9,pr*.84,pr*.09); pg.endFill();
+  const psh=new PIXI.Graphics();
+  psh.beginFill(0x000000,.28); psh.drawEllipse(0,pr*.95,pr*.75,pr*.2); psh.endFill();
+  playerCont.addChild(psh);
 
-  playerCont.addChild(pg);
-  playerCont._gfx=pg;
+  // ── SPRITE PROFESSIONALE (tintato oro/arancio — il protagonista) ──
+  const ptex=texCache[WORKER_SPRITE];
+  let pg;
+  if(ptex){
+    const sprite=new PIXI.Sprite(ptex);
+    sprite.anchor.set(0.5, 0.9375);
+    sprite.height=pr*2.17;
+    sprite.width=sprite.height*(96/128);
+    sprite.position.set(0, pr*0.9);
+    sprite.tint=0xf59e0b; // arancio/oro — colore distintivo protagonista
+    playerCont.addChild(sprite);
+    playerCont._gfx=sprite;
+  } else {
+    pg=new PIXI.Graphics();
+    pg.beginFill(0xf59e0b);pg.drawRoundedRect(-pr*.44,-pr*.5,pr*.88,pr*1.3,pr*.15);pg.endFill();
+    playerCont.addChild(pg);
+    playerCont._gfx=pg;
+  }
+
+  // ── DETTAGLI OVERLAY (occhi, cravatta rossa, elmetto — sempre nitidi) ──
+  const pov=new PIXI.Graphics();
+  // Occhi
+  pov.beginFill(0xffffff); pov.drawCircle(-pr*.14,-pr*.68,pr*.12); pov.drawCircle(pr*.14,-pr*.68,pr*.12); pov.endFill();
+  pov.beginFill(0x1e293b); pov.drawCircle(-pr*.14,-pr*.67,pr*.07); pov.drawCircle(pr*.14,-pr*.67,pr*.07); pov.endFill();
+  pov.beginFill(0x000000); pov.drawCircle(-pr*.12,-pr*.66,pr*.035); pov.drawCircle(pr*.16,-pr*.66,pr*.035); pov.endFill();
+  // Bocca
+  pov.lineStyle(pr*.055,0x7f1d1d,1);
+  pov.moveTo(-pr*.12,-pr*.55); pov.lineTo(pr*.12,-pr*.52); pov.lineStyle(0);
+  // Sopracciglia
+  pov.lineStyle(pr*.07,0x2a2a2a,1);
+  pov.moveTo(-pr*.22,-pr*.8); pov.lineTo(-pr*.06,-pr*.75);
+  pov.moveTo(pr*.22,-pr*.8); pov.lineTo(pr*.06,-pr*.75);
+  pov.lineStyle(0);
+  // Cravatta rossa distintiva (protagonista)
+  pov.beginFill(0xe94560);
+  pov.drawPolygon([-pr*.05,-pr*.12, pr*.05,-pr*.12, pr*.04,pr*.08, 0,pr*.22, -pr*.04,pr*.08]);
+  pov.endFill();
+  // Elmetto oro
+  pov.lineStyle(1.5,0x92400e,.8);
+  pov.beginFill(0xfbbf24,.95); pov.drawEllipse(0,-pr*.88,pr*.42,pr*.21); pov.endFill();
+  pov.beginFill(0xf59e0b); pov.drawRect(-pr*.42,-pr*.9,pr*.84,pr*.09); pov.endFill();
+  pov.lineStyle(0);
+
+  playerCont.addChild(pov);
   L.tower.addChild(playerCont);
   window.playerContainer=playerCont;
 
