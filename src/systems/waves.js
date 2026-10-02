@@ -88,7 +88,7 @@ export function startWave(run) {
   run.spawnQueue = queue;
   run.spawnTimer = 0;
   run.phase = 'wave';
-  if (boss) banner(run, boss.name, boss.sub, '#ef4444');
+  if (boss) banner(run, boss.name, boss.sub, '#d7263d');
   else banner(run, `ONDATA ${w}`, `${n} nemici in arrivo`);
 }
 

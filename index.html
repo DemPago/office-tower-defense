@@ -7,7 +7,7 @@
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -28,7 +28,7 @@
 
     <section id="scr-cards" class="overlay" hidden>
       <h2 id="cards-title">Ondata superata!</h2>
-      <p>Scegli un potenziamento</p>
+      <p id="cards-sub">Scegli un potenziamento</p>
       <div id="cards-list"></div>
       <button id="btn-reroll" class="btn small">🎲 Rilancia</button>
     </section>
@@ -48,7 +48,7 @@
 
   <!-- Schermate a tutto schermo -->
   <section id="scr-menu" class="overlay full" hidden>
-    <h1>OFFICE<br>TOWER<br>DEFENSE</h1>
+    <h1>OFFICE<br><span>TOWER</span><br>DEFENSE</h1>
     <p class="tag">Difendi la tua scrivania dalla gerarchia aziendale.</p>
     <p id="menu-best"></p>
     <p id="menu-buoni" class="buoni"></p>
@@ -58,7 +58,7 @@
   </section>
 
   <section id="scr-shop" class="overlay full" hidden>
-    <h2>UFFICIO DEL<br>PERSONALE</h2>
+    <h2>Ufficio del<br>personale</h2>
     <p>Bonus permanenti, valgono per tutte le partite.</p>
     <p id="shop-buoni" class="buoni"></p>
     <div id="shop-list"></div>

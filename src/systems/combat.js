@@ -82,7 +82,7 @@ export function updateTower(run, dt) {
   const t = run.tower, s = run.stats;
   t.hitFlash = Math.max(0, t.hitFlash - dt);
   t.recoil = Math.max(0, (t.recoil || 0) - dt);
-  t.hp =Math.min(s.maxHp, t.hp + s.regen * dt);
+  t.hp = Math.min(s.maxHp, t.hp + s.regen * dt);
   t.cooldown -= dt;
   if (t.cooldown > 0) return;
 
@@ -94,16 +94,22 @@ export function updateTower(run, dt) {
 
   t.cooldown = 1 / s.rate;
   t.recoil = 0.08;
-  for (const target of targets) fire(run, MUZZLE.x, MUZZLE.y, target, s.dmg, s.bounce, new Set());
+  const effects = { slow: s.slow, dot: s.dot, aoeRadius: s.aoeRadius, aoeDmg: s.aoeDmg };
+  for (const target of targets) {
+    fire(run, MUZZLE.x, MUZZLE.y, target, {
+      dmg: s.dmg, bounces: s.bounce, hitIds: new Set(), speed: s.shotSpeed, effects, kind: 'tower',
+    });
+  }
 }
 
-function fire(run, x, y, target, dmg, bounces, hitIds) {
+// Spara un colpo che insegue il bersaglio. opts: dmg, bounces, hitIds, speed, effects, kind
+export function fire(run, x, y, target, opts) {
   const crit = Math.random() < run.stats.crit;
   run.shots.push({
-    x, y, target,
-    dmg: crit ? dmg * run.stats.critMult : dmg,
-    baseDmg: dmg, crit, bounces, hitIds,
-    speed: run.stats.shotSpeed,
+    ...opts, x, y, target,
+    baseDmg: opts.dmg,
+    dmg: crit ? opts.dmg * run.stats.critMult : opts.dmg,
+    crit,
   });
 }
 
@@ -129,21 +135,27 @@ export function updateShots(run, dt) {
 }
 
 function onShotHit(run, shot, e) {
-  const s = run.stats;
+  const fx = shot.effects;
   shot.hitIds.add(e.id);
+  burst(run, shot.x, shot.y, '#ffd23f', 3, 50); // scintille d'impatto
   dealDamage(run, e, shot.dmg, { crit: shot.crit });
-  if (s.slow > 0) { e.slowT = 1.5; e.slowF = s.slow * (e.boss ? 0.5 : 1); }
-  if (s.dot > 0) { e.dotT = 3; e.dotDps = shot.baseDmg * s.dot / 3; }
+  if (fx.slow > 0) { e.slowT = 1.5; e.slowF = fx.slow * (e.boss ? 0.5 : 1); }
+  if (fx.dot > 0) { e.dotT = 3; e.dotDps = shot.baseDmg * fx.dot / 3; }
 
-  if (s.aoeRadius > 0) {
-    ring(run, e.x, e.y - e.size * 0.3, s.aoeRadius, '#c084fc');
+  if (fx.aoeRadius > 0) {
+    ring(run, e.x, e.y - e.size * 0.3, fx.aoeRadius, '#ff7b1c');
+    burst(run, e.x, e.y - e.size * 0.3, '#ff7b1c', 8, 90);
     for (const o of run.enemies) {
-      if (o !== e && !o.dead && dist(o, e) <= s.aoeRadius) dealDamage(run, o, shot.dmg * s.aoeDmg, { silent: true });
+      if (o !== e && !o.dead && dist(o, e) <= fx.aoeRadius) dealDamage(run, o, shot.dmg * fx.aoeDmg, { silent: true });
     }
   }
   if (shot.bounces > 0) {
     const next = nearest(run, e, o => o !== e && !shot.hitIds.has(o.id), 140);
-    if (next) fire(run, e.x, e.y - e.size * 0.35, next, shot.baseDmg * 0.75, shot.bounces - 1, shot.hitIds);
+    if (next) {
+      fire(run, e.x, e.y - e.size * 0.35, next, {
+        ...shot, dmg: shot.baseDmg * 0.75, bounces: shot.bounces - 1, done: false,
+      });
+    }
   }
 }
 
@@ -165,7 +177,7 @@ export function dealDamage(run, e, amount, { crit = false, silent = false } = {}
   e.hp -= dmg;
   if (!silent) {
     e.hitFlash = 0.08;
-    floatText(run, e.x + (Math.random() * 10 - 5), e.y - e.size * 0.8, fmt(Math.max(1, dmg)) + (crit ? '!' : ''), crit ? '#fbbf24' : '#fff', crit ? 10 : 7);
+    floatText(run, e.x + (Math.random() * 10 - 5), e.y - e.size * 0.8, fmt(Math.max(1, dmg)) + (crit ? '!' : ''), crit ? '#d7263d' : '#e8e2d0', crit ? 10 : 7);
   }
   if (e.hp <= 0) killEnemy(run, e);
 }
@@ -176,8 +188,10 @@ function killEnemy(run, e) {
   run.fx.corpses.push({ char: e.char, x: e.x, y: e.y, size: e.size, dir: e.x < TOWER.x ? -1 : 1, life: 0.6, max: 0.6 });
   const gold = Math.max(1, Math.round(e.gold * run.stats.goldMult));
   run.gold += gold;
-  floatText(run, e.x, e.y - e.size, '+' + fmt(gold) + '💰', '#fbbf24', 7);
-  burst(run, e.x, e.y - e.size * 0.3, e.boss ? '#ef4444' : '#e5e7eb', e.boss ? 30 : 7, e.boss ? 140 : 70);
+  floatText(run, e.x, e.y - e.size, '+' + fmt(gold) + '💰', '#f2b705', 7);
+  // fogli di carta e schizzi rossi
+  burst(run, e.x, e.y - e.size * 0.3, '#e8e2d0', e.boss ? 24 : 6, e.boss ? 140 : 80);
+  burst(run, e.x, e.y - e.size * 0.3, '#d7263d', e.boss ? 16 : 4, e.boss ? 120 : 60);
   if (run.stats.healOnKill) run.tower.hp = Math.min(run.stats.maxHp, run.tower.hp + run.stats.healOnKill);
   if (e.boss) {
     shake(run, 8);

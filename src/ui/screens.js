@@ -2,6 +2,7 @@
 // scelta delle carte, pausa e fine partita.
 import { RARITY } from '../data/cards.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
+import { ALLY_LEVELS } from '../data/allies.js';
 import { fmt } from '../util.js';
 
 const $ = id => document.getElementById(id);
@@ -64,7 +65,32 @@ export function showCards(run, onPick, onReroll) {
   rr.textContent = `🎲 Rilancia (${run.rerolls})`;
   rr.disabled = run.rerolls <= 0;
   rr.onclick = onReroll;
+  rr.hidden = false;
   $('cards-title').textContent = `Ondata ${run.wave} superata!`;
+  $('cards-sub').textContent = 'Scegli un potenziamento';
+  show('scr-cards');
+}
+
+// Scelta del rinforzo: usa la stessa schermata delle carte.
+export function showAllies(run, onPick) {
+  const box = $('cards-list');
+  box.innerHTML = '';
+  run.allyChoices.forEach((def, i) => {
+    const have = run.allies.find(a => a.id === def.id);
+    const el = document.createElement('button');
+    el.className = 'card ally';
+    el.innerHTML = `
+      <span class="rar">${have ? 'PROMOZIONE' : 'NUOVO'}</span>
+      <span class="ico">${def.icon}</span>
+      <b>${def.name}</b>
+      <small>${def.desc}</small>
+      <span class="own">${have ? `${ALLY_LEVELS[have.level - 1]} → ${ALLY_LEVELS[have.level]}` : ALLY_LEVELS[0]}</span>`;
+    el.addEventListener('click', () => onPick(i));
+    box.appendChild(el);
+  });
+  $('btn-reroll').hidden = true;
+  $('cards-title').textContent = '🚨 RINFORZI IN ARRIVO!';
+  $('cards-sub').textContent = 'Un collega viene ad aiutarti. Chi scegli?';
   show('scr-cards');
 }
 

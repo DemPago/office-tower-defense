@@ -13,8 +13,9 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 1. **La torre spara da sola** al nemico più vicino dentro la gittata (il cerchio tratteggiato).
 2. Ogni nemico eliminato dà **oro 💰**: spendilo nel pannello in basso per Danno, Velocità, Gittata, Vita e Rigenerazione.
 3. **Dopo ogni ondata scegli 1 carta su 3**: sono potenziamenti che si sommano (colpi multipli, rimbalzi, esplosioni, veleno, critici…).
-4. Usa i **poteri** quando sei in difficoltà: si ricaricano col tempo.
-5. Quando la torre crolla vieni **licenziato**, ma guadagni **buoni pasto 🎫** da spendere nell'**Ufficio del personale** in bonus permanenti.
+4. **Ogni 5 ondate arrivano i rinforzi**: scegli un collega fra 3 e si piazza in una postazione intorno al palazzo. Se ripeschi un collega che hai già, viene promosso (Junior → Middle → Professional → Senior → 👑 King).
+5. Usa i **poteri** quando sei in difficoltà: si ricaricano col tempo.
+6. Quando la torre crolla vieni **licenziato**, ma guadagni **buoni pasto 🎫** da spendere nell'**Ufficio del personale** in bonus permanenti.
 
 ### Comandi
 | Tasto | Azione |
@@ -22,6 +23,15 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 | `1` `2` `3` `4` | 💣 Bomba di carta · ☕ Caffè bollente · 📅 Riunione urgente · 🔍 Audit fiscale |
 | `Spazio` / `Esc` | Pausa |
 | `x1` in alto | Velocità di gioco x1 / x2 / x3 |
+
+## 🦺 Rinforzi (ogni 5 ondate)
+| Collega | Cosa fa |
+|---|---|
+| 📊 **Project Manager** | Laser rapido a lunga gittata |
+| 🎯 **Service Manager** | Balestra: colpi forti che rallentano |
+| 💻 **Dev** | Lancia PC che esplodono ad area |
+| 🏃 **Mago Agile** | +velocità di fuoco a palazzo e colleghi |
+| 📋 **Mago Scrum** | +danno a palazzo e colleghi |
 
 ## 👾 Boss (ogni 10 ondate)
 | Ondata | Boss |
@@ -71,8 +81,9 @@ Per **bilanciare il gioco** basta toccare i file in `src/data/` e le curve `hpSc
 Su GitHub: **Settings → Pages → Source: main / (root)** → Save.
 
 ## 🎨 Asset grafici
-Personaggi e terreno: asset di [Kenney](https://kenney.nl), licenza [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (pubblico dominio; il credito è dato per correttezza).
-Font: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) (OFL).
+Personaggi: asset di [Kenney](https://kenney.nl), licenza [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (pubblico dominio; il credito è dato per correttezza).
+Font: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) e [Permanent Marker](https://fonts.google.com/specimen/Permanent+Marker) (licenze OFL / Apache).
+Tutto il resto (strade, palazzo, oggetti) è disegnato via codice in `src/render/world.js`.
 
 ---
 *"La tua posizione è stata eliminata per motivi strutturali."*

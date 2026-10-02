@@ -11,7 +11,7 @@ export const TOWER = { x: 180, y: 455, radius: 26 };
 export function createRun(meta) {
   const mb = metaBonuses(meta);
   const run = {
-    phase: 'break',          // 'break' (pausa fra ondate) | 'wave' | 'cards' | 'over'
+    phase: 'break',          // 'break' (pausa fra ondate) | 'wave' | 'ally' | 'cards' | 'over'
     breakTimer: 2,           // secondi prima della prossima ondata
     wave: 0,
     time: 0,
@@ -22,6 +22,8 @@ export function createRun(meta) {
     upgrades: Object.fromEntries(UPGRADES.map(u => [u.id, 0])),
     cards: {},               // id carta -> quante copie prese
     cardChoices: null,       // le 3 carte proposte durante la fase 'cards'
+    allies: [],              // rinforzi: { id, level, slot, ... }
+    allyChoices: null,       // i 3 colleghi proposti durante la fase 'ally'
     abilityCd: Object.fromEntries(ABILITIES.map(a => [a.id, 0])),
     tower: { hp: 0, cooldown: 0, hitFlash: 0 },
     stats: null,

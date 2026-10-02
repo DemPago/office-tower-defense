@@ -5,6 +5,7 @@ import { update, runReward } from './systems/game.js';
 import { buyUpgrade } from './systems/economy.js';
 import { useAbility } from './systems/abilities.js';
 import { pickCard, reroll } from './systems/cards.js';
+import { pickAlly } from './systems/allies.js';
 import { META_UPGRADES, levelCost } from './data/upgrades.js';
 import { ABILITIES } from './data/abilities.js';
 import { loadAssets } from './render/assets.js';
@@ -21,6 +22,12 @@ let speed = 1;
 let overHandled = false;
 
 const assets = await loadAssets();
+// I font servono già pronti per disegnare i graffiti sullo sfondo.
+try {
+  await Promise.all([document.fonts.load('16px "Permanent Marker"'), document.fonts.load('8px "Press Start 2P"')]);
+} catch {
+  // senza font si usa quello di riserva
+}
 const renderer = createRenderer($('cv'), assets);
 const hud = createHud({
   onBuy: id => run && buyUpgrade(run, meta, id),
@@ -44,7 +51,7 @@ function toMenu() {
 }
 
 function setPaused(p) {
-  if (!run || run.phase === 'over' || run.phase === 'cards') return;
+  if (!run || run.phase === 'over' || run.phase === 'cards' || run.phase === 'ally') return;
   paused = p;
   if (paused) screens.show('scr-pause');
   else screens.hideAll();
@@ -67,6 +74,13 @@ function onCardsPhase() {
   screens.showCards(run,
     i => { if (pickCard(run, meta, i)) screens.hideAll(); },
     () => { if (reroll(run)) onCardsPhase(); });
+}
+
+function onAllyPhase() {
+  screens.showAllies(run, i => {
+    // dopo il rinforzo si passa subito alla scelta della carta
+    if (pickAlly(run, meta, i)) onCardsPhase();
+  });
 }
 
 function onGameOver() {
@@ -110,6 +124,7 @@ function frame(now) {
   if (run && !paused) {
     // A velocità x2/x3 si fanno più passi piccoli invece di uno grande.
     for (let i = 0; i < speed; i++) update(run, dt);
+    if (run.phase === 'ally' && $('scr-cards').hidden) onAllyPhase();
     if (run.phase === 'cards' && $('scr-cards').hidden) onCardsPhase();
     if (run.phase === 'over' && !overHandled) onGameOver();
   }

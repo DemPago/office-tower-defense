@@ -26,7 +26,7 @@ export const CARDS = [
 ];
 
 export const RARITY = {
-  common: { weight: 60, label: 'Comune', color: '#9ca3af' },
-  rare:   { weight: 30, label: 'Rara',   color: '#60a5fa' },
-  epic:   { weight: 10, label: 'Epica',  color: '#c084fc' },
+  common: { weight: 60, label: 'Comune', color: '#8a8d93' },
+  rare:   { weight: 30, label: 'Rara',   color: '#2de2e6' },
+  epic:   { weight: 10, label: 'Epica',  color: '#ff3e8a' },
 };

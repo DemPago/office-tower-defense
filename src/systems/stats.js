@@ -2,6 +2,7 @@
 // potenziamenti con l'oro (u), carte (c) e progressi permanenti (m).
 import { CARDS } from '../data/cards.js';
 import { UPGRADES, META_UPGRADES } from '../data/upgrades.js';
+import { ALLIES } from '../data/allies.js';
 
 // La torre senza nessun bonus.
 export const BASE = {
@@ -45,9 +46,18 @@ export function computeStats(run, meta) {
   }
   const m = metaBonuses(meta);
 
+  // Bonus dei maghi (rinforzi con aura): valgono per torre e colleghi.
+  let auraRate = 0, auraDmg = 0;
+  for (const ally of run.allies) {
+    const def = ALLIES.find(a => a.id === ally.id);
+    if (def.aura === 'rate') auraRate += def.auraPer * ally.level;
+    if (def.aura === 'dmg') auraDmg += def.auraPer * ally.level;
+  }
+
   return {
-    dmg: BASE.dmg * (1 + u.dmg) * (1 + c.dmg) * (1 + m.dmg),
-    rate: Math.min(12, BASE.rate * (1 + u.rate + c.rate + m.rate)),
+    dmg: BASE.dmg * (1 + u.dmg) * (1 + c.dmg) * (1 + m.dmg) * (1 + auraDmg),
+    rate: Math.min(12, BASE.rate * (1 + u.rate + c.rate + m.rate + auraRate)),
+    allyRateMult: 1 + auraRate,
     range: Math.min(320, BASE.range * (1 + u.range + c.range)),
     maxHp: (BASE.hp + u.hpFlat + c.hpFlat) * (1 + c.hp + m.hp),
     regen: BASE.regen + u.regen + c.regen,

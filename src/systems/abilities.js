@@ -34,7 +34,7 @@ export function useAbility(run, id) {
   const def = ABILITIES.find(a => a.id === id);
   EFFECTS[id](run);
   run.abilityCd[id] = def.cd * run.stats.cdMult;
-  banner(run, `${def.icon} ${def.name.toUpperCase()}`, '', '#60a5fa');
+  banner(run, `${def.icon} ${def.name.toUpperCase()}`, '', '#2de2e6');
   run.fx.banner.life = run.fx.banner.max = 1.2;
   return true;
 }

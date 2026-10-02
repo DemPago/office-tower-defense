@@ -22,7 +22,7 @@ export function shake(run, amount) {
   run.fx.shake = Math.max(run.fx.shake, amount);
 }
 
-export function banner(run, title, sub, color = '#fbbf24') {
+export function banner(run, title, sub, color = '#f2b705') {
   run.fx.banner = { title, sub, color, life: 2.6, max: 2.6 };
 }
 
