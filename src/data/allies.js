@@ -7,11 +7,11 @@
 export const REINFORCE_EVERY = 5;
 
 export const ALLIES = [
-  { id: 'pm',    icon: '📊', name: 'Project Manager', char: 'red_shirt',     kind: 'laser', dmg: 0.3, rate: 2.2, range: 210, desc: 'Laser rapido a lunga gittata' },
-  { id: 'sm',    icon: '🎯', name: 'Service Manager', char: 'purple_hair',   kind: 'bolt',  dmg: 0.9,  rate: 0.6, range: 190, slow: 0.4, desc: 'Balestra: colpi forti che rallentano' },
-  { id: 'dev',   icon: '💻', name: 'Dev',             char: 'worker_helmet', kind: 'pc',    dmg: 0.6,  rate: 0.5, range: 170, aoe: 42, desc: 'Lancia PC che esplodono ad area' },
-  { id: 'agile', icon: '🏃', name: 'Mago Agile',      char: 'elder',         aura: 'rate', auraPer: 0.10, desc: '+10% velocità di fuoco a tutti, per livello' },
-  { id: 'scrum', icon: '📋', name: 'Mago Scrum',      char: 'green_shirt',   aura: 'dmg',  auraPer: 0.12, desc: '+12% danno a tutti, per livello' },
+  { id: 'pm',    icon: '📊', name: 'Project Manager', look: 'pm',  kind: 'laser', dmg: 0.3, rate: 2.2, range: 210, desc: 'Laser rapido a lunga gittata' },
+  { id: 'sm',    icon: '🎯', name: 'Service Manager', look: 'sm',  kind: 'bolt',  dmg: 0.9,  rate: 0.6, range: 190, slow: 0.4, desc: 'Balestra: colpi forti che rallentano' },
+  { id: 'dev',   icon: '💻', name: 'Dev',             look: 'dev', kind: 'pc',    dmg: 0.6,  rate: 0.5, range: 170, aoe: 42, desc: 'Lancia PC che esplodono ad area' },
+  { id: 'agile', icon: '🏃', name: 'Mago Agile',      look: 'agile', aura: 'rate', auraPer: 0.10, desc: '+10% velocità di fuoco a tutti, per livello' },
+  { id: 'scrum', icon: '📋', name: 'Mago Scrum',      look: 'scrum', aura: 'dmg',  auraPer: 0.12, desc: '+12% danno a tutti, per livello' },
 ];
 
 export const ALLY_LEVELS = ['Junior', 'Middle', 'Professional', 'Senior', '👑 King'];

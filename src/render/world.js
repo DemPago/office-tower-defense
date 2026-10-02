@@ -3,6 +3,7 @@
 import { WORLD, TOWER } from '../state.js';
 import { ALLY_SLOTS } from '../data/allies.js';
 import { allyDef } from '../systems/allies.js';
+import { LOOKS } from './people.js';
 
 // Palette grunge (la stessa usata in style.css).
 export const PAL = {
@@ -697,26 +698,25 @@ function drawTower(ctx, assets, run, time) {
 
   if (dead) return;
 
-  // Il protagonista sul tetto, con l'elmetto giallo da capocantiere
-  const recoil = run && run.tower.recoil > 0 ? 2 : 0;
-  const bob = Math.round(Math.sin(time * 2.2));
-  const py = top - 33 + recoil + bob;
-  ctx.drawImage(assets.sprite('dark_hair', 32, 0), TOWER.x - 17, py - 1);
-  ctx.fillStyle = PAL.black;
-  ctx.fillRect(TOWER.x - 8, py - 1, 16, 7);
-  ctx.fillStyle = PAL.hazard;
-  ctx.fillRect(TOWER.x - 7, py, 14, 4);
-  ctx.fillRect(TOWER.x - 9, py + 4, 18, 2);
-  ctx.fillStyle = '#fff3b0';
-  ctx.fillRect(TOWER.x - 5, py + 1, 3, 1);
+  // Il protagonista sul tetto: elmetto e giubbotto catarifrangente
+  const recoil = run && run.tower.recoil > 0 ? 1 : 0;
+  const bob = Math.round(Math.sin(time * 2.2) * 0.6);
+  const feet = top - 2 + recoil + bob;
+  drawPersonAt(ctx, assets.person('player', 0, 1), TOWER.x, feet);
   // Lampo allo sparo
   if (recoil) {
+    const fx = TOWER.x + 1, fy = feet - 15;
     ctx.fillStyle = PAL.white;
-    ctx.fillRect(TOWER.x - 2, py + 6, 5, 5);
+    ctx.fillRect(fx - 2, fy - 2, 5, 5);
     ctx.fillStyle = PAL.hazard;
-    ctx.fillRect(TOWER.x - 5, py + 7, 11, 3);
-    ctx.fillRect(TOWER.x - 1, py + 3, 3, 11);
+    ctx.fillRect(fx - 5, fy - 1, 11, 3);
+    ctx.fillRect(fx - 1, fy - 5, 3, 11);
   }
+}
+
+// Disegna uno sprite di personaggio con i piedi nel punto (x, feetY).
+function drawPersonAt(ctx, img, x, feetY) {
+  ctx.drawImage(img, Math.round(x - img.width / 2), Math.round(feetY - img.height + 2));
 }
 
 function updateSmoke(smoke, run, dt) {
@@ -765,14 +765,14 @@ function drawAlly(ctx, assets, ally, time) {
   }
   const recoil = ally.recoil > 0 ? 1 : 0;
   ctx.globalAlpha = ally.spawn;
-  ctx.drawImage(assets.sprite(def.char, 32, 0), x - 17, y - 33 + drop + recoil);
+  drawPersonAt(ctx, assets.person(def.look, 0, 1), x, y - 1 + drop + recoil);
   ctx.globalAlpha = 1;
   sandbag(ctx, x - 12, y - 5);
   sandbag(ctx, x + 1, y - 5);
 
   // segno di riconoscimento: freccia gialla e tacche del livello
   if (ally.spawn >= 1) {
-    const by = y - 40 + Math.round(Math.sin(time * 3 + ally.slot));
+    const by = y - (def.aura ? 44 : 38) + Math.round(Math.sin(time * 3 + ally.slot));
     ctx.fillStyle = PAL.black;
     ctx.fillRect(x - 4, by - 1, 9, 5);
     ctx.fillStyle = PAL.hazard;
@@ -798,18 +798,17 @@ function drawShadow(ctx, e) {
 }
 
 function drawEnemy(ctx, assets, e) {
-  const s = e.size;
+  const s = e.size, k = e.scale || 1;
   const frame = e.moving ? Math.floor(e.anim * 2) % 2 : 0;
-  let x = e.x - s / 2, y = e.y - s;
-  if (e.moving) y -= Math.abs(Math.sin(e.anim * Math.PI)) * 2; // saltello mentre cammina
+  let x = e.x, feet = e.y;
+  if (e.moving) feet -= Math.abs(Math.sin(e.anim * Math.PI)) * k; // saltello mentre cammina
   if (e.lunge > 0) {
     // scatto verso il palazzo quando colpisce
     const d = Math.hypot(TOWER.x - e.x, TOWER.y - e.y) || 1;
     x += (TOWER.x - e.x) / d * 5;
-    y += (TOWER.y - e.y) / d * 5;
+    feet += (TOWER.y - e.y) / d * 5;
   }
-  x = Math.round(x);
-  y = Math.round(y);
+  const y = Math.round(feet - s); // cima della testa, per barre e simboli
 
   ctx.globalAlpha = Math.min(1, (e.age || 0) / 0.4); // compare in dissolvenza
   if (e.boss) {
@@ -818,12 +817,13 @@ function drawEnemy(ctx, assets, e) {
     ctx.ellipse(e.x, e.y, s * 0.55, s * 0.18, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.drawImage(assets.sprite(e.char, s, frame), x - 1, y - 1);
+  drawPersonAt(ctx, assets.person(e.look, frame, k), x, feet);
   if (e.hitFlash > 0) {
     ctx.globalAlpha = 0.6;
-    ctx.drawImage(assets.sprite(e.char, s, frame, true), x - 1, y - 1);
+    drawPersonAt(ctx, assets.person(e.look, frame, k, true), x, feet);
   }
   ctx.globalAlpha = 1;
+  x = Math.round(x - s / 2);
 
   if (e.slowT > 0) {
     ctx.fillStyle = 'rgba(45,226,230,0.6)';
@@ -840,7 +840,7 @@ function drawEnemy(ctx, assets, e) {
     ctx.textAlign = 'center';
     ctx.fillText('zZ', e.x, y - 2);
   }
-  if (e.boss) {
+  if (e.boss && !LOOKS[e.look].hat) {
     // corona d'oro sporca
     const cx = Math.round(e.x), cy = Math.round(y + s * 0.06);
     ctx.fillStyle = PAL.black;
@@ -875,10 +875,10 @@ function drawCorpse(ctx, assets, c) {
   ctx.globalAlpha = Math.max(0, 1 - k * 1.3);
   ctx.translate(Math.round(c.x), Math.round(c.y));
   ctx.rotate(c.dir * Math.min(1, k * 3) * Math.PI / 2);
-  ctx.drawImage(assets.sprite(c.char, c.size, 0), -c.size / 2 - 1, -c.size - 1);
+  drawPersonAt(ctx, assets.person(c.look, 0, c.scale || 1), 0, 0);
   if (k < 0.2) {
     ctx.globalAlpha = 0.6 * (1 - k / 0.2); // breve lampo bianco all'inizio
-    ctx.drawImage(assets.sprite(c.char, c.size, 0, true), -c.size / 2 - 1, -c.size - 1);
+    drawPersonAt(ctx, assets.person(c.look, 0, c.scale || 1, true), 0, 0);
   }
   ctx.restore();
 }

@@ -81,9 +81,8 @@ Per **bilanciare il gioco** basta toccare i file in `src/data/` e le curve `hpSc
 Su GitHub: **Settings → Pages → Source: main / (root)** → Save.
 
 ## 🎨 Asset grafici
-Personaggi: asset di [Kenney](https://kenney.nl), licenza [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (pubblico dominio; il credito è dato per correttezza).
 Font: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) e [Permanent Marker](https://fonts.google.com/specimen/Permanent+Marker) (licenze OFL / Apache).
-Tutto il resto (strade, palazzo, oggetti) è disegnato via codice in `src/render/world.js`.
+Tutta la grafica è disegnata via codice, senza immagini: personaggi in `src/render/people.js`, strade, palazzo e oggetti in `src/render/world.js`.
 
 ---
 *"La tua posizione è stata eliminata per motivi strutturali."*

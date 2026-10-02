@@ -38,7 +38,8 @@ function makeEnemy(def, w, extra = {}) {
     id: Math.random(),
     def,
     name: def.name,
-    char: def.char,
+    look: def.look,
+    scale: 1,
     x: p.x, y: p.y,
     hp, maxHp: hp,
     speed: def.speed * (0.9 + Math.random() * 0.2),
@@ -62,12 +63,13 @@ function makeBoss(b, w) {
   for (let i = 0; i < group; i++) {
     const hp = base.hp * hpScale(w) * b.hpFactor / group;
     list.push(makeEnemy(base, w, {
-      name: b.name, char: b.char, boss: true,
+      name: b.name, look: b.look, boss: true,
+      scale: group > 4 ? 1 : 2,
       hp, maxHp: hp,
       speed: b.speed,
       atk: base.atk * atkScale(w) * b.atkFactor,
       gold: 30 * goldScale(w) / group,
-      size: group > 1 ? 48 : 64,
+      size: group > 4 ? 28 : 56,
     }));
   }
   return list;
