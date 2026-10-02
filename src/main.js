@@ -1,93 +1,124 @@
-'use strict';
-// MAIN.JS
-// ─── INPUT ──────────────────────────────────────────────────────
-document.querySelectorAll('.sc').forEach(card=>{
-  const id=card.dataset.id,def=TD[id];
-  card.addEventListener('click',()=>{
-    if(G.over||G.won) return;
-    document.querySelectorAll('.sc').forEach(c=>c.classList.remove('sel'));
-    placeTower(id);
-  });
-  if(def){
-    card.addEventListener('mouseenter',ev=>{
-      document.getElementById('tt-n').textContent=`${def.ico} ${def.n}`;
-      document.getElementById('tt-d').textContent=def.desc||'';
-      const tt=document.getElementById('tt');
-      tt.style.left=(ev.clientX+10)+'px';tt.style.top=(ev.clientY-44)+'px';tt.style.display='block';
-    });
-    card.addEventListener('mouseleave',()=>document.getElementById('tt').style.display='none');
-  }
-});
-document.getElementById('btn-sell').addEventListener('click',()=>{G.sellMode=!G.sellMode;document.getElementById('btn-sell').classList.toggle('on',G.sellMode);});
-document.getElementById('btn-pause').addEventListener('click',()=>{
-  if(G.over||G.won) return;G.paused=!G.paused;
-  document.getElementById('btn-pause').textContent=G.paused?'▶':'⏸';
-  if(G.paused) showS('s-pause');else document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-});
-document.addEventListener('keydown',e=>{if(e.key==='Escape') resume();});
-// Click sul canvas — gestione unificata
-document.getElementById('cw').addEventListener('click',e=>{
-  if(!G||G.over||G.won) return;
-  const rect=e.currentTarget.getBoundingClientRect();
-  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
-  if(G.sellMode){
-    const hit=G.towers&&G.towers.find(t=>Math.hypot(t.x-mx,t.y-my)<26);
-    if(hit){
-      G.gold+=hit.def.sell||20;
-      if(hit.gfx){L.tower.removeChild(hit.gfx);hit.gfx.destroy({children:true});}
-      G.towers=G.towers.filter(x=>x!==hit);
-      G.selTower=null;
-      document.getElementById('tp').style.display='none';
-      G.sellMode=false;
-      document.getElementById('btn-sell').classList.remove('on');
-      buildSlotIndicators();updHUD();
-    }
-    return;
-  }
-  const hit=G.towers&&G.towers.find(t=>Math.hypot(t.x-mx,t.y-my)<26);
-  if(hit){selectTower(hit);return;}
-  G.selTower=null;document.getElementById('tp').style.display='none';
+// Punto di partenza: carica tutto, collega i pulsanti e fa girare il game loop.
+import { createRun } from './state.js';
+import { loadMeta, saveMeta } from './save.js';
+import { update, runReward } from './systems/game.js';
+import { buyUpgrade } from './systems/economy.js';
+import { useAbility } from './systems/abilities.js';
+import { pickCard, reroll } from './systems/cards.js';
+import { META_UPGRADES, levelCost } from './data/upgrades.js';
+import { ABILITIES } from './data/abilities.js';
+import { loadAssets } from './render/assets.js';
+import { createRenderer } from './render/world.js';
+import { createHud } from './ui/hud.js';
+import * as screens from './ui/screens.js';
+
+const $ = id => document.getElementById(id);
+
+const meta = loadMeta();
+let run = null;
+let paused = false;
+let speed = 1;
+let overHandled = false;
+
+const assets = await loadAssets();
+const renderer = createRenderer($('cv'), assets);
+const hud = createHud({
+  onBuy: id => run && buyUpgrade(run, meta, id),
+  onAbility: id => run && !paused && useAbility(run, id),
 });
 
-// ─── BOOTSTRAP ──────────────────────────────────────────────────
-function showS(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');}
+// ─── Flusso delle schermate ─────────────────────────────────────
 
-function startGame(){
-  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-
-  // Aspetta che PixiJS sia pronto
-  if(!app){ setTimeout(startGame, 100); return; }
-
-  // Aggiorna dimensioni canvas (potrebbero essere cambiate dopo il layout)
-  const wrap=document.getElementById('cw');
-  CW=wrap.clientWidth; CH=wrap.clientHeight;
-  app.renderer.resize(CW,CH);
-
-  resetG();
-  G._floatTexts=[];
-
-  // Pulisci layer (tranne bg e roads che vengono ricostruiti)
-  ['enemies','tower','walls','projs','fx','hud2'].forEach(k=>{
-    if(L[k]) L[k].removeChildren().forEach(c=>{try{c.destroy({children:true});}catch(e){}});
-  });
-
-  buildBG();
-  buildMainTower();
-  buildSlotIndicators();
-  updHUD();
-  renderUpgPanel();
-  document.getElementById('tp').style.display='none';
-  document.getElementById('btn-sell').classList.remove('on');
-  document.getElementById('wb').classList.remove('on');
-  startCountdown(1);
+function newRun() {
+  run = createRun(meta);
+  paused = false;
+  overHandled = false;
+  screens.hideAll();
+  document.body.classList.add('playing');
 }
-function restart(){startGame();}
-function resume(){G.paused=false;document.getElementById('btn-pause').textContent='⏸';document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));}
-function toMenu(){G.over=true;G.won=true;document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));showS('s-title');}
 
-// ─── AVVIO: PixiJS si inizializza subito, poi mostra titolo ─────
-(async()=>{
-  await initPixi();
-  // PixiJS pronto — ora il click su INIZIA funzionerà
-  // La schermata titolo è già visibile (on nel HTML)
-})();
+function toMenu() {
+  run = null;
+  document.body.classList.remove('playing');
+  screens.showMenu(meta);
+}
+
+function setPaused(p) {
+  if (!run || run.phase === 'over' || run.phase === 'cards') return;
+  paused = p;
+  if (paused) screens.show('scr-pause');
+  else screens.hideAll();
+}
+
+function openShop() {
+  screens.showShop(meta, id => {
+    const def = META_UPGRADES.find(d => d.id === id);
+    const L = meta.levels[id] || 0;
+    const cost = levelCost(def, L);
+    if (L >= def.max || meta.buoni < cost) return;
+    meta.buoni -= cost;
+    meta.levels[id] = L + 1;
+    saveMeta(meta);
+    openShop();
+  });
+}
+
+function onCardsPhase() {
+  screens.showCards(run,
+    i => { if (pickCard(run, meta, i)) screens.hideAll(); },
+    () => { if (reroll(run)) onCardsPhase(); });
+}
+
+function onGameOver() {
+  overHandled = true;
+  const reward = runReward(run);
+  const isRecord = run.wave > meta.best;
+  meta.buoni += reward;
+  meta.best = Math.max(meta.best, run.wave);
+  meta.runs++;
+  saveMeta(meta);
+  // Un attimo di pausa per vedere la torre crollare, poi il riepilogo.
+  setTimeout(() => screens.showOver(run, reward, isRecord), 1200);
+}
+
+$('btn-play').addEventListener('click', newRun);
+$('btn-shop').addEventListener('click', openShop);
+$('btn-shop-back').addEventListener('click', () => screens.showMenu(meta));
+$('btn-resume').addEventListener('click', () => setPaused(false));
+$('btn-quit').addEventListener('click', toMenu);
+$('btn-retry').addEventListener('click', newRun);
+$('btn-over-menu').addEventListener('click', toMenu);
+$('btn-pause').addEventListener('click', () => setPaused(!paused));
+$('btn-speed').addEventListener('click', () => { speed = speed === 3 ? 1 : speed + 1; });
+
+document.addEventListener('keydown', e => {
+  if (!run) return;
+  if (e.key === ' ' || e.key === 'Escape') { e.preventDefault(); setPaused(!paused); return; }
+  const ab = ABILITIES.find(a => a.key === e.key);
+  if (ab && !paused) useAbility(run, ab.id);
+});
+// Se cambi scheda del browser, il gioco si mette in pausa da solo.
+document.addEventListener('visibilitychange', () => { if (document.hidden) setPaused(true); });
+
+// ─── Game loop ──────────────────────────────────────────────────
+
+let last = performance.now();
+function frame(now) {
+  // dt = secondi passati dall'ultimo frame, limitato per evitare salti enormi.
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (run && !paused) {
+    // A velocità x2/x3 si fanno più passi piccoli invece di uno grande.
+    for (let i = 0; i < speed; i++) update(run, dt);
+    if (run.phase === 'cards' && $('scr-cards').hidden) onCardsPhase();
+    if (run.phase === 'over' && !overHandled) onGameOver();
+  }
+  renderer.draw(run);
+  if (run) hud.update(run, speed);
+  requestAnimationFrame(frame);
+}
+
+window.addEventListener('resize', renderer.resize);
+renderer.resize();
+toMenu();
+requestAnimationFrame(frame);

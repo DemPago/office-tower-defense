@@ -1,42 +1,27 @@
 # 🏢 Office Tower Defense
 
-Un tower defense comico a tema lavorativo. Difendi la tua scrivania dalla gerarchia aziendale — dal Team Leader fino al leggendario **Direttore Galattico**.
+Un tower defense comico a tema lavorativo, in stile "idle + roguelike".
+Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggendario **Direttore Galattico**.
 
 ## 🎮 Gioca ora
-👉 **[Apri il gioco](https://TUO-USERNAME.github.io/office-tower-defense/)**
+👉 **[Apri il gioco](https://dempago.github.io/office-tower-defense/)**
 
 ---
 
 ## 🗺️ Come si gioca
 
-1. **Scegli una torre** dal negozio in basso
-2. **Cliccala sulla mappa** (celle verdi = piazzabili)
-3. **Avvia l'ondata** con il pulsante ▶ ONDATA o premi `Spazio`
-4. Ogni nemico eliminato dà **oro 💰** per comprare altre torri
-5. Il **mana 💧** cresce da solo (+1/secondo) e serve per i Maghi
+1. **La torre spara da sola** al nemico più vicino dentro la gittata (il cerchio tratteggiato).
+2. Ogni nemico eliminato dà **oro 💰**: spendilo nel pannello in basso per Danno, Velocità, Gittata, Vita e Rigenerazione.
+3. **Dopo ogni ondata scegli 1 carta su 3**: sono potenziamenti che si sommano (colpi multipli, rimbalzi, esplosioni, veleno, critici…).
+4. Usa i **poteri** quando sei in difficoltà: si ricaricano col tempo.
+5. Quando la torre crolla vieni **licenziato**, ma guadagni **buoni pasto 🎫** da spendere nell'**Ufficio del personale** in bonus permanenti.
 
-## 🏰 Torri
-
-### Fisiche (costano oro)
-| Torre | Effetto |
+### Comandi
+| Tasto | Azione |
 |---|---|
-| 📊 **Project Manager** | Laser singolo, gittata alta, cadenza elevata |
-| 🎯 **Service Manager** | Balestra, danno alto + rallenta i nemici |
-| 💻 **Dev** | Lancia computer, danno area + attraversa 2 nemici |
-
-### Maghi Facilitatori (costano mana)
-| Mago | Buff | MP/s |
-|---|---|---|
-| 🏃 **Mago Agile** | +40% velocità fuoco torri vicine | 2 |
-| 📋 **Mago Scrum** | +50% danno torri vicine | 3 |
-| 📚 **Mago ITIL** | Azzera cooldown torri vicine | 5 |
-| 🔭 **Mago Vision** | +35% raggio torri vicine | 1 |
-
-## ⬆️ Upgrade torri
-Ogni torre ha **5 livelli**: Junior → Middle → Professional → Senior → 👑 King of the Office
-
-- **Auto-upgrade** ogni 15 ondate
-- **Upgrade manuale**: clicca la torre → paga oro (100 / 200 / 400 / 800)
+| `1` `2` `3` `4` | 💣 Bomba di carta · ☕ Caffè bollente · 📅 Riunione urgente · 🔍 Audit fiscale |
+| `Spazio` / `Esc` | Pausa |
+| `x1` in alto | Velocità di gioco x1 / x2 / x3 |
 
 ## 👾 Boss (ogni 10 ondate)
 | Ondata | Boss |
@@ -46,40 +31,48 @@ Ogni torre ha **5 livelli**: Junior → Middle → Professional → Senior → �
 | 30 | Direttore di Dipartimento |
 | 40 | Leadership Team (x4) |
 | 50 | Direttore Generale |
-| 60 | 10 Membri del Consiglio |
+| 60 | Consiglio di Amministrazione (x10) |
 | 70 | CEO |
-| **80** | **🐉 Il Grande Drago Socio** (4 fasi elemento) |
-| **90** | **🔬 Doc Brown** (DeLorean dash + time travel) |
+| 80 | Il Grande Socio |
+| 90 | Doc Brown |
 | **100** | **🌌 Direttore Galattico** |
 
 ---
 
-## 🚀 Deploy su GitHub Pages
+## 🛠️ Provarlo in locale
+
+Il gioco usa i moduli JavaScript, quindi va aperto tramite un piccolo server (non con doppio clic sul file):
 
 ```bash
-git init
-git add .
-git commit -m "Initial release"
-git branch -M main
-git remote add origin https://github.com/TUO-USERNAME/office-tower-defense.git
-git push -u origin main
+cd office-tower-defense
+python3 -m http.server 8000
 ```
 
-Poi su GitHub: **Settings → Pages → Source: main / (root)** → Save
+Poi apri **http://localhost:8000**. Se dopo una modifica vedi ancora la versione vecchia, ricarica con `Cmd+Shift+R`.
 
----
+## 🧩 Com'è fatto il codice
 
-## 🛠️ Tech stack
-- PixiJS 7 (rendering WebGL)
-- JavaScript vanilla (no build step)
-- CSS3
-- GitHub Pages per hosting gratuito
+JavaScript puro + Canvas 2D, nessuna libreria e nessun build step.
+
+```
+src/
+  main.js        avvio, pulsanti, game loop
+  state.js       stato di una partita
+  save.js        salvataggio dei progressi permanenti (localStorage)
+  data/          SOLO numeri e testi: nemici, boss, carte, potenziamenti, poteri
+  systems/       le regole del gioco (ondate, combattimento, carte, economia…)
+  render/        disegno sul canvas
+  ui/            barra in alto, pannello e schermate HTML
+```
+
+Per **bilanciare il gioco** basta toccare i file in `src/data/` e le curve `hpScale` / `atkScale` in `src/systems/waves.js`.
+
+## 🚀 Deploy su GitHub Pages
+Su GitHub: **Settings → Pages → Source: main / (root)** → Save.
 
 ## 🎨 Asset grafici
-Personaggi (nemici, boss, protagonista) basati su **RPG Urban Pack** by [Kenney](https://kenney.nl) — licenza [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (pubblico dominio, nessuna attribuzione richiesta, credit fornito per correttezza).
-
-## 💛 Supporta il progetto
-Se ti diverte: [Ko-fi](https://ko-fi.com) ☕
+Personaggi e terreno: asset di [Kenney](https://kenney.nl), licenza [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (pubblico dominio; il credito è dato per correttezza).
+Font: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) (OFL).
 
 ---
 *"La tua posizione è stata eliminata per motivi strutturali."*
