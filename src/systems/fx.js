@@ -32,6 +32,8 @@ export function updateFx(run, dt) {
   fx.texts = fx.texts.filter(t => t.life > 0);
   for (const p of fx.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; }
   fx.parts = fx.parts.filter(p => p.life > 0);
+  for (const c of fx.corpses) c.life -= dt;
+  fx.corpses = fx.corpses.filter(c => c.life > 0);
   for (const r of fx.rings) r.life -= dt;
   fx.rings = fx.rings.filter(r => r.life > 0);
   fx.shake = Math.max(0, fx.shake - 30 * dt);

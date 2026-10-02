@@ -30,7 +30,7 @@ export function createRun(meta) {
     enemyShots: [],          // colpi dei nemici a distanza
     spawnQueue: [],
     boss: null,              // il boss vivo (per la barra in alto)
-    fx: { texts: [], parts: [], rings: [], shake: 0, banner: null },
+    fx: { texts: [], parts: [], rings: [], corpses: [], shake: 0, banner: null },
     healFull: false,
   };
   run.stats = computeStats(run, meta);

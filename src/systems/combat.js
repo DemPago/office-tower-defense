@@ -4,13 +4,14 @@ import { dist, fmt } from '../util.js';
 import { floatText, burst, ring, shake } from './fx.js';
 
 // Punto da cui partono i colpi: il personaggio sul tetto della torre.
-const MUZZLE = { x: TOWER.x, y: TOWER.y - 58 };
+const MUZZLE = { x: TOWER.x, y: TOWER.y - 84 };
 
 // ─── Nemici ─────────────────────────────────────────────────────
 
 export function updateEnemies(run, dt) {
   for (const e of run.enemies) {
     if (e.dead) continue;
+    e.age = (e.age || 0) + dt;
     e.hitFlash = Math.max(0, e.hitFlash - dt);
 
     if (e.dotT > 0) {
@@ -172,6 +173,7 @@ export function dealDamage(run, e, amount, { crit = false, silent = false } = {}
 function killEnemy(run, e) {
   e.dead = true;
   run.kills++;
+  run.fx.corpses.push({ char: e.char, x: e.x, y: e.y, size: e.size, dir: e.x < TOWER.x ? -1 : 1, life: 0.6, max: 0.6 });
   const gold = Math.max(1, Math.round(e.gold * run.stats.goldMult));
   run.gold += gold;
   floatText(run, e.x, e.y - e.size, '+' + fmt(gold) + '💰', '#fbbf24', 7);
