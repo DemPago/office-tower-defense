@@ -2,6 +2,8 @@
 import { TOWER } from '../state.js';
 import { dist, fmt } from '../util.js';
 import { floatText, burst, ring, shake } from './fx.js';
+import { makeEnemy } from './waves.js';
+import { ENEMIES } from '../data/enemies.js';
 
 // Punto da cui partono i colpi: il personaggio sul tetto della torre.
 const MUZZLE = { x: TOWER.x + 1, y: TOWER.y - 89 };
@@ -21,6 +23,7 @@ export function updateEnemies(run, dt) {
     }
     if (e.slowT > 0) e.slowT -= dt;
     if (e.stunT > 0) { e.stunT -= dt; continue; }
+    if (e.def.heal) healNearby(run, e, dt);
 
     const d = dist(e, TOWER);
     const stopAt = e.range > 0 ? e.range : TOWER.radius + e.size * 0.4;
@@ -46,6 +49,23 @@ export function updateEnemies(run, dt) {
     if (e.lunge > 0) e.lunge -= dt;
   }
   run.enemies = run.enemies.filter(e => !e.dead);
+}
+
+// HR e segretarie curano i colleghi vicini ogni 3 secondi.
+function healNearby(run, healer, dt) {
+  healer.healCd -= dt;
+  if (healer.healCd > 0) return;
+  healer.healCd = 3;
+  let healed = false;
+  for (const o of run.enemies) {
+    if (o.dead || o.boss || o.hp >= o.maxHp || dist(o, healer) > 60) continue;
+    o.hp = Math.min(o.maxHp, o.hp + o.maxHp * healer.def.heal);
+    healed = true;
+  }
+  if (healed) {
+    ring(run, healer.x, healer.y - 10, 60, '#7bd332');
+    floatText(run, healer.x, healer.y - healer.size - 6, '+', '#7bd332', 10);
+  }
 }
 
 export function updateEnemyShots(run, dt) {
@@ -106,7 +126,7 @@ export function updateTower(run, dt) {
 export function fire(run, x, y, target, opts) {
   const crit = Math.random() < run.stats.crit;
   run.shots.push({
-    ...opts, x, y, target,
+    ...opts, x, y, target, ox: x, oy: y,
     baseDmg: opts.dmg,
     dmg: crit ? opts.dmg * run.stats.critMult : opts.dmg,
     crit,
@@ -138,7 +158,8 @@ function onShotHit(run, shot, e) {
   const fx = shot.effects;
   shot.hitIds.add(e.id);
   burst(run, shot.x, shot.y, '#ffd23f', 3, 50); // scintille d'impatto
-  dealDamage(run, e, shot.dmg, { crit: shot.crit });
+  // i numeri dei colleghi sono azzurri, quelli del palazzo chiari
+  dealDamage(run, e, shot.dmg, { crit: shot.crit, color: shot.kind === 'tower' ? null : '#2de2e6' });
   if (fx.slow > 0) { e.slowT = 1.5; e.slowF = fx.slow * (e.boss ? 0.5 : 1); }
   if (fx.dot > 0) { e.dotT = 3; e.dotDps = shot.baseDmg * fx.dot / 3; }
 
@@ -171,13 +192,13 @@ function nearest(run, from, filter, maxDist) {
 
 // ─── Danni e morti ──────────────────────────────────────────────
 
-export function dealDamage(run, e, amount, { crit = false, silent = false } = {}) {
+export function dealDamage(run, e, amount, { crit = false, silent = false, color = null } = {}) {
   if (e.dead) return;
   const dmg = amount * (1 - e.armor);
   e.hp -= dmg;
   if (!silent) {
     e.hitFlash = 0.08;
-    floatText(run, e.x + (Math.random() * 10 - 5), e.y - e.size * 0.8, fmt(Math.max(1, dmg)) + (crit ? '!' : ''), crit ? '#d7263d' : '#e8e2d0', crit ? 10 : 7);
+    floatText(run, e.x + (Math.random() * 10 - 5), e.y - e.size * 0.8, fmt(Math.max(1, dmg)) + (crit ? '!' : ''), crit ? '#d7263d' : color || '#e8e2d0', crit ? 10 : 7);
   }
   if (e.hp <= 0) killEnemy(run, e);
 }
@@ -193,6 +214,13 @@ function killEnemy(run, e) {
   burst(run, e.x, e.y - e.size * 0.3, '#e8e2d0', e.boss ? 24 : 6, e.boss ? 140 : 80);
   burst(run, e.x, e.y - e.size * 0.3, '#d7263d', e.boss ? 16 : 4, e.boss ? 120 : 60);
   if (run.stats.healOnKill) run.tower.hp = Math.min(run.stats.maxHp, run.tower.hp + run.stats.healOnKill);
+  // Capo vendite e vicedirettore: quando cadono, delegano a due sottoposti.
+  if (e.def.split) {
+    for (const dx of [-8, 8]) {
+      run.enemies.push(makeEnemy(ENEMIES[e.def.split], run.wave, { x: e.x + dx, y: e.y, age: 0.4 }));
+    }
+    floatText(run, e.x, e.y - e.size - 10, 'DELEGA!', '#ff3e8a', 8);
+  }
   if (e.boss) {
     shake(run, 8);
     if (run.boss && run.boss.list.every(b => b.dead)) {

@@ -23,6 +23,7 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 | `1` `2` `3` `4` | 💣 Bomba di carta · ☕ Caffè bollente · 📅 Riunione urgente · 🔍 Audit fiscale |
 | `Spazio` / `Esc` | Pausa |
 | `x1` in alto | Velocità di gioco x1 / x2 / x3 |
+| `F` / ⛶ | Schermo intero |
 
 ## 🦺 Rinforzi (ogni 5 ondate)
 | Collega | Cosa fa |
@@ -32,6 +33,20 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 | 💻 **Dev** | Lancia PC che esplodono ad area |
 | 🏃 **Mago Agile** | +velocità di fuoco a palazzo e colleghi |
 | 📋 **Mago Scrum** | +danno a palazzo e colleghi |
+
+## 🏢 Reparti (nemici nuovi ogni 10 ondate)
+| Ondate | Reparto | Nemici |
+|---|---|---|
+| 1-10 | Open Space | Stagista, Impiegato, Resp. HR (cura i vicini) |
+| 11-20 | Amministrazione | Contabile (corazzato), Avvocato (a distanza), Consulente (veloce) |
+| 21-30 | Reparto IT | Tecnico, Sistemista (a distanza), Ingegnere (corazzato) |
+| 31-40 | Commerciale | Venditore (veloce), Marketing (a distanza), Capo Vendite (si divide in 2) |
+| 41-50 | Sicurezza | Guardia (corazzata), Vigilante (a distanza), Buttafuori (enorme) |
+| 51-60 | Piani Alti | Assistente (veloce), Segretaria (cura), Vicedirettore (si divide in 2) |
+| 61+ | … si ricomincia | versioni ÉLITE con gli occhi rossi |
+
+## 🏆 Classifica
+Quando perdi lasci le tue **3 iniziali** come nei cabinati. La classifica è online (Supabase) se `src/config.js` è compilato, altrimenti resta nel browser. Per crearla: incolla `supabase/schema.sql` nel SQL Editor di Supabase e metti URL e chiave pubblica in `src/config.js`.
 
 ## 👾 Boss (ogni 10 ondate)
 | Ondata | Boss |

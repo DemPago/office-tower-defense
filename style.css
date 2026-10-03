@@ -30,8 +30,7 @@ body {
 #app {
   position: relative;
   height: 100dvh;
-  width: min(100vw, calc(100dvh * 0.6));
-  margin: 0 auto;
+  width: 100vw;
   display: flex;
   flex-direction: column;
   background: var(--char);
@@ -50,11 +49,12 @@ button:disabled { cursor: default; }
 }
 
 /* ─── Barra in alto ─────────────────────────────────────────── */
+/* Barre a tutta larghezza, contenuto al centro largo al massimo 560px */
 #top {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
+  padding: 6px max(8px, calc((100vw - 560px) / 2));
   background: var(--steel);
   border-bottom: 4px solid transparent;
   border-image: var(--stripes) 4;
@@ -87,6 +87,7 @@ button:disabled { cursor: default; }
 
 /* ─── Pannello in basso ─────────────────────────────────────── */
 #panel {
+  padding-inline: max(6px, calc((100vw - 560px) / 2)) !important;
   background: var(--steel);
   border-top: 4px solid transparent;
   border-image: var(--stripes) 4;
@@ -179,7 +180,7 @@ h2 {
 .btn:disabled { opacity: .4; }
 
 /* Carte */
-#cards-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; }
+#cards-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; max-width: 520px; }
 .card {
   --rar: var(--grey);
   background: var(--asphalt);
@@ -207,7 +208,7 @@ h2 {
 .card.ally { --rar: var(--hazard); border-image: var(--stripes) 3; border-width: 3px; }
 
 /* Negozio permanente */
-#shop-list { display: flex; flex-direction: column; gap: 6px; width: 100%; max-height: 55%; overflow-y: auto; }
+#shop-list { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 460px; max-height: 55%; overflow-y: auto; }
 .shop-row {
   display: flex; align-items: center; gap: 8px;
   padding: 8px;
@@ -221,3 +222,41 @@ h2 {
 .shop-row .cost { color: var(--toxic); }
 .shop-row:hover:not(:disabled) { background: var(--steel); }
 .shop-row:disabled { opacity: .5; }
+
+/* ─── Iniziali stile cabinato e classifica ──────────────────── */
+#initials-box, #over-after { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#initials { display: flex; gap: 14px; }
+.slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.slot button {
+  width: 44px; height: 30px; font-size: 12px;
+  background: var(--steel-hi); border: 2px solid var(--ink);
+}
+.slot button:active { transform: translateY(1px); }
+.slot .ch {
+  width: 44px; padding: 8px 0; text-align: center; cursor: pointer;
+  font-size: 28px; line-height: 1; color: var(--hazard);
+  background: var(--ink); border: 2px solid var(--steel-hi);
+}
+.slot.cur .ch { border-color: var(--hazard); animation: blink 0.8s steps(2, start) infinite; }
+@keyframes blink { to { color: transparent; } }
+.link { background: none; border: none; color: var(--grey); text-decoration: underline; font-size: 7px; }
+
+.board { list-style: none; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 3px; }
+.board li {
+  display: grid; grid-template-columns: 28px 44px 1fr auto; align-items: center; gap: 6px;
+  padding: 6px 8px; background: var(--asphalt); border: 2px solid var(--ink); text-align: left;
+}
+.board li:nth-child(1) .pos { color: var(--hazard); }
+.board li:nth-child(2) .pos { color: #c0c4cc; }
+.board li:nth-child(3) .pos { color: var(--rust-hi); }
+.board .ini { color: var(--white); font-size: 10px; }
+.board .w { color: var(--grey); }
+.board .k { color: var(--grey); }
+.board li.me { border-color: var(--hazard); background: #3a3420; animation: pulse 1s ease-in-out infinite alternate; }
+.board li.empty { display: block; text-align: center; color: var(--grey); }
+@keyframes pulse { to { background: #4a4224; } }
+
+/* Schermi grandi: schermate più leggibili */
+@media (min-width: 760px) and (min-height: 760px) {
+  .overlay > * { zoom: 1.4; }
+}

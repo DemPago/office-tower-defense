@@ -1,0 +1,66 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Progetto
+
+Office Tower Defense: tower defense "idle + roguelike" (ispirato a Evil Tower su CrazyGames), tema ufficio, stile grafico **grunge urbano in pixel art**. Il proprietario parla italiano ed è alle prime armi con Claude Code: rispondi e commenta il codice **in italiano**, con spiegazioni semplici.
+
+JavaScript puro + Canvas 2D, **nessuna dipendenza, nessun build step, nessun test runner**. Pubblicato con GitHub Pages dal branch `main` (root): ogni push su `main` aggiorna https://dempago.github.io/office-tower-defense/ in circa un minuto.
+
+## Comandi
+
+```bash
+python3 -m http.server 8000          # avvia in locale → http://localhost:8000 (i moduli ES non funzionano con file://)
+node tools/sim.mjs                   # simulazione del bilanciamento senza grafica (bot che gioca molte partite)
+for f in $(find src -name '*.js'); do node --check "$f"; done   # controllo di sintassi
+```
+
+Per verificare la grafica si usa Chrome headless con `--remote-debugging-port` pilotato via DevTools Protocol (WebSocket nativo di Node): screenshot con `Page.captureScreenshot`, click con `Runtime.evaluate`. Dopo modifiche il browser può tenere in cache i moduli: ricaricare con Cmd+Shift+R.
+
+Bilanciamento attuale di riferimento (`tools/sim.mjs`): senza potenziamenti ~ondata 5, bot completo mediana ~30-40, con progressi permanenti ~45-50. I boss (ogni 10 ondate) fanno da muro.
+
+## Architettura
+
+Separazione rigida in quattro strati, tutti moduli ES sotto `src/`:
+
+- **`data/`**: solo numeri e testi (nemici, reparti, boss, carte, potenziamenti, poteri, rinforzi). Per ribilanciare si tocca qui e le curve `hpScale`/`atkScale`/`goldScale` in `systems/waves.js`.
+- **`systems/`**: le regole. Modificano solo l'oggetto `run` e **non toccano il DOM**: per questo `tools/sim.mjs` li importa direttamente in Node. `systems/game.js#update(run, dt)` è il regista che fa avanzare tutto e gestisce le fasi.
+- **`render/`**: disegno su canvas. Legge `run`, non lo modifica (fumo e polvere decorativi vivono nel renderer).
+- **`ui/`**: barra in alto, pannello e schermate HTML sovrapposte (`index.html` contiene il markup statico delle schermate `scr-*`).
+
+`main.js` collega tutto: carica gli asset, gestisce input, schermate e game loop (`requestAnimationFrame`, dt limitato a 0.05 s, a velocità x2/x3 fa più `update` piccoli invece di uno grande).
+
+### Stato e fasi
+
+`state.js#createRun(meta)` crea l'unico oggetto di partita `run`. `run.phase` è una macchina a stati: `break` → `wave` → (`ally` ogni 5 ondate) → `cards` → `break` … oppure `over`. `main.js` controlla la fase a ogni frame e apre la schermata corrispondente. Gli effetti visivi (testi, particelle, banner, shake) vengono "ordinati" dai sistemi in `run.fx` tramite `systems/fx.js` e disegnati dal render.
+
+Il mondo logico è fisso **360×560** (`WORLD`), la torre è in `TOWER`. Il renderer scala per stare in altezza o larghezza e disegna lo sfondo anche oltre i bordi (`MX`/`MY` in `render/world.js`) per riempire schermi larghi.
+
+### Statistiche
+
+`systems/stats.js#computeStats` ricalcola le statistiche della torre da zero combinando tre fonti: potenziamenti a oro (`u`), carte (`c`), progressi permanenti (`m`), più le aure dei maghi rinforzo. Ogni carta/potenziamento definisce una funzione `mod(bonus)` nei file `data/`. Dopo ogni acquisto o scelta va chiamato `economy.js#refreshStats` (che sistema anche la vita attuale).
+
+### Colpi
+
+`combat.js#fire` crea colpi a ricerca che portano con sé i propri effetti (`effects`: slow, dot, aoe) e un `kind` (`tower`, `laser`, `bolt`, `pc`) usato dal render per l'aspetto. Torre e rinforzi (`systems/allies.js`) usano lo stesso meccanismo.
+
+### Nemici
+
+`data/enemies.js`: `ENEMIES` è un oggetto per id; `DECADES` definisce un "reparto" di 3 nemici ogni 10 ondate (dopo la 60 si ricomincia in versione élite). Abilità speciali tramite campi del dato: `armor`, `range` (a distanza), `heal` (cura i vicini), `split` (alla morte si divide in 2 nemici di quel tipo). I boss (`data/bosses.js`) sono costruiti a partire dallo stagista con moltiplicatori.
+
+### Grafica
+
+**Nessuna immagine**: tutto è disegnato via codice.
+- `render/people.js`: personaggi in pixel art. Ogni `LOOKS[id]` descrive un vestito su una griglia 16×34 (6 righe in alto per i cappelli). `render/assets.js` li genera con contorno nero, li scala (×2 per i boss) e li mette in cache; un look nuovo va aggiunto lì e referenziato con `look:` nei dati.
+- `render/world.js`: sfondo generato una volta con random a seed fisso, palazzo, effetti. La palette `PAL` è la stessa delle variabili CSS in `style.css`: mantenerle allineate. Font: Press Start 2P (testi) e Permanent Marker (titoli/graffiti), caricati prima di generare lo sfondo.
+
+### Salvataggi e classifica
+
+- `save.js`: progressi permanenti (buoni pasto, livelli dell'"Ufficio del personale", record) in `localStorage`, sempre in try/catch.
+- `leaderboard.js`: classifica con iniziali di 3 lettere. Se `src/config.js` contiene `SUPABASE.url` e `SUPABASE.key` (chiave pubblica *publishable/anon*, non segreta) usa l'API REST di Supabase sulla tabella `scores` (schema e regole RLS in `supabase/schema.sql`), altrimenti, o se la rete fallisce, una classifica locale. Ogni punteggio viene salvato anche in locale.
+
+## Convenzioni del repo
+
+- Commit e PR **solo a nome dell'utente**: niente trailer `Co-Authored-By` né firme di Claude.
+- Committare e pubblicare (push su `main`) solo quando l'utente lo chiede: il push va subito online.

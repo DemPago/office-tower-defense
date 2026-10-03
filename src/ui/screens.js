@@ -6,7 +6,7 @@ import { ALLY_LEVELS } from '../data/allies.js';
 import { fmt } from '../util.js';
 
 const $ = id => document.getElementById(id);
-const SCREENS = ['scr-menu', 'scr-shop', 'scr-cards', 'scr-pause', 'scr-over'];
+const SCREENS = ['scr-menu', 'scr-shop', 'scr-cards', 'scr-pause', 'scr-over', 'scr-board'];
 
 export function show(id) {
   for (const s of SCREENS) $(s).hidden = s !== id;
@@ -99,5 +99,46 @@ export function showOver(run, reward, isRecord) {
   $('over-stats').textContent = `${run.kills} nemici eliminati · ${run.bossesKilled} boss sconfitti`;
   $('over-reward').textContent = `+${fmt(reward)} 🎫 buoni pasto`;
   $('over-record').hidden = !isRecord;
+  $('initials-box').hidden = false;
+  $('over-after').hidden = true;
+  $('btn-save-score').disabled = false;
+  $('btn-save-score').textContent = 'SALVA';
   show('scr-over');
+}
+
+// Mostra le 3 lettere; quella selezionata lampeggia.
+export function renderInitials(chars, cursor) {
+  document.querySelectorAll('#initials .slot').forEach((slot, i) => {
+    slot.querySelector('.ch').textContent = chars[i];
+    slot.classList.toggle('cur', i === cursor);
+  });
+}
+
+function renderBoard(list, top, mine) {
+  list.innerHTML = '';
+  if (!top.rows.length) {
+    list.innerHTML = '<li class="empty">Ancora nessun punteggio. Sii il primo!</li>';
+    return;
+  }
+  top.rows.forEach((r, i) => {
+    const li = document.createElement('li');
+    const isMine = mine && (mine.id ? r.id === mine.id : r.ts === mine.ts);
+    li.className = isMine ? 'me' : '';
+    li.innerHTML = `<span class="pos">${i + 1}</span><span class="ini">${r.initials}</span><span class="w">ONDATA ${r.wave}</span><span class="k">${fmt(r.kills)}💀</span>`;
+    list.appendChild(li);
+  });
+}
+
+// Dopo aver salvato (o saltato): posizione raggiunta e classifica.
+export function showOverAfter(result, top) {
+  $('initials-box').hidden = true;
+  $('over-after').hidden = false;
+  $('over-rank').textContent = result?.rank ? `Sei ${result.rank}° in classifica!` : '';
+  renderBoard($('over-board'), top, result);
+}
+
+export function showBoard(top) {
+  $('board-source').textContent = top.source === 'online' ? 'Classifica mondiale' : 'Classifica di questo dispositivo';
+  renderBoard($('board-list'), top, null);
+  show('scr-board');
 }

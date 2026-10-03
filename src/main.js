@@ -12,6 +12,7 @@ import { loadAssets } from './render/assets.js';
 import { createRenderer } from './render/world.js';
 import { createHud } from './ui/hud.js';
 import * as screens from './ui/screens.js';
+import { getTop, submitScore, lastInitials } from './leaderboard.js';
 
 const $ = id => document.getElementById(id);
 
@@ -91,8 +92,65 @@ function onGameOver() {
   meta.best = Math.max(meta.best, run.wave);
   meta.runs++;
   saveMeta(meta);
+  initials = lastInitials().split('');
+  cursor = 0;
   // Un attimo di pausa per vedere la torre crollare, poi il riepilogo.
-  setTimeout(() => screens.showOver(run, reward, isRecord), 1200);
+  setTimeout(() => {
+    screens.showOver(run, reward, isRecord);
+    screens.renderInitials(initials, cursor);
+  }, 1200);
+}
+
+// ─── Iniziali e classifica ──────────────────────────────────────
+
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+let initials = ['A', 'A', 'A'];
+let cursor = 0;
+let saving = false;
+
+function stepLetter(i, delta) {
+  const n = (LETTERS.indexOf(initials[i]) + delta + LETTERS.length) % LETTERS.length;
+  initials[i] = LETTERS[n];
+  cursor = i;
+  screens.renderInitials(initials, cursor);
+}
+
+async function saveScore() {
+  if (saving || !run) return;
+  saving = true;
+  $('btn-save-score').disabled = true;
+  $('btn-save-score').textContent = 'INVIO...';
+  const result = await submitScore({ initials: initials.join(''), wave: run.wave, kills: run.kills, bosses: run.bossesKilled });
+  screens.showOverAfter(result, await getTop(10));
+  saving = false;
+}
+
+document.querySelectorAll('#initials .slot').forEach((slot, i) => {
+  slot.querySelector('.up').addEventListener('click', () => stepLetter(i, -1));
+  slot.querySelector('.down').addEventListener('click', () => stepLetter(i, 1));
+  slot.querySelector('.ch').addEventListener('click', () => { cursor = i; screens.renderInitials(initials, cursor); });
+});
+$('btn-save-score').addEventListener('click', saveScore);
+$('btn-skip-score').addEventListener('click', async () => screens.showOverAfter(null, await getTop(10)));
+$('btn-board').addEventListener('click', async () => screens.showBoard(await getTop(10)));
+$('btn-board-back').addEventListener('click', () => screens.showMenu(meta));
+
+// Tastiera sulla schermata delle iniziali: lettere, frecce, Backspace, Invio.
+function initialsKey(e) {
+  if ($('scr-over').hidden || $('initials-box').hidden) return false;
+  const k = e.key;
+  if (/^[a-zA-Z]$/.test(k)) {
+    initials[cursor] = k.toUpperCase();
+    cursor = Math.min(2, cursor + 1);
+  } else if (k === 'Backspace' || k === 'ArrowLeft') cursor = Math.max(0, cursor - 1);
+  else if (k === 'ArrowRight') cursor = Math.min(2, cursor + 1);
+  else if (k === 'ArrowUp') stepLetter(cursor, -1);
+  else if (k === 'ArrowDown') stepLetter(cursor, 1);
+  else if (k === 'Enter') saveScore();
+  else return false;
+  e.preventDefault();
+  screens.renderInitials(initials, cursor);
+  return true;
 }
 
 $('btn-play').addEventListener('click', newRun);
@@ -105,7 +163,23 @@ $('btn-over-menu').addEventListener('click', toMenu);
 $('btn-pause').addEventListener('click', () => setPaused(!paused));
 $('btn-speed').addEventListener('click', () => { speed = speed === 3 ? 1 : speed + 1; });
 
+// ─── Schermo intero ─────────────────────────────────────────────
+const canFullscreen = !!document.documentElement.requestFullscreen;
+function toggleFullscreen() {
+  if (!canFullscreen) return;
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(() => {});
+}
+$('btn-full').hidden = !canFullscreen; // es. iPhone: non supportato dal browser
+$('btn-full').addEventListener('click', toggleFullscreen);
+// Sui telefoni si passa a schermo intero appena si preme GIOCA.
+$('btn-play').addEventListener('click', () => {
+  if (canFullscreen && !document.fullscreenElement && matchMedia('(pointer: coarse)').matches) toggleFullscreen();
+});
+
 document.addEventListener('keydown', e => {
+  if (initialsKey(e)) return;
+  if (e.key === 'f' || e.key === 'F') { toggleFullscreen(); return; }
   if (!run) return;
   if (e.key === ' ' || e.key === 'Escape') { e.preventDefault(); setPaused(!paused); return; }
   const ab = ABILITIES.find(a => a.key === e.key);

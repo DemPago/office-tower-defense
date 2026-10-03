@@ -5,9 +5,11 @@ import { dist } from '../util.js';
 import { fire } from './combat.js';
 import { offerCards } from './cards.js';
 import { refreshStats } from './economy.js';
-import { banner } from './fx.js';
+import { banner, ring } from './fx.js';
 
-const SHOT_SPEED = { laser: 900, bolt: 520, pc: 260 };
+// Velocità dei colpi: abbastanza lente da vederli partire dalla postazione.
+const SHOT_SPEED = { laser: 650, bolt: 360, pc: 230 };
+const AURA_COLOR = { rate: '#2de2e6', dmg: '#ff3e8a' };
 
 export function allyDef(id) {
   return ALLIES.find(a => a.id === id);
@@ -56,7 +58,17 @@ export function updateAllies(run, dt) {
     ally.spawn = Math.min(1, ally.spawn + dt * 2);
     ally.recoil = Math.max(0, ally.recoil - dt);
     const def = allyDef(ally.id);
-    if (def.aura) continue;
+    if (def.aura) {
+      // I maghi "lanciano" il loro bonus sul palazzo ogni tanto, così si vede che lavorano.
+      ally.pulse = (ally.pulse || 0) - dt;
+      if (ally.pulse <= 0) {
+        ally.pulse = 3;
+        const pos = allyPos(ally);
+        ring(run, pos.x, pos.y - 12, 22, AURA_COLOR[def.aura]);
+        ring(run, TOWER.x, TOWER.y - 40, 46, AURA_COLOR[def.aura]);
+      }
+      continue;
+    }
     ally.cooldown -= dt;
     if (ally.cooldown > 0) continue;
 

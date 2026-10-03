@@ -18,7 +18,8 @@ export const PAL = {
 };
 const FONT = '"Press Start 2P", monospace';
 const SPRAY = '"Permanent Marker", "Press Start 2P", cursive';
-const MARGIN = 160; // sfondo disegnato anche oltre i bordi del mondo
+// Lo sfondo continua oltre i bordi del mondo, così riempie anche gli schermi larghi.
+const MX = 560, MY = 200;
 
 // Misure del palazzo (la torre).
 const B = { w: 60, h: 96 };
@@ -62,7 +63,7 @@ export function createRenderer(canvas, assets) {
     ctx.setTransform(view.scale, 0, 0, view.scale, view.ox + sx * view.scale, view.oy + sy * view.scale);
     ctx.imageSmoothingEnabled = false;
 
-    ctx.drawImage(bg, -MARGIN, -MARGIN);
+    ctx.drawImage(bg, -MX, -MY);
     drawStreetLights(ctx, time);
 
     if (run) {
@@ -96,13 +97,14 @@ export function createRenderer(canvas, assets) {
 
 function buildBackground() {
   const c = document.createElement('canvas');
-  c.width = WORLD.w + MARGIN * 2;
-  c.height = WORLD.h + MARGIN * 2;
+  c.width = WORLD.w + MX * 2;
+  c.height = WORLD.h + MY * 2;
   const g = c.getContext('2d');
-  g.translate(MARGIN, MARGIN); // da qui in poi si disegna in coordinate del mondo
+  g.translate(MX, MY); // da qui in poi si disegna in coordinate del mondo
   const rnd = seeded(11);
   const R = (a, b) => a + rnd() * (b - a);
-  const all = { x: -MARGIN, y: -MARGIN, w: WORLD.w + MARGIN * 2, h: WORLD.h + MARGIN * 2 };
+  const all = { x: -MX, y: -MY, w: WORLD.w + MX * 2, h: WORLD.h + MY * 2 };
+  const many = n => Math.round(n * (all.w * all.h) / (680 * 880)); // quantità proporzionali all'area
   const inYard = (x, y, pad = 0) => x > YARD.x - pad && x < YARD.x + YARD.w + pad && y > YARD.y - pad && y < YARD.y + YARD.h + pad;
   const ROAD_V = { x: 148, w: 64 }, ROAD_H = { y: 92, h: 56 };
   const onRoad = (x, y) => (x > ROAD_V.x - 4 && x < ROAD_V.x + ROAD_V.w + 4 && y < YARD.y) || (y > ROAD_H.y - 4 && y < ROAD_H.y + ROAD_H.h + 4);
@@ -110,13 +112,13 @@ function buildBackground() {
   // Asfalto sporco
   g.fillStyle = PAL.asphalt;
   g.fillRect(all.x, all.y, all.w, all.h);
-  for (let i = 0; i < 9000; i++) {
+  for (let i = 0; i < many(9000); i++) {
     g.fillStyle = [PAL.asphalt2, PAL.asphaltHi, PAL.black][Math.floor(rnd() * 3)];
     g.fillRect(Math.floor(R(all.x, all.x + all.w)), Math.floor(R(all.y, all.y + all.h)), 1, 1);
   }
   // Rattoppi di asfalto più nuovo
-  for (let i = 0; i < 16; i++) {
-    const x = Math.floor(R(-60, WORLD.w + 20)), y = Math.floor(R(-40, WORLD.h + 20));
+  for (let i = 0; i < many(16); i++) {
+    const x = Math.floor(R(all.x, all.x + all.w)), y = Math.floor(R(-40, WORLD.h + 20));
     const w = Math.floor(R(24, 80)), h = Math.floor(R(16, 50));
     g.fillStyle = PAL.black;
     g.fillRect(x - 1, y - 1, w + 2, h + 2);
@@ -154,8 +156,8 @@ function buildBackground() {
   }
 
   // Crepe con qualche erbaccia
-  for (let i = 0; i < 55; i++) {
-    let x = R(-40, WORLD.w + 40), y = R(-40, WORLD.h + 40), a = R(0, Math.PI * 2);
+  for (let i = 0; i < many(55); i++) {
+    let x = R(all.x, all.x + all.w), y = R(-40, WORLD.h + 40), a = R(0, Math.PI * 2);
     if (inYard(x, y)) continue;
     g.strokeStyle = PAL.black;
     g.lineWidth = 1;
@@ -173,16 +175,16 @@ function buildBackground() {
   }
 
   // Macchie d'olio e pozzanghere
-  for (let i = 0; i < 14; i++) {
-    const x = R(-20, WORLD.w + 20), y = R(-20, WORLD.h + 20);
+  for (let i = 0; i < many(14); i++) {
+    const x = R(all.x, all.x + all.w), y = R(-20, WORLD.h + 20);
     if (inYard(x, y, 6)) continue;
     g.fillStyle = 'rgba(0,0,0,0.35)';
     g.beginPath();
     g.ellipse(x, y, R(5, 14), R(3, 7), 0, 0, Math.PI * 2);
     g.fill();
   }
-  for (let i = 0; i < 6; i++) {
-    const x = R(10, WORLD.w - 10), y = R(30, WORLD.h - 20);
+  for (let i = 0; i < many(6); i++) {
+    const x = R(all.x, all.x + all.w), y = R(30, WORLD.h - 20);
     if (inYard(x, y, 10)) continue;
     const w = R(10, 20), h = R(4, 8);
     g.fillStyle = '#3d4a57';
@@ -241,8 +243,8 @@ function buildBackground() {
 
   // Oggetti sparsi: coni, barili, scatoloni, gomme, rifiuti
   const props = [];
-  for (let i = 0; i < 70; i++) {
-    const x = Math.round(R(-30, WORLD.w + 30)), y = Math.round(R(30, WORLD.h + 30));
+  for (let i = 0; i < many(70); i++) {
+    const x = Math.round(R(all.x, all.x + all.w)), y = Math.round(R(30, WORLD.h + 30));
     if (inYard(x, y, 18) || onRoad(x, y)) continue;
     props.push({ x, y, k: rnd() });
   }
@@ -257,6 +259,11 @@ function buildBackground() {
   dumpster(g, 16, 200);
   wreck(g, 286, 214);
   dumpster(g, 300, 470);
+  // ai lati, visibili solo sugli schermi larghi
+  wreck(g, -150, 300);
+  dumpster(g, -260, 460);
+  wreck(g, 470, 380);
+  dumpster(g, 560, 240);
   return c;
 }
 
@@ -501,15 +508,15 @@ let gradeCache = null;
 // Bordo scuro e una leggera luce calda da lampione su tutta la scena.
 function drawGrade(ctx) {
   if (!gradeCache) {
-    const g = ctx.createRadialGradient(TOWER.x, WORLD.h * 0.6, WORLD.h * 0.25, TOWER.x, WORLD.h * 0.6, WORLD.h * 0.8);
+    const g = ctx.createRadialGradient(TOWER.x, WORLD.h * 0.6, WORLD.h * 0.3, TOWER.x, WORLD.h * 0.6, WORLD.h * 1.1);
     g.addColorStop(0, 'rgba(13,13,15,0)');
     g.addColorStop(1, 'rgba(13,13,15,0.7)');
     gradeCache = g;
   }
   ctx.fillStyle = 'rgba(255,140,40,0.05)';
-  ctx.fillRect(-MARGIN, -MARGIN, WORLD.w + MARGIN * 2, WORLD.h + MARGIN * 2);
+  ctx.fillRect(-MX, -MY, WORLD.w + MX * 2, WORLD.h + MY * 2);
   ctx.fillStyle = gradeCache;
-  ctx.fillRect(-MARGIN, -MARGIN, WORLD.w + MARGIN * 2, WORLD.h + MARGIN * 2);
+  ctx.fillRect(-MX, -MY, WORLD.w + MX * 2, WORLD.h + MY * 2);
 }
 
 function drawRange(ctx, range, time) {
@@ -767,6 +774,14 @@ function drawAlly(ctx, assets, ally, time) {
   ctx.globalAlpha = ally.spawn;
   drawPersonAt(ctx, assets.person(def.look, 0, 1), x, y - 1 + drop + recoil);
   ctx.globalAlpha = 1;
+  if (recoil) {
+    // lampo allo sparo, sopra la testa
+    ctx.fillStyle = PAL.white;
+    ctx.fillRect(x - 2, y - 24, 5, 5);
+    ctx.fillStyle = PAL.cyan;
+    ctx.fillRect(x - 4, y - 23, 9, 3);
+    ctx.fillRect(x - 1, y - 26, 3, 9);
+  }
   sandbag(ctx, x - 12, y - 5);
   sandbag(ctx, x + 1, y - 5);
 
@@ -818,6 +833,16 @@ function drawEnemy(ctx, assets, e) {
     ctx.fill();
   }
   drawPersonAt(ctx, assets.person(e.look, frame, k), x, feet);
+  if (e.elite) {
+    // ÉLITE: occhi rossi che brillano
+    const img = assets.person(e.look, frame, k);
+    const left = Math.round(x - img.width / 2), top = Math.round(feet - img.height + 2);
+    ctx.fillStyle = 'rgba(215,38,61,0.45)';
+    ctx.fillRect(left + 6 * k, top + 12 * k, 5 * k, 3 * k);
+    ctx.fillStyle = '#ff2a3d';
+    ctx.fillRect(left + 7 * k, top + 13 * k, k, k);
+    ctx.fillRect(left + 10 * k, top + 13 * k, k, k);
+  }
   if (e.hitFlash > 0) {
     ctx.globalAlpha = 0.6;
     drawPersonAt(ctx, assets.person(e.look, frame, k, true), x, feet);
@@ -908,12 +933,17 @@ function drawShots(ctx, run, time) {
     const { dx, dy } = shotDir(s);
     const x = Math.round(s.x), y = Math.round(s.y);
     if (s.kind === 'laser') {
-      line(ctx, x - dx * 16, y - dy * 16, x, y, PAL.red, 3);
-      line(ctx, x - dx * 14, y - dy * 14, x, y, '#ffd0d6', 1);
+      // raggio continuo dalla postazione del PM fino alla punta del colpo
+      ctx.globalAlpha = 0.5;
+      line(ctx, s.ox, s.oy, x, y, PAL.red, 3);
+      ctx.globalAlpha = 1;
+      line(ctx, x - dx * 18, y - dy * 18, x, y, PAL.red, 3);
+      line(ctx, x - dx * 16, y - dy * 16, x, y, '#ffd0d6', 1);
     } else if (s.kind === 'bolt') {
-      line(ctx, x - dx * 10, y - dy * 10, x, y, PAL.black, 3);
-      line(ctx, x - dx * 9, y - dy * 9, x, y, PAL.white, 1);
-      ctx.fillStyle = PAL.grey;
+      line(ctx, x - dx * 14, y - dy * 14, x, y, PAL.black, 4);
+      line(ctx, x - dx * 13, y - dy * 13, x, y, PAL.white, 2);
+      line(ctx, x - dx * 14, y - dy * 14, x - dx * 10, y - dy * 10, PAL.toxic, 2);
+      ctx.fillStyle = PAL.cyan;
       ctx.fillRect(x - 1, y - 1, 3, 3);
     } else if (s.kind === 'pc') {
       ctx.save();

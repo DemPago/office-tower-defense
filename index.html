@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Office Tower Defense</title>
 <link rel="icon" href="data:,">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0d0f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -20,6 +24,7 @@
     <span id="gold-box">💰 <span id="gold">0</span></span>
     <button id="btn-speed" title="Velocità di gioco">x1</button>
     <button id="btn-pause" title="Pausa (Spazio)">⏸</button>
+    <button id="btn-full" title="Schermo intero (F)">⛶</button>
   </header>
 
   <!-- Campo di gioco -->
@@ -54,6 +59,7 @@
     <p id="menu-buoni" class="buoni"></p>
     <button id="btn-play" class="btn big">▶ GIOCA</button>
     <button id="btn-shop" class="btn">🏢 Ufficio del personale</button>
+    <button id="btn-board" class="btn">🏆 Classifica</button>
     <p class="help">La torre spara da sola.<br>Compra potenziamenti con l'oro 💰,<br>scegli una carta dopo ogni ondata,<br>usa i poteri con i tasti 1-4.</p>
   </section>
 
@@ -71,8 +77,32 @@
     <p id="over-wave"></p>
     <p id="over-stats" class="dim"></p>
     <p id="over-reward" class="buoni"></p>
-    <button id="btn-retry" class="btn big">↻ Riprova</button>
-    <button id="btn-over-menu" class="btn ghost">Menu</button>
+
+    <!-- Iniziali stile cabinato: frecce o tastiera, Invio per confermare -->
+    <div id="initials-box">
+      <p class="dim">Lascia le tue iniziali</p>
+      <div id="initials">
+        <div class="slot"><button class="up">▲</button><span class="ch">A</span><button class="down">▼</button></div>
+        <div class="slot"><button class="up">▲</button><span class="ch">A</span><button class="down">▼</button></div>
+        <div class="slot"><button class="up">▲</button><span class="ch">A</span><button class="down">▼</button></div>
+      </div>
+      <button id="btn-save-score" class="btn big">SALVA</button>
+      <button id="btn-skip-score" class="link">salta</button>
+    </div>
+
+    <div id="over-after" hidden>
+      <p id="over-rank" class="record"></p>
+      <ol id="over-board" class="board"></ol>
+      <button id="btn-retry" class="btn big">↻ Riprova</button>
+      <button id="btn-over-menu" class="btn ghost">Menu</button>
+    </div>
+  </section>
+
+  <section id="scr-board" class="overlay full" hidden>
+    <h2>CLASSIFICA</h2>
+    <p id="board-source" class="dim"></p>
+    <ol id="board-list" class="board"></ol>
+    <button id="btn-board-back" class="btn ghost">← Indietro</button>
   </section>
 
 </div>

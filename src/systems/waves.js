@@ -1,5 +1,5 @@
 // Ondate: quanti nemici, quali, quanto sono forti e da dove arrivano.
-import { ENEMIES } from '../data/enemies.js';
+import { ENEMIES, decadeFor } from '../data/enemies.js';
 import { bossForWave } from '../data/bosses.js';
 import { TOWER } from '../state.js';
 import { banner } from './fx.js';
@@ -14,15 +14,15 @@ function enemyCount(w) {
   return Math.min(60, 5 + Math.floor(w * 1.2));
 }
 
-// Sceglie un tipo di nemico: i tipi appena sbloccati escono un po' più spesso.
+// Sceglie un nemico del reparto di questa ondata: il terzo (quello "speciale") esce meno spesso.
+const WEIGHTS = [1, 1, 0.6];
 function pickEnemy(w) {
-  const pool = ENEMIES.filter(e => e.from <= w);
-  const weights = pool.map((e, i) => 1 + i * 0.5);
-  let r = Math.random() * weights.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < pool.length; i++) {
-    if ((r -= weights[i]) <= 0) return pool[i];
+  const ids = decadeFor(w).enemies;
+  let r = Math.random() * WEIGHTS.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < ids.length; i++) {
+    if ((r -= WEIGHTS[i]) <= 0) return ENEMIES[ids[i]];
   }
-  return pool[pool.length - 1];
+  return ENEMIES[ids[0]];
 }
 
 // Punto di partenza casuale su un arco sopra e ai lati della torre, fuori schermo.
@@ -31,9 +31,10 @@ function spawnPoint() {
   return { x: TOWER.x + Math.cos(a) * 240, y: TOWER.y + Math.sin(a) * 500 };
 }
 
-function makeEnemy(def, w, extra = {}) {
+export function makeEnemy(def, w, extra = {}) {
   const p = spawnPoint();
   const hp = def.hp * hpScale(w);
+  const elite = decadeFor(w).elite;
   return {
     id: Math.random(),
     def,
@@ -42,12 +43,14 @@ function makeEnemy(def, w, extra = {}) {
     scale: 1,
     x: p.x, y: p.y,
     hp, maxHp: hp,
-    speed: def.speed * (0.9 + Math.random() * 0.2),
+    speed: def.speed * (0.9 + Math.random() * 0.2) * (elite ? 1.15 : 1),
+    elite,
+    healCd: 3,
     atk: def.atk * atkScale(w),
     range: def.range,
     armor: def.armor || 0,
     gold: def.gold * goldScale(w),
-    size: def.size,
+    size: 28,
     attackCd: 1,
     slowT: 0, slowF: 0, stunT: 0, dotT: 0, dotDps: 0,
     hitFlash: 0, anim: Math.random(),
@@ -57,7 +60,7 @@ function makeEnemy(def, w, extra = {}) {
 }
 
 function makeBoss(b, w) {
-  const base = ENEMIES[0];
+  const base = ENEMIES.stagista;
   const group = b.group || 1;
   const list = [];
   for (let i = 0; i < group; i++) {
@@ -90,8 +93,13 @@ export function startWave(run) {
   run.spawnQueue = queue;
   run.spawnTimer = 0;
   run.phase = 'wave';
+  const decade = decadeFor(w);
   if (boss) banner(run, boss.name, boss.sub, '#d7263d');
-  else banner(run, `ONDATA ${w}`, `${n} nemici in arrivo`);
+  else if ((w - 1) % 10 === 0) {
+    // primo turno di un nuovo reparto: si presentano i nemici nuovi
+    const names = decade.enemies.map(id => ENEMIES[id].name).join(', ');
+    banner(run, decade.name + (decade.elite ? ' ÉLITE' : ''), `Arrivano: ${names}`, '#ff3e8a');
+  } else banner(run, `ONDATA ${w}`, `${n} nemici in arrivo`);
 }
 
 export function updateSpawns(run, dt) {

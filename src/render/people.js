@@ -27,6 +27,18 @@ export const LOOKS = {
   avvocato:   { skin: SKIN.light, hair: '#8a8d93', hairStyle: 'slick', top: '#141416', shirt: '#e8e2d0', tie: '#d7263d', pants: '#141416', item: 'briefcase', itemColor: '#141416', angry: true },
   ingegnere:  { skin: SKIN.dark, hair: '#141416', hairStyle: 'short', facial: 'mustache', hat: 'hardhat', hatColor: '#e8e2d0', top: '#2f4f6f', shirt: '#2f4f6f', vest: '#e8641b', pants: '#3a4a6a', item: 'wrench', angry: true },
 
+  tecnico:    { skin: SKIN.mid, hair: '#5a3a22', hairStyle: 'short', glasses: 'glasses', top: '#2f4f8f', shirt: '#2f4f8f', sleeves: 'short', pants: '#3a3226', item: 'cable', lanyard: true, angry: true },
+  sistemista: { skin: SKIN.light, hair: '#141416', hairStyle: 'messy', facial: 'beard', top: '#3a3c42', shirt: '#3a3c42', pants: '#2a2a2e', headphones: true, item: 'keyboard', angry: true },
+  venditore:  { skin: SKIN.tan, hair: '#141416', hairStyle: 'slick', top: '#4a5a6a', shirt: '#e8e2d0', tie: '#f2b705', pants: '#4a5a6a', shoes: '#5a3a22', build: 'thin', item: 'phone', angry: true },
+  marketing:  { skin: SKIN.light, hair: '#d9b45a', hairStyle: 'long', glasses: 'glasses', top: '#e8641b', shirt: '#e8641b', pants: '#2a2a2e', shoes: '#d9d4c7', item: 'flyers', angry: true },
+  capovendite:{ skin: SKIN.mid, hair: '#2a2a2e', hairStyle: 'slick', facial: 'mustache', top: '#5a4632', shirt: '#e8e2d0', tie: '#f2b705', pants: '#3a3226', build: 'fat', item: 'briefcase', itemColor: '#a67c00', angry: true },
+  guardia:    { skin: SKIN.tan, hair: '#141416', hairStyle: 'short', hat: 'cap', hatColor: '#1f2a44', top: '#2f3f5f', shirt: '#2f3f5f', tie: '#141416', pants: '#1f2a44', item: 'baton', badge: true, angry: true },
+  vigilante:  { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'short', facial: 'mustache', hat: 'cap', hatColor: '#141416', top: '#3a3c42', shirt: '#3a3c42', vest: '#c9d12e', pants: '#2a2a2e', item: 'flashlight', angry: true },
+  buttafuori: { skin: SKIN.dark, hair: '#141416', hairStyle: 'bald', glasses: 'shades', top: '#141416', shirt: '#141416', sleeves: 'short', pants: '#2a2a2e', build: 'fat', angry: true },
+  assistente: { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'long', top: '#d9d4c7', shirt: '#d9d4c7', pants: '#2a2a2e', build: 'thin', item: 'mug', lanyard: true, angry: true },
+  segretaria: { skin: SKIN.mid, hair: '#8a8d93', hairStyle: 'bun', glasses: 'glasses', top: '#5d275d', shirt: '#e8e2d0', skirt: '#3a3c42', shoes: '#141416', item: 'phone', angry: true },
+  vicedirettore:{ skin: SKIN.light, hair: '#8a8d93', hairStyle: 'slick', top: '#141416', shirt: '#e8e2d0', tie: '#2f4f8f', pants: '#141416', build: 'fat', item: 'briefcase', itemColor: '#141416', angry: true },
+
   // Boss
   teamleader: { skin: SKIN.mid, hair: '#8a3b1e', hairStyle: 'short', top: '#7a1f2b', shirt: '#e8e2d0', tie: '#141416', pants: '#2a2a2e', item: 'megaphone', angry: true },
   capoarea:   { skin: SKIN.tan, hair: '#2a2a2e', hairStyle: 'bald', facial: 'mustache', top: '#3a3c42', shirt: '#d9d4c7', tie: '#a67c00', pants: '#2a2a2e', build: 'fat', item: 'phone', angry: true },
@@ -107,6 +119,7 @@ export function drawPerson(g, look, frame) {
     px(tx + tw - 3, 11, 3, 9, shade(look.vest, 0.85));
     px(tx, 16, tw, 1, '#c0c4cc');
   }
+  if (look.badge) px(tx + 1, 13, 2, 2, '#f2b705');
   if (look.lanyard) {
     px(6, 12, 1, 3, '#d7263d');
     px(6, 15, 2, 2, '#e8e2d0');
@@ -225,6 +238,21 @@ export function drawPerson(g, look, frame) {
       break;
     case 'cigar':
       px(9, 8, 3, 1, '#6b4a2b'); px(12, 8, 1, 1, '#e8641b'); px(12, 6, 1, 1, '#8a8d93');
+      break;
+    case 'cable':
+      px(hx, hy - 1, 3, 3, '#141416'); px(hx + 1, hy, 1, 1, look.skin); px(hx + 3, hy + 1, 1, 3, '#141416');
+      break;
+    case 'keyboard':
+      px(hx - 3, hy - 1, 7, 3, '#c0c4cc'); px(hx - 2, hy, 5, 1, '#5b5f66');
+      break;
+    case 'flyers':
+      px(hx, hy - 3, 3, 3, '#ff3e8a'); px(hx + 1, hy - 4, 3, 3, '#f2b705'); px(hx + 1, hy - 2, 1, 1, '#141416');
+      break;
+    case 'baton':
+      px(hx + 1, hy - 3, 1, 6, '#141416'); px(hx, hy - 1, 3, 1, '#141416');
+      break;
+    case 'flashlight':
+      px(hx, hy - 1, 3, 2, '#5b5f66'); px(hx + 3, hy - 2, 1, 4, '#fff3b0');
       break;
     case 'sticky':
       px(tx + 1, 13, 2, 2, '#f2b705'); px(tx + tw - 3, 15, 2, 2, '#ff3e8a'); px(hx, hy - 2, 2, 2, '#7bd332');
