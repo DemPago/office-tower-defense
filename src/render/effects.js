@@ -47,21 +47,29 @@ function shotDir(s) {
 
 export function drawShots(ctx, run, time) {
   ctx.lineCap = 'square';
-  // Onda energetica: anello che si allarga dal palazzo
   for (const w of run.fx.waves) {
-    const k = w.life / 0.45;
     ctx.save();
-    ctx.globalAlpha = k;
-    ctx.strokeStyle = PAL.cyan;
-    ctx.lineWidth = 4 * k + 1;
-    ctx.beginPath();
-    ctx.arc(TOWER.x, TOWER.y - 10, w.r, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.strokeStyle = '#e0ffff';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.fillStyle = `rgba(45,226,230,${0.12 * k})`;
-    ctx.fill();
+    if (w.energy) {
+      // esplosione della sfera energetica: viola con il centro bianco
+      const k = w.life / 0.35;
+      ctx.globalAlpha = k;
+      ctx.fillStyle = `rgba(160,90,255,${0.35 * k})`;
+      ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#c8a0ff'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(w.x, w.y, w.r * 0.3 * k, 0, Math.PI * 2); ctx.fill();
+    } else {
+      // onda sonica: tre anelli concentrici che si allargano dal palazzo
+      const k = w.life / 0.45;
+      ctx.globalAlpha = k;
+      for (const [f, lw] of [[1, 3], [0.82, 1.5], [0.64, 1]]) {
+        ctx.strokeStyle = f === 1 ? '#e8e2d0' : PAL.cyan;
+        ctx.lineWidth = lw;
+        ctx.setLineDash(f === 1 ? [] : [4, 3]);
+        ctx.beginPath();
+        ctx.arc(TOWER.x, TOWER.y - 10, w.r * f, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
     ctx.restore();
   }
   // Laser della torre: raggio istantaneo con bagliore
@@ -84,6 +92,33 @@ export function drawShots(ctx, run, time) {
       ctx.globalAlpha = 1;
       line(ctx, x - dx * 18, y - dy * 18, x, y, PAL.red, 3);
       line(ctx, x - dx * 16, y - dy * 16, x, y, '#ffd0d6', 1);
+    } else if (s.kind === 'energy') {
+      // sfera di energia che pulsa, con la scia
+      const p = 1 + Math.sin(time * 30) * 0.2;
+      line(ctx, x - dx * 10, y - dy * 10, x, y, 'rgba(160,90,255,0.4)', 4);
+      ctx.fillStyle = 'rgba(160,90,255,0.35)';
+      ctx.beginPath(); ctx.arc(x, y, 5 * p, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#b880ff';
+      ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x - 1, y - 1, 2, 2);
+    } else if (s.kind === 'heart') {
+      // cuore che pulsa, con scia di brillantini
+      const p = 1 + Math.sin(time * 20) * 0.12;
+      ctx.fillStyle = 'rgba(255,62,138,0.35)';
+      ctx.fillRect(x - dx * 6 - 1, y - dy * 6 - 1, 2, 2);
+      drawHeart(ctx, x, y, 3.2 * p, '#ff3e8a', '#ffd0e0');
+    } else if (s.kind === 'dagger') {
+      // pugnale che gira: lama d'acciaio e manico
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(time * 25);
+      ctx.fillStyle = PAL.black; ctx.fillRect(-4.5, -1.5, 9, 3);
+      ctx.fillStyle = PAL.silver; ctx.fillRect(-1, -1, 5, 2);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, -1, 4, 0.5);
+      ctx.fillStyle = PAL.wood; ctx.fillRect(-4, -1, 3, 2);
+      ctx.fillStyle = PAL.hazard; ctx.fillRect(-1.5, -1.5, 1, 3);
+      ctx.restore();
     } else if (s.kind === 'xbow') {
       // dardo della balestra: lungo, con la punta d'acciaio e le alette
       line(ctx, x - dx * 20, y - dy * 20, x, y, PAL.black, 4);
@@ -175,4 +210,26 @@ export function drawFx(ctx, run) {
     ctx.fillText(t.text, t.x, t.y);
   }
   ctx.globalAlpha = 1;
+}
+
+// Cuore in pixel art centrato in (x, y), grande r.
+export function drawHeart(ctx, x, y, r, color, light) {
+  ctx.fillStyle = PAL.black;
+  ctx.beginPath();
+  ctx.arc(x - r * 0.5, y - r * 0.2, r * 0.62, 0, Math.PI * 2);
+  ctx.arc(x + r * 0.5, y - r * 0.2, r * 0.62, 0, Math.PI * 2);
+  ctx.moveTo(x - r * 1.1, y);
+  ctx.lineTo(x, y + r * 1.15);
+  ctx.lineTo(x + r * 1.1, y);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x - r * 0.5, y - r * 0.2, r * 0.5, 0, Math.PI * 2);
+  ctx.arc(x + r * 0.5, y - r * 0.2, r * 0.5, 0, Math.PI * 2);
+  ctx.moveTo(x - r * 0.95, y);
+  ctx.lineTo(x, y + r * 0.95);
+  ctx.lineTo(x + r * 0.95, y);
+  ctx.fill();
+  ctx.fillStyle = light;
+  ctx.fillRect(x - r * 0.75, y - r * 0.45, r * 0.35, r * 0.3);
 }

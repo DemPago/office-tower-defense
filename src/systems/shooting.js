@@ -24,16 +24,26 @@ export function updateTower(run, dt) {
   t.cooldown = 1 / (s.rate * (mitra ? MITRA.rateMult : 1));
   t.recoil = 0.08;
   sfx(run, mitra ? 'mitra' : 'shoot');
-  const effects = { slow: s.slow, dot: s.dot, aoeRadius: s.aoeRadius, aoeDmg: s.aoeDmg };
   const W = weaponDef(run.weapon);
+  const effects = { slow: s.slow, dot: s.dot, aoeRadius: s.aoeRadius, aoeDmg: s.aoeDmg, charm: W.charm || 0 };
 
   if (W.kind === 'wave') {
-    // Onda energetica: colpisce tutti i nemici nella gittata in un colpo solo.
+    // Onda sonica: colpisce tutti i nemici nella gittata, ma il danno si divide tra loro.
     // I colpi multipli (carta Laser del PM) la rendono più forte invece di sdoppiarla.
-    const dmg = s.dmg * (1 + 0.25 * (s.multishot - 1));
+    const hit = run.enemies.filter(e => !e.dead && dist(e, TOWER) <= s.range);
+    const dmg = s.dmg * (1 + 0.25 * (s.multishot - 1)) / Math.max(1, hit.length);
     run.fx.waves.push({ r: 18, max: s.range, life: 0.45 });
-    for (const e of run.enemies.filter(e => !e.dead && dist(e, TOWER) <= s.range)) {
-      onShotHit(run, makeShot(run, e, { dmg, bounces: 0, hitIds: new Set(), effects, kind: 'wave' }), e);
+    for (const e of hit) onShotHit(run, makeShot(run, e, { dmg, bounces: 0, hitIds: new Set(), effects, kind: 'wave' }), e);
+    return;
+  }
+  if (W.kind === 'dagger') {
+    // Pugnali: un ventaglio su più nemici diversi, il danno si divide tra i pugnali
+    const n = W.fan + s.multishot - 1;
+    const near = pickTargets(run.enemies, TOWER, s.range, n);
+    // se ci sono meno nemici che pugnali, quelli in più vanno sugli stessi bersagli
+    const fan = Array.from({ length: n }, (_, i) => near[i % near.length]);
+    for (const target of fan) {
+      fire(run, MUZZLE.x, MUZZLE.y, target, { dmg: s.dmg / W.fan, bounces: s.bounce, hitIds: new Set(), speed: s.shotSpeed * 1.2, effects, kind: 'dagger' });
     }
     return;
   }
@@ -45,7 +55,8 @@ export function updateTower(run, dt) {
       run.fx.beams.push({ x1: MUZZLE.x, y1: MUZZLE.y, x2: target.x, y2: target.y - target.size * 0.35, life: 0.07, crit: shot.crit });
       onShotHit(run, shot, target);
     } else {
-      fire(run, MUZZLE.x, MUZZLE.y, target, { ...opts, speed: W.kind === 'xbow' ? s.shotSpeed * 1.3 : s.shotSpeed });
+      const speed = W.kind === 'xbow' ? s.shotSpeed * 1.3 : W.kind === 'energy' ? s.shotSpeed * 0.45 : s.shotSpeed;
+      fire(run, MUZZLE.x, MUZZLE.y, target, { ...opts, speed, splash: W.splash || 0, splashR: W.splashR || 0, pierceDmg: W.pierceDmg || 1 });
     }
   }
 }
@@ -101,8 +112,9 @@ function onShotHit(run, shot, e) {
   shot.hitIds.add(e.id);
   if (shot.kind !== 'wave') burst(run, shot.x, shot.y, '#ffd23f', 3, 50); // scintille d'impatto
   // i numeri dei colleghi sono azzurri, quelli del palazzo chiari
-  const fromTower = ['tower', 'xbow', 'laser', 'wave'].includes(shot.kind);
+  const fromTower = ['tower', 'xbow', 'laser', 'wave', 'energy', 'dagger', 'heart'].includes(shot.kind);
   dealDamage(run, e, shot.dmg, { crit: shot.crit, color: fromTower ? null : '#2de2e6' });
+  if (fx.charm > 0) e.charmT = Math.max(e.charmT || 0, fx.charm * (e.boss ? 0.25 : 1)); // innamorato: resta fermo
   if (fx.slow > 0) { e.slowT = 1.5; e.slowF = fx.slow * (e.boss ? 0.5 : 1); }
   if (fx.dot > 0) { e.dotT = 3; e.dotDps = shot.baseDmg * fx.dot / 3; }
 
@@ -113,10 +125,17 @@ function onShotHit(run, shot, e) {
       if (o !== e && !o.dead && dist(o, e) <= fx.aoeRadius) dealDamage(run, o, shot.dmg * fx.aoeDmg, { silent: true });
     }
   }
+  if (shot.splash > 0) {
+    // Onda energetica: esplosione che ferisce anche chi è vicino
+    run.fx.waves.push({ x: e.x, y: e.y - e.size * 0.35, r: 6, max: shot.splashR, life: 0.35, energy: true });
+    for (const o of run.enemies) {
+      if (o !== e && !o.dead && dist(o, e) <= shot.splashR) dealDamage(run, o, shot.baseDmg * shot.splash, { silent: true });
+    }
+  }
   if (shot.pierce > 0) {
     // Balestra: il dardo prosegue sul nemico successivo, più lontano dal palazzo, a danno pieno
     const next = nearest(run, e, o => o !== e && !shot.hitIds.has(o.id) && dist(o, TOWER) >= dist(e, TOWER) - 10, 90);
-    if (next) fire(run, e.x, e.y - e.size * 0.35, next, { ...shot, dmg: shot.baseDmg, pierce: shot.pierce - 1, bounces: 0, done: false });
+    if (next) fire(run, e.x, e.y - e.size * 0.35, next, { ...shot, dmg: shot.baseDmg * shot.pierceDmg, pierce: shot.pierce - 1, bounces: 0, done: false });
   }
   if (shot.bounces > 0) {
     const next = nearest(run, e, o => o !== e && !shot.hitIds.has(o.id), 140);

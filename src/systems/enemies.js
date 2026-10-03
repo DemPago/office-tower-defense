@@ -20,6 +20,7 @@ export function updateEnemies(run, dt) {
     if (e.slowT > 0) e.slowT -= dt;
     if (e.boss) bossMood(run, e);
     if (e.stunT > 0) { e.stunT -= dt; continue; }
+    if (e.charmT > 0) { e.charmT -= dt; e.moving = false; continue; } // innamorato (cuori): fermo
     if (e.def.heal) healNearby(run, e, dt);
 
     const d = dist(e, TOWER);

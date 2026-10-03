@@ -3,6 +3,7 @@ import { TOWER, YARD } from '../state.js';
 import { LOOKS, EYES, FRAMES } from './people.js';
 import { PAL, FONT } from './palette.js';
 import { drawPersonAt, enemySprite, facesLeft, hexA } from './view.js';
+import { drawHeart } from './effects.js';
 
 export function drawShadow(ctx, e) {
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
@@ -68,6 +69,7 @@ export function drawEnemy(ctx, assets, e) {
     ctx.fillRect(Math.round(e.x - 1 + Math.sin(e.anim * 9) * 4), y + 2, 2, 2);
     ctx.fillRect(Math.round(e.x + 3 + Math.cos(e.anim * 7) * 3), y + 6, 1, 1);
   }
+  if (e.charmT > 0) drawHeart(ctx, e.x, y - 5 + Math.sin(performance.now() / 120), 3, '#ff3e8a', '#ffd0e0');
   if (e.stunT > 0) {
     ctx.font = `6px ${FONT}`;
     ctx.fillStyle = PAL.white;

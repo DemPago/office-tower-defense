@@ -10,9 +10,14 @@ const { pickCard } = await import(R + 'systems/cards.js');
 const { pickAlly } = await import(R + 'systems/allies.js');
 const { useAbility } = await import(R + 'systems/abilities.js');
 const { defaultMeta } = await import(R + 'save.js');
+const { HEROES } = await import(R + 'data/heroes.js');
 
 function play(strategy, meta = defaultMeta(), cap = 80) {
-  if (strategy.weapon) meta = { ...meta, weapon: strategy.weapon };
+  if (strategy.weapon) {
+    // l'arma dipende dal personaggio: si sceglie quello che ha l'arma voluta
+    const hero = HEROES.find(h => h.weapon === strategy.weapon);
+    meta = { ...meta, hero: hero.id, heroes: HEROES.map(h => h.id) };
+  }
   const run = createRun(meta);
   const dt = 1 / 30;
   let t = 0;
@@ -47,7 +52,7 @@ function report(label, strategy, meta, cap, n = 15) {
 
 const only = process.argv[2]; // node tools/sim.mjs armi  → confronta solo le armi
 if (only === 'armi') {
-  for (const weapon of ['pistol', 'crossbow', 'laser', 'wave']) report(weapon, { buy: 1, cards: 1, abil: 1, weapon }, undefined, 80, 21);
+  for (const weapon of ['pistol', 'crossbow', 'laser', 'sonic', 'energy', 'daggers', 'hearts']) report(weapon, { buy: 1, cards: 1, abil: 1, weapon }, undefined, 80, 21);
   process.exit(0);
 }
 report('niente', {});

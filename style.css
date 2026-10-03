@@ -324,7 +324,7 @@ h2 {
 .hero.sel { border-color: var(--hazard); background: #3a3420; }
 .hero.sel span { color: var(--hazard); }
 .hero.locked { opacity: .55; cursor: help; }
-#hero-desc { color: var(--grey); font-size: 7px; min-height: 12px; max-width: 360px; }
+#hero-desc { color: var(--grey); font-size: 7px; min-height: 12px; max-width: 420px; white-space: pre-line; line-height: 1.8; }
 
 /* Mitra: potere speciale che compare contro la forma bestiale dei boss */
 .abl.special { background: #8a1020; border-color: var(--hazard); animation: mitra 0.5s steps(2) infinite; }

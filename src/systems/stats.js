@@ -5,6 +5,7 @@ import { UPGRADES, META_UPGRADES } from '../data/upgrades.js';
 import { ALLIES } from '../data/allies.js';
 import { MANA } from '../data/abilities.js';
 import { weaponDef } from '../data/weapons.js';
+import { heroDef } from '../data/heroes.js';
 
 // La torre senza nessun bonus.
 export const BASE = {
@@ -57,16 +58,17 @@ export function computeStats(run, meta) {
   }
 
   const W = weaponDef(run.weapon);
+  const H = { dmg: 0, rate: 0, hp: 0, regen: 0, range: 0, manaRegen: 0, crit: 0, armor: 0, gold: 0, manaMax: 0, ...heroDef(run.hero).stats };
 
   return {
-    dmg: W.dmg * BASE.dmg * (1 + u.dmg) * (1 + c.dmg) * (1 + m.dmg) * (1 + auraDmg),
-    rate: Math.min(12 * W.rate, W.rate * BASE.rate * (1 + u.rate + c.rate + m.rate + auraRate)),
+    dmg: (1 + H.dmg) * W.dmg * BASE.dmg * (1 + u.dmg) * (1 + c.dmg) * (1 + m.dmg) * (1 + auraDmg),
+    rate: Math.min(12 * W.rate, (1 + H.rate) * W.rate * BASE.rate * (1 + u.rate + c.rate + m.rate + auraRate)),
     allyRateMult: 1 + auraRate,
-    range: Math.min(260, W.range * BASE.range * (1 + u.range + c.range)),
-    maxHp: (BASE.hp + u.hpFlat + c.hpFlat) * (1 + c.hp + m.hp),
-    regen: BASE.regen + u.regen + c.regen,
-    armor: Math.min(0.7, c.armor),
-    crit: Math.min(0.8, BASE.crit + c.crit),
+    range: Math.min(260, (1 + H.range) * W.range * BASE.range * (1 + u.range + c.range)),
+    maxHp: (BASE.hp + u.hpFlat + c.hpFlat) * (1 + c.hp + m.hp) * (1 + H.hp),
+    regen: (BASE.regen + u.regen + c.regen) * (1 + H.regen),
+    armor: Math.min(0.7, c.armor + H.armor),
+    crit: Math.min(0.8, BASE.crit + c.crit + H.crit),
     critMult: BASE.critMult + c.critMult,
     shotSpeed: BASE.shotSpeed,
     multishot: 1 + c.multishot,
@@ -75,11 +77,11 @@ export function computeStats(run, meta) {
     aoeDmg: c.aoe ? 0.5 : 0,
     slow: Math.min(0.6, c.slow),
     dot: c.dot,
-    goldMult: 1 + c.gold + m.gold,
+    goldMult: 1 + c.gold + m.gold + H.gold,
     healOnKill: c.healOnKill,
     manaMult: Math.max(0.4, 1 - c.cdr), // costo dei poteri (carta Manuale ITIL)
-    manaRegen: MANA.regen + c.manaRegen, // mana al secondo
-    manaMax: c.manaMax,                  // mana massimo in più
+    manaRegen: (MANA.regen + c.manaRegen) * (1 + H.manaRegen), // mana al secondo
+    manaMax: c.manaMax + H.manaMax,      // mana massimo in più
     manaOnKill: c.manaOnKill,            // mana per ogni nemico eliminato
     wallHp: c.wallHp,                    // muro: vita in più (frazione)
     wallThorns: c.wallThorns,            // muro: danno a chi lo colpisce (frazione del danno della torre)

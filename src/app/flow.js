@@ -34,11 +34,6 @@ export function createFlow(app) {
       saveMeta(meta);
       play('pick');
       showMenu();
-    }, id => {
-      meta.weapon = id;
-      saveMeta(meta);
-      play('pick');
-      showMenu();
     });
   }
 

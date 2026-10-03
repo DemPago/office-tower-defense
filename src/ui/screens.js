@@ -3,8 +3,8 @@
 import { RARITY, cardPower } from '../data/cards.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
 import { ALLY_LEVELS, allyArc } from '../data/allies.js';
-import { HEROES, UNLOCK_WAVE, unlockedHeroes } from '../data/heroes.js';
-import { WEAPONS, weaponDef } from '../data/weapons.js';
+import { HEROES, UNLOCK_WAVE, unlockedHeroes, heroStatsText } from '../data/heroes.js';
+import { weaponDef } from '../data/weapons.js';
 import { slotName } from '../systems/allies.js';
 import { fmt } from '../util.js';
 
@@ -19,8 +19,14 @@ export function hideAll() {
   show(null);
 }
 
+// Descrizione del personaggio: chi è, arma e statistiche.
+function heroText(h) {
+  const w = weaponDef(h.weapon);
+  return `${h.name}: ${h.desc}\nArma: ${w.icon} ${w.name} – ${w.desc}\nStatistiche: ${heroStatsText(h)}`;
+}
+
 // portrait(id, locked) restituisce un canvas col ritratto; onHero(id) quando ne scegli uno.
-export function showMenu(meta, portrait, onHero, onWeapon) {
+export function showMenu(meta, portrait, onHero) {
   $('menu-best').textContent = meta.best ? `Record: ondata ${meta.best}` : 'Nessuna partita ancora';
   $('menu-buoni').textContent = `🎫 ${fmt(meta.buoni)} buoni pasto`;
   const have = unlockedHeroes(meta);
@@ -33,38 +39,22 @@ export function showMenu(meta, portrait, onHero, onWeapon) {
     btn.className = 'hero' + (h.id === current ? ' sel' : '') + (locked ? ' locked' : '');
     btn.appendChild(portrait(h.id, locked));
     const name = document.createElement('span');
-    name.textContent = locked ? '🔒' : h.name;
+    name.textContent = locked ? '🔒' : `${weaponDef(h.weapon).icon} ${h.name}`;
     btn.appendChild(name);
     const describe = () => {
       $('hero-desc').textContent = locked
         ? `🔒 Si sblocca completando tutti i livelli (ondata ${UNLOCK_WAVE})`
-        : `${h.name}: ${h.desc}`;
+        : heroText(h);
     };
     btn.addEventListener('pointerenter', describe);
     btn.addEventListener('click', () => { if (!locked) onHero(h.id); else describe(); });
     list.appendChild(btn);
   }
   const sel = HEROES.find(h => h.id === current);
-  $('hero-desc').textContent = `${sel.name}: ${sel.desc}`;
-  renderWeapons(meta, onWeapon);
+  $('hero-desc').textContent = heroText(sel);
   show('scr-menu');
 }
 
-// Scelta dell'arma della torre (tutte disponibili da subito).
-function renderWeapons(meta, onWeapon) {
-  const current = weaponDef(meta.weapon);
-  const list = $('weapon-list');
-  list.innerHTML = '';
-  for (const w of WEAPONS) {
-    const btn = document.createElement('button');
-    btn.className = 'weapon' + (w.id === current.id ? ' sel' : '');
-    btn.innerHTML = `<span class="ico">${w.icon}</span><span>${w.name}</span>`;
-    btn.addEventListener('pointerenter', () => { $('weapon-desc').textContent = `${w.name}: ${w.desc}`; });
-    btn.addEventListener('click', () => onWeapon(w.id));
-    list.appendChild(btn);
-  }
-  $('weapon-desc').textContent = `${current.name}: ${current.desc}`;
-}
 
 export function showShop(meta, onBuy) {
   $('shop-buoni').textContent = `🎫 ${fmt(meta.buoni)} buoni pasto`;

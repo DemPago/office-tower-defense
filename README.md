@@ -73,15 +73,18 @@ Quando perdi lasci le tue **3 iniziali** come nei cabinati. La classifica è onl
 Il cortile è chiuso da un muro di sacchi di sabbia, fatto a tratti: i nemici a piedi si fermano a sfondarlo, i **kamikaze** ci esplodono contro e i **cecchini** aprono **brecce** da lontano. Dalle brecce si entra nel cortile (e i colleghi perdono vita). A fine ondata il muro si ripara.
 Con le carte puoi cambiarlo: 🧱 **Muro di cemento** (più vita), ➰ **Filo spinato** (chi lo colpisce si ferisce), 🛡️ **Lastre d'acciaio** (respinge i colpi dei cecchini), 🔧 **Muro autoriparante**.
 
-## 🔫 Armi della torre
-Nel menu scegli come spara il palazzo:
+## 🔫 Armi e personaggi
+Ogni personaggio ha la sua arma e le sue statistiche (punti forti e deboli). Tutte le armi tolgono in media lo stesso danno: cambia il modo.
 
-| Arma | Come funziona |
+| Personaggio | Arma |
 |---|---|
-| 🔫 **Pistola** | Equilibrata: colpi rapidi a un bersaglio alla volta |
-| 🏹 **Balestra** | Lenta ma potente: il dardo trapassa fino a 3 nemici in fila |
-| 🔴 **Laser** | Raggio istantaneo velocissimo, ogni colpo è debole |
-| 🌀 **Onda energetica** | Colpisce tutti i nemici nella gittata, ma lentamente |
+| Peppe | 🔴 Laser: raggio istantaneo, colpi deboli e velocissimi |
+| Dem | 🗡️ Pugnali: 3 a ventaglio su nemici diversi |
+| Nando | 🏹 Balestra: lenta, trapassa i nemici in fila |
+| Tony | 🔫 Pistola: equilibrata |
+| Vanessa | 💖 Cuori: chi viene colpito si innamora e resta fermo |
+| Clara | ⚡ Onda energetica: sfera che esplode ad area |
+| Uomo Pesce | 🔊 Onda sonica: colpisce tutti i nemici vicini |
 
 ## 🧑 Personaggi
 Nel menu scegli chi sta sul tetto del palazzo: all'inizio **Peppe** (esperto AI sciupato dal running) e **Dem** (al servizio dei poveri e italiano vero). Ogni volta che completi tutti i livelli (ondata 60) ne sblocchi uno nuovo: **Nando**, **Tony**, **Vanessa**, **Clara** e l'**Uomo Pesce**.
