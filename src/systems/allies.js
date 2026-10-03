@@ -2,10 +2,10 @@
 import { ALLIES, ALLY_LEVELS, ALLY_LEVEL_MULT, ALLY_SLOTS, ALLY_RING, allyArc } from '../data/allies.js';
 import { TOWER } from '../state.js';
 import { dist } from '../util.js';
-import { fire } from './combat.js';
+import { fire, pickTargets } from './combat.js';
 import { offerCards } from './cards.js';
 import { refreshStats } from './economy.js';
-import { banner, ring, sfx } from './fx.js';
+import { banner, ring, sfx, floatText } from './fx.js';
 import { angleOf, inArc } from '../util.js';
 
 // Velocità dei colpi: abbastanza lente da vederli partire dalla postazione.
@@ -26,33 +26,60 @@ export function allyCovers(ally, enemy) {
   return inArc(angleOf(TOWER, enemy), ALLY_SLOTS[ally.slot], allyArc(ally.level));
 }
 
-export function offerAllies(run) {
-  let pool = ALLIES.filter(def => {
-    const have = run.allies.find(a => a.id === def.id);
-    return !have || have.level < ALLY_LEVELS.length;
-  });
-  if (!pool.length) { offerCards(run); return; } // tutti al massimo
-  const picked = [];
-  while (picked.length < 3 && pool.length) {
-    const def = pool[Math.floor(Math.random() * pool.length)];
-    picked.push(def);
-    pool = pool.filter(d => d !== def);
+const MAX_LEVEL = ALLY_LEVELS.length;
+const SLOT_NAMES = { 0: 'Est', 45: 'Nord-Est', 90: 'Nord', 135: 'Nord-Ovest', 180: 'Ovest', 225: 'Sud-Ovest', 270: 'Sud', 315: 'Sud-Est' };
+
+export function slotName(slot) {
+  return SLOT_NAMES[ALLY_SLOTS[slot]] || '';
+}
+
+function freeSlot(run) {
+  for (let s = 0; s < ALLY_SLOTS.length; s++) if (!run.allies.some(a => a.slot === s)) return s;
+  return -1;
+}
+
+function shuffle(list) {
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
   }
-  run.allyChoices = picked;
+  return list;
+}
+
+// Propone 3 carte: "assumi" un collega nuovo (finché ci sono postazioni libere,
+// almeno 2 carte su 3 sono assunzioni) oppure "promuovi" un collega già in campo.
+export function offerAllies(run) {
+  const slot = freeSlot(run);
+  const promos = shuffle(run.allies.filter(a => a.level < MAX_LEVEL))
+    .map(a => ({ kind: 'promote', def: allyDef(a.id), ally: a }));
+  const hires = slot < 0 ? [] : shuffle([...ALLIES]).map(def => ({ kind: 'hire', def, slot }));
+  const choices = [...hires.slice(0, promos.length ? 2 : 3), ...promos.slice(0, 1)];
+  // se mancano carte (es. postazioni piene) si riempie con altre promozioni
+  for (const p of promos.slice(1)) if (choices.length < 3) choices.push(p);
+  if (!choices.length) { offerCards(run); return; } // tutti al massimo
+  run.allyChoices = shuffle(choices);
   run.phase = 'ally';
 }
 
 export function pickAlly(run, meta, index) {
-  const def = run.allyChoices?.[index];
-  if (run.phase !== 'ally' || !def) return false;
-  const have = run.allies.find(a => a.id === def.id);
-  if (have) {
-    have.level++;
+  const choice = run.allyChoices?.[index];
+  if (run.phase !== 'ally' || !choice) return false;
+  let ally;
+  if (choice.kind === 'hire') {
+    ally = { uid: Math.random(), id: choice.def.id, level: 1, slot: choice.slot, cooldown: 0, recoil: 0, spawn: 0 };
+    run.allies.push(ally);
   } else {
-    run.allies.push({ id: def.id, level: 1, slot: run.allies.length, cooldown: 0, recoil: 0, spawn: 0 });
+    ally = choice.ally;
+    ally.level++;
+    ally.promoFlash = 1.5;
   }
-  const lv = (have ? have.level : 1) - 1;
-  banner(run, `${def.icon} ${def.name.toUpperCase()}`, have ? `Promosso a ${ALLY_LEVELS[lv]}!` : 'si unisce alla difesa!', '#ffd23f');
+  const { def } = choice;
+  const pos = allyPos(ally);
+  const hired = choice.kind === 'hire';
+  banner(run, `${def.icon} ${def.name.toUpperCase()}`,
+    hired ? `Assunto! Difende il lato ${slotName(ally.slot)}` : `Promosso a ${ALLY_LEVELS[ally.level - 1]}!`, '#f2b705');
+  floatText(run, pos.x, pos.y - 44, hired ? 'ASSUNTO!' : 'PROMOSSO!', '#f2b705', 9);
+  ring(run, pos.x, pos.y - 10, 26, '#f2b705');
   run.allyChoices = null;
   sfx(run, 'pick');
   refreshStats(run, meta);
@@ -60,9 +87,16 @@ export function pickAlly(run, meta, index) {
   return true;
 }
 
-export function updateAllies(run, dt) {
+// Animazioni dei colleghi (arrivo dall'alto, lampo di promozione): girano anche fra un'ondata e l'altra.
+export function animateAllies(run, dt) {
   for (const ally of run.allies) {
     ally.spawn = Math.min(1, ally.spawn + dt * 2);
+    ally.promoFlash = Math.max(0, (ally.promoFlash || 0) - dt);
+  }
+}
+
+export function updateAllies(run, dt) {
+  for (const ally of run.allies) {
     ally.recoil = Math.max(0, ally.recoil - dt);
     const def = allyDef(ally.id);
     if (def.aura) {
@@ -80,11 +114,8 @@ export function updateAllies(run, dt) {
     if (ally.cooldown > 0) continue;
 
     const pos = allyPos(ally);
-    let target = null, best = def.range;
-    for (const e of run.enemies) {
-      const d = dist(e, pos);
-      if (!e.dead && d < best && allyCovers(ally, e)) { target = e; best = d; }
-    }
+    // come la torre: prima i tank, poi i più vicini, ma solo nel suo spicchio
+    const [target] = pickTargets(run.enemies, pos, def.range, 1, e => allyCovers(ally, e));
     if (!target) continue;
 
     ally.cooldown = 1 / (def.rate * run.stats.allyRateMult);

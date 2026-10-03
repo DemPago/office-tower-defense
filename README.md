@@ -13,7 +13,7 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 1. **La torre sta al centro e spara da sola** al nemico più vicino dentro la gittata (il cerchio tratteggiato). I nemici arrivano da tutte le direzioni.
 2. Ogni nemico eliminato dà **oro 💰**: spendilo nel pannello in basso per Danno, Velocità, Gittata, Vita, Rigenerazione e **🔌 Recinto elettrico** (a settori: livello 1 copre 0-90°, livello 2 fino a 180°, livello 3 fino a 270°, livello 4 tutto il giro).
 3. **Dopo ogni ondata scegli 1 carta su 3**: sono potenziamenti che si sommano (colpi multipli, rimbalzi, esplosioni, veleno, critici…).
-4. **Ogni 5 ondate arrivano i rinforzi**: scegli un collega fra 3 e si piazza in una postazione intorno al palazzo. Ogni collega difende uno **spicchio** (l'arco colorato a terra): 90° al livello 1, e ogni promozione lo allarga di altri 90° (Junior → Middle → Professional → Senior → 👑 King).
+4. **Ogni 5 ondate arrivano i rinforzi**: puoi **assumere** un collega nuovo (6 postazioni intorno al palazzo) o **promuoverne** uno che hai già. Ogni collega difende uno **spicchio** (l'arco colorato a terra): 90° al livello 1, e ogni promozione lo allarga di altri 90° (Junior → Middle → Professional → Senior → 👑 King).
 5. Usa i **poteri** quando sei in difficoltà: si ricaricano col tempo.
 6. Quando la torre crolla vieni **licenziato**, ma guadagni **buoni pasto 🎫** da spendere nell'**Ufficio del personale** in bonus permanenti.
 
@@ -35,16 +35,24 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 | 🏃 **Mago Agile** | +velocità di fuoco a palazzo e colleghi |
 | 📋 **Mago Scrum** | +danno a palazzo e colleghi |
 
-## 🏢 Reparti (nemici nuovi ogni 10 ondate)
-| Ondate | Reparto | Nemici |
-|---|---|---|
-| 1-10 | Open Space | Stagista, Impiegato, Resp. HR (cura i vicini) |
-| 11-20 | Amministrazione | Contabile (corazzato), Avvocato (a distanza), Consulente (veloce) |
-| 21-30 | Reparto IT | Tecnico, Sistemista (a distanza), Ingegnere (corazzato) |
-| 31-40 | Commerciale | Venditore (veloce), Marketing (a distanza), Capo Vendite (si divide in 2) |
-| 41-50 | Sicurezza | Guardia (corazzata), Vigilante (a distanza), Buttafuori (enorme) |
-| 51-60 | Piani Alti | Assistente (veloce), Segretaria (cura), Vicedirettore (si divide in 2) |
-| 61+ | … si ricomincia | versioni ÉLITE con gli occhi rossi |
+## 🏢 Nemici: 4 ruoli, un reparto nuovo ogni 10 ondate
+| Ruolo | Comportamento |
+|---|---|
+| 🛡️ **Tank** | Tanta vita, lento e corazzato. Attira i colpi di torre e colleghi: fa da scudo agli altri. Sono i più numerosi. |
+| 🎯 **Cecchino** | Spara da lontano colpi forti (il mirino rosso avvisa prima del colpo), ma muore in fretta. |
+| 💥 **Kamikaze** | Vicino alla torre carica a doppia velocità; se arriva esplode con un danno enorme. |
+| ✨ **Speciale** | Cura i compagni vicini oppure, quando muore, si divide in due. |
+
+| Ondate | Reparto | Tank | Cecchino | Kamikaze | Speciale |
+|---|---|---|---|---|---|
+| 1-10 | Open Space | Impiegato | Stagista | Fattorino | Resp. HR (cura) |
+| 11-20 | Amministrazione | Contabile | Avvocato | Consulente | Funzionario (si divide) |
+| 21-30 | Reparto IT | Ingegnere | Sistemista | Tecnico | DevOps (cura) |
+| 31-40 | Commerciale | Magazziniere | Marketing | Venditore | Capo Vendite (si divide) |
+| 41-50 | Sicurezza | Buttafuori | Vigilante | Guardia | Caposquadra (si divide) |
+| 51-60 | Piani Alti | Vicedirettore | Segretaria | Assistente | Portavoce (cura) |
+
+Dopo l'ondata 60 si ricomincia con le versioni ÉLITE (occhi rossi).
 
 ## 🌆 Scenari
 Dopo ogni boss cambia lo scenario: parcheggio aziendale → archivio → data center → centro commerciale → zona industriale → tetto del grattacielo, poi si ricomincia.

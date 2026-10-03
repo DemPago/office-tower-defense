@@ -4,13 +4,14 @@ import { updateSpawns, startWave } from './waves.js';
 import { updateEnemies, updateEnemyShots, updateTower, updateShots, updateFence } from './combat.js';
 import { updateAbilities } from './abilities.js';
 import { offerCards } from './cards.js';
-import { offerAllies, updateAllies } from './allies.js';
+import { offerAllies, updateAllies, animateAllies } from './allies.js';
 import { REINFORCE_EVERY } from '../data/allies.js';
 import { updateFx, floatText } from './fx.js';
 import { TOWER } from '../state.js';
 
 export function update(run, dt) {
   updateFx(run, dt);
+  animateAllies(run, dt);
   if (run.phase === 'over' || run.phase === 'cards' || run.phase === 'ally') return;
   run.time += dt;
 

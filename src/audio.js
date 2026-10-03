@@ -107,6 +107,8 @@ const SOUNDS = {
   meeting: { gap: 0.5,  play: () => { tone({ type: 'sine', f1: 1046, dur: 0.8, vol: 0.12 }); tone({ type: 'sine', f1: 1568, dur: 0.6, vol: 0.06 }); } },
   audit:   { gap: 0.5,  play: () => { tone({ type: 'square', f1: 1760, dur: 0.07, vol: 0.05 }); tone({ type: 'square', f1: 2637, dur: 0.25, vol: 0.05, at: 0.08 }); noise({ dur: 0.15, vol: 0.08, freq: 5000, at: 0.02 }); } },
   boss:    { gap: 5,    play: () => bossMarch() },
+  charge:  { gap: 0.3,  play: () => tone({ type: 'sawtooth', f1: 200, f2: 700, dur: 0.25, vol: 0.06, filter: 1500 }) },
+  boom:    { gap: 0.1,  play: () => { noise({ dur: 0.45, vol: 0.3, type: 'lowpass', freq: 800 }); tone({ type: 'sine', f1: 120, f2: 40, dur: 0.4, vol: 0.25 }); } },
 };
 
 export function play(name) {

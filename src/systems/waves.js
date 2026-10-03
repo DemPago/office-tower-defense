@@ -1,5 +1,5 @@
 // Ondate: quanti nemici, quali, quanto sono forti e da dove arrivano.
-import { ENEMIES, decadeFor } from '../data/enemies.js';
+import { ENEMIES, ROLE_WEIGHTS, decadeFor } from '../data/enemies.js';
 import { bossForWave } from '../data/bosses.js';
 import { TOWER, SPAWN_RADIUS } from '../state.js';
 import { banner, sfx } from './fx.js';
@@ -14,15 +14,14 @@ function enemyCount(w) {
   return Math.min(60, 5 + Math.floor(w * 1.2));
 }
 
-// Sceglie un nemico del reparto di questa ondata: il terzo (quello "speciale") esce meno spesso.
-const WEIGHTS = [1, 1, 0.6];
+// Sceglie un nemico del reparto di questa ondata, pesando i ruoli (tanti tank).
 function pickEnemy(w) {
-  const ids = decadeFor(w).enemies;
-  let r = Math.random() * WEIGHTS.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < ids.length; i++) {
-    if ((r -= WEIGHTS[i]) <= 0) return ENEMIES[ids[i]];
+  const lineup = decadeFor(w).enemies;
+  let r = Math.random();
+  for (const [role, weight] of Object.entries(ROLE_WEIGHTS)) {
+    if ((r -= weight) <= 0) return ENEMIES[lineup[role]];
   }
-  return ENEMIES[ids[0]];
+  return ENEMIES[lineup.tank];
 }
 
 // Punto di partenza casuale su un cerchio intorno alla torre: arrivano da ogni direzione.
@@ -33,8 +32,10 @@ function spawnPoint() {
 
 export function makeEnemy(def, w, extra = {}) {
   const p = spawnPoint();
-  const hp = def.hp * hpScale(w);
-  const elite = decadeFor(w).elite;
+  const decade = decadeFor(w);
+  const elite = decade.elite;
+  // i reparti più avanzati sono un po' più robusti
+  const hp = def.hp * hpScale(w) * (1 + 0.12 * Math.min(decade.index, 5));
   return {
     id: Math.random(),
     def,
@@ -45,6 +46,11 @@ export function makeEnemy(def, w, extra = {}) {
     hp, maxHp: hp,
     speed: def.speed * (0.9 + Math.random() * 0.2) * (elite ? 1.15 : 1),
     elite,
+    role: def.role,
+    taunt: !!def.taunt,
+    charge: def.charge || null,
+    charging: false,
+    shotCd: def.shotCd || 1,
     healCd: 3,
     atk: def.atk * atkScale(w),
     range: def.range,
@@ -59,8 +65,11 @@ export function makeEnemy(def, w, extra = {}) {
   };
 }
 
+// Base dei boss: un "dipendente medio" a cui si applicano i moltiplicatori del boss.
+const BOSS_BASE = { name: 'Boss', look: 'impiegato', role: 'boss', hp: 10, speed: 20, atk: 2, range: 0, gold: 1 };
+
 function makeBoss(b, w) {
-  const base = ENEMIES.stagista;
+  const base = BOSS_BASE;
   const group = b.group || 1;
   const list = [];
   for (let i = 0; i < group; i++) {
@@ -98,7 +107,7 @@ export function startWave(run) {
   if (boss) banner(run, boss.name, boss.sub, '#d7263d');
   else if ((w - 1) % 10 === 0) {
     // primo turno di un nuovo reparto: si presentano i nemici nuovi
-    const names = decade.enemies.map(id => ENEMIES[id].name).join(', ');
+    const names = Object.values(decade.enemies).map(id => ENEMIES[id].name).join(', ');
     banner(run, decade.name + (decade.elite ? ' ÉLITE' : ''), `Arrivano: ${names}`, '#ff3e8a');
   } else banner(run, `ONDATA ${w}`, `${n} nemici in arrivo`);
 }

@@ -39,6 +39,13 @@ export const LOOKS = {
   segretaria: { skin: SKIN.mid, hair: '#8a8d93', hairStyle: 'bun', glasses: 'glasses', top: '#5d275d', shirt: '#e8e2d0', skirt: '#3a3c42', shoes: '#141416', item: 'phone', angry: true },
   vicedirettore:{ skin: SKIN.light, hair: '#8a8d93', hairStyle: 'slick', top: '#141416', shirt: '#e8e2d0', tie: '#2f4f8f', pants: '#141416', build: 'fat', item: 'briefcase', itemColor: '#141416', angry: true },
 
+  rider:      { skin: SKIN.tan, hair: '#141416', hairStyle: 'short', hat: 'cap', hatColor: '#3e6b2a', top: '#7bd332', shirt: '#7bd332', sleeves: 'short', pants: '#2a2a2e', shoes: '#d9d4c7', build: 'thin', item: 'box', angry: true },
+  funzionario:{ skin: SKIN.light, hair: '#5a3a22', hairStyle: 'bald', facial: 'mustache', glasses: 'glasses', top: '#4a4743', shirt: '#d9d4c7', tie: '#7a1f2b', pants: '#4a4743', item: 'stamp', angry: true },
+  devops:     { skin: SKIN.mid, hair: '#2a2a2e', hairStyle: 'long', facial: 'beard', top: '#5d275d', shirt: '#5d275d', pants: '#3a4a6a', shoes: '#d9d4c7', item: 'laptop', angry: true },
+  magazziniere:{ skin: SKIN.tan, hair: '#5a3a22', hairStyle: 'short', facial: 'beard', hat: 'cap', hatColor: '#8a3b1e', top: '#3a3c42', shirt: '#3a3c42', vest: '#e8641b', pants: '#3a3226', build: 'fat', item: 'box', angry: true },
+  caposquadra:{ skin: SKIN.mid, hair: '#8a8d93', hairStyle: 'short', facial: 'mustache', hat: 'cap', hatColor: '#7a1f2b', top: '#2f3f5f', shirt: '#2f3f5f', tie: '#7a1f2b', pants: '#1f2a44', item: 'megaphone', badge: true, angry: true },
+  portavoce:  { skin: SKIN.light, hair: '#d9b45a', hairStyle: 'bun', top: '#2f4f8f', shirt: '#e8e2d0', skirt: '#2f4f8f', shoes: '#141416', item: 'phone', angry: true },
+
   // Boss
   teamleader: { skin: SKIN.mid, hair: '#8a3b1e', hairStyle: 'short', top: '#7a1f2b', shirt: '#e8e2d0', tie: '#141416', pants: '#2a2a2e', item: 'megaphone', angry: true },
   capoarea:   { skin: SKIN.tan, hair: '#2a2a2e', hairStyle: 'bald', facial: 'mustache', top: '#3a3c42', shirt: '#d9d4c7', tie: '#a67c00', pants: '#2a2a2e', build: 'fat', item: 'phone', angry: true },
@@ -238,6 +245,12 @@ export function drawPerson(g, look, frame) {
       break;
     case 'cigar':
       px(9, 8, 3, 1, '#6b4a2b'); px(12, 8, 1, 1, '#e8641b'); px(12, 6, 1, 1, '#8a8d93');
+      break;
+    case 'box':
+      px(hx - 2, hy - 4, 5, 5, '#8b6a3e'); px(hx - 2, hy - 4, 5, 1, '#a5824f'); px(hx, hy - 4, 1, 5, '#c9b48a');
+      break;
+    case 'stamp':
+      px(hx + 1, hy - 4, 1, 3, '#6b4a2b'); px(hx, hy - 1, 3, 2, '#7a1f2b');
       break;
     case 'cable':
       px(hx, hy - 1, 3, 3, '#141416'); px(hx + 1, hy, 1, 1, look.skin); px(hx + 3, hy + 1, 1, 3, '#141416');

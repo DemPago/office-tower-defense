@@ -466,6 +466,11 @@ function drawAlly(ctx, assets, ally, time) {
     ctx.fill();
   }
   const recoil = ally.recoil > 0 ? 1 : 0;
+  if (ally.promoFlash > 0) {
+    // promozione: colonna di luce dorata
+    ctx.fillStyle = `rgba(242,183,5,${0.35 * ally.promoFlash / 1.5})`;
+    ctx.fillRect(x - 8, y - 70, 16, 72);
+  }
   ctx.globalAlpha = ally.spawn;
   drawPersonAt(ctx, assets.person(def.look, 0, 1), x, y - 1 + drop + recoil);
   ctx.globalAlpha = 1;
@@ -545,6 +550,7 @@ function drawEnemy(ctx, assets, e) {
   ctx.globalAlpha = 1;
   x = Math.round(x - s / 2);
 
+  drawRoleCue(ctx, e, x, y, s);
   if (e.slowT > 0) {
     ctx.fillStyle = 'rgba(45,226,230,0.6)';
     ctx.fillRect(x + Math.round(s * 0.25), y + Math.round(s * 0.88), Math.round(s * 0.5), 2);
@@ -581,6 +587,52 @@ function drawEnemy(ctx, assets, e) {
     ctx.fillRect(bx, by, bw, 2);
     ctx.fillStyle = PAL.red;
     ctx.fillRect(bx, by, Math.max(1, Math.round(bw * e.hp / e.maxHp)), 2);
+  }
+}
+
+// Segnali del ruolo: scudo per i tank, mirino per i cecchini, scia per i kamikaze.
+function drawRoleCue(ctx, e, x, y, s) {
+  if (e.role === 'tank' && !e.boss) {
+    const sx = Math.round(e.x) - 3, sy = y - 11;
+    ctx.fillStyle = PAL.black;
+    ctx.fillRect(sx - 1, sy - 1, 8, 8);
+    ctx.fillStyle = PAL.silver;
+    ctx.fillRect(sx, sy, 6, 4);
+    ctx.fillRect(sx + 1, sy + 4, 4, 1);
+    ctx.fillRect(sx + 2, sy + 5, 2, 1);
+    ctx.fillStyle = PAL.steel;
+    ctx.fillRect(sx + 3, sy, 3, 4);
+  }
+  if (e.role === 'sniper' && !e.moving && e.attackCd < 0.6) {
+    // mirino laser: il colpo sta per partire
+    ctx.save();
+    ctx.globalAlpha = 0.35 + (0.6 - e.attackCd);
+    ctx.strokeStyle = PAL.red;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 2]);
+    ctx.beginPath();
+    ctx.moveTo(e.x, e.y - s * 0.4);
+    ctx.lineTo(TOWER.x, TOWER.y - 20);
+    ctx.stroke();
+    ctx.restore();
+  }
+  if (e.charging) {
+    const d = Math.hypot(TOWER.x - e.x, TOWER.y - e.y) || 1;
+    const dx = (e.x - TOWER.x) / d, dy = (e.y - TOWER.y) / d;
+    ctx.strokeStyle = 'rgba(255,123,28,0.7)';
+    ctx.lineWidth = 1;
+    for (const off of [-5, 0, 5]) {
+      ctx.beginPath();
+      ctx.moveTo(e.x + dy * off + dx * 6, e.y - 12 - dx * off + dy * 6);
+      ctx.lineTo(e.x + dy * off + dx * 18, e.y - 12 - dx * off + dy * 18);
+      ctx.stroke();
+    }
+    if (Math.floor(performance.now() / 90) % 2) {
+      ctx.fillStyle = 'rgba(255,123,28,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(e.x, e.y - s * 0.45, s * 0.45, s * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }
 
@@ -666,6 +718,15 @@ function drawShots(ctx, run, time) {
   // Colpi dei nemici: tazze di caffè lanciate contro il palazzo
   for (const s of run.enemyShots) {
     const x = Math.round(s.x), y = Math.round(s.y);
+    if (s.sniper) {
+      ctx.fillStyle = PAL.black;
+      ctx.fillRect(x - 3, y - 3, 6, 6);
+      ctx.fillStyle = PAL.red;
+      ctx.fillRect(x - 2, y - 2, 4, 4);
+      ctx.fillStyle = '#ffd0d6';
+      ctx.fillRect(x - 1, y - 1, 2, 2);
+      continue;
+    }
     ctx.fillStyle = PAL.black;
     ctx.fillRect(x - 4, y - 3, 8, 7);
     ctx.fillStyle = PAL.white;

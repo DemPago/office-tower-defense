@@ -49,7 +49,9 @@ Angoli: si usano gradi "da geometria" (0 = destra, 90 = su) con `util.js#angleOf
 
 ### Nemici
 
-`data/enemies.js`: `ENEMIES` è un oggetto per id; `DECADES` definisce un "reparto" di 3 nemici ogni 10 ondate (dopo la 60 si ricomincia in versione élite). Abilità speciali tramite campi del dato: `armor`, `range` (a distanza), `heal` (cura i vicini), `split` (alla morte si divide in 2 nemici di quel tipo). I boss (`data/bosses.js`) sono costruiti a partire dallo stagista con moltiplicatori.
+`data/enemies.js`: ogni nemico ha un **ruolo** (`ROLES`: `tank` con taunt, `sniper`, `charger` kamikaze, `special` con `heal` o `split`) che ne fissa statistiche e comportamento; `ROLE_WEIGHTS` decide la composizione delle ondate. `DECADES` assegna a ogni reparto (10 ondate) un nemico per ruolo; dopo la 60 si ricomincia in versione élite. La logica dei ruoli è in `systems/combat.js` (`updateEnemies`, `explode`, `pickTargets` che mette i tank per primi). I boss (`data/bosses.js`) partono da `BOSS_BASE` in `systems/waves.js`.
+
+Rinforzi: `run.allies` contiene unità indipendenti (si possono avere due colleghi dello stesso tipo); `offerAllies` propone carte `hire` (postazione libera) o `promote`.
 
 ### Suoni
 

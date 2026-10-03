@@ -27,19 +27,29 @@ export function updateEnemies(run, dt) {
 
     const d = dist(e, TOWER);
     const stopAt = e.range > 0 ? e.range : TOWER.radius + e.size * 0.4;
+    // Kamikaze: vicino alla torre parte la carica
+    if (e.charge && !e.charging && d < e.charge.dist) {
+      e.charging = true;
+      floatText(run, e.x, e.y - e.size - 6, 'CARICA!', '#ff7b1c', 8);
+      sfx(run, 'charge');
+    }
     if (d > stopAt) {
-      const speed = e.speed * (e.slowT > 0 ? 1 - e.slowF : 1);
+      const speed = e.speed * (e.slowT > 0 ? 1 - e.slowF : 1) * (e.charging ? e.charge.mult : 1);
       e.x += (TOWER.x - e.x) / d * speed * dt;
       e.y += (TOWER.y - e.y) / d * speed * dt;
       e.anim += dt * (speed / 30);
       e.moving = true;
+    } else if (e.charge) {
+      explode(run, e);
+      continue;
     } else {
       e.moving = false;
       e.attackCd -= dt;
       if (e.attackCd <= 0) {
-        e.attackCd = e.boss ? 1.3 : 1;
+        e.attackCd = e.boss ? 1.3 : e.shotCd;
         if (e.range > 0) {
-          run.enemyShots.push({ x: e.x, y: e.y - e.size * 0.3, dmg: e.atk, speed: 160 });
+          run.enemyShots.push({ x: e.x, y: e.y - e.size * 0.3, dmg: e.atk, speed: 210, sniper: e.role === 'sniper' });
+          e.lunge = 0.12;
         } else {
           damageTower(run, e.atk);
           e.lunge = 0.15;
@@ -51,7 +61,19 @@ export function updateEnemies(run, dt) {
   run.enemies = run.enemies.filter(e => !e.dead);
 }
 
-// HR e segretarie curano i colleghi vicini ogni 3 secondi.
+// Il kamikaze arriva alla torre ed esplode: danno enorme, ma muore (senza lasciare oro).
+function explode(run, e) {
+  e.dead = true;
+  damageTower(run, e.atk);
+  burst(run, e.x, e.y - 10, '#ff7b1c', 18, 140);
+  burst(run, e.x, e.y - 10, '#f2b705', 10, 100);
+  ring(run, e.x, e.y - 8, 34, '#ff7b1c');
+  floatText(run, e.x, e.y - e.size - 8, 'BOOM!', '#ff7b1c', 11);
+  shake(run, 6);
+  sfx(run, 'boom');
+}
+
+// Chi cura (HR, DevOps, Portavoce) cura i colleghi vicini ogni 3 secondi.
 function healNearby(run, healer, dt) {
   healer.healCd -= dt;
   if (healer.healCd > 0) return;
@@ -108,10 +130,7 @@ export function updateTower(run, dt) {
   t.cooldown -= dt;
   if (t.cooldown > 0) return;
 
-  const targets = run.enemies
-    .filter(e => dist(e, TOWER) <= s.range)
-    .sort((a, b) => dist(a, TOWER) - dist(b, TOWER))
-    .slice(0, s.multishot);
+  const targets = pickTargets(run.enemies, TOWER, s.range, s.multishot);
   if (!targets.length) return;
 
   t.cooldown = 1 / s.rate;
@@ -123,6 +142,14 @@ export function updateTower(run, dt) {
       dmg: s.dmg, bounces: s.bounce, hitIds: new Set(), speed: s.shotSpeed, effects, kind: 'tower',
     });
   }
+}
+
+// Sceglie i bersagli: prima i tank (attirano i colpi), poi i più vicini.
+export function pickTargets(enemies, from, range, count, filter = () => true) {
+  return enemies
+    .filter(e => !e.dead && dist(e, from) <= range && filter(e))
+    .sort((a, b) => (b.taunt - a.taunt) || (dist(a, from) - dist(b, from)))
+    .slice(0, count);
 }
 
 // Spara un colpo che insegue il bersaglio. opts: dmg, bounces, hitIds, speed, effects, kind

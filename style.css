@@ -267,3 +267,5 @@ h2 {
   #top { padding-inline: max(8px, calc((100vw / 1.5 - 560px) / 2)); }
   #panel { padding-inline: max(6px, calc((100vw / 1.5 - 560px) / 2)) !important; }
 }
+.card.ally.hire .rar { color: var(--toxic); }
+.card.ally.promo .rar { color: var(--hazard); }
