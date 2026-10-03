@@ -7,7 +7,7 @@
 //   mod(c,m) modifica i bonus delle carte (vedi systems/stats.js), una volta per copia
 //   onPick   effetto immediato, solo nel momento della scelta
 export function cardPower(wave) {
-  return 1 + 0.03 * (Math.max(1, wave) - 1);
+  return 1; // le carte valgono uguale a ogni ondata (si può far crescere, es. 1 + 0.03 * (wave - 1))
 }
 const pct = (v, m) => Math.round(v * m * 100);
 const num = (v, m) => Math.round(v * m * 10) / 10;

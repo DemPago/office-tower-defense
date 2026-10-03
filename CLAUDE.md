@@ -53,7 +53,9 @@ Angoli: si usano gradi "da geometria" (0 = destra, 90 = su) con `util.js#angleOf
 
 Rinforzi: `run.allies` contiene unità indipendenti (si possono avere due colleghi dello stesso tipo); `offerAllies` propone carte `hire` (postazione libera) o `promote`. I colleghi hanno vita (`allyHp`): per ogni nemico vivo dentro `YARD` (state.js) perdono `YARD_DRAIN` HP al secondo (`updateYard`), a zero si dimettono; a fine ondata si curano (`restAllies`).
 
-Carte: l'effetto è moltiplicato per `cardPower(ondata)` al momento della scelta; le scelte stanno in `run.cardPicks` (`run.cards` conta solo le copie, per il massimo).
+Carte: le scelte stanno in `run.cardPicks` con la potenza `cardPower(ondata)` del momento (oggi sempre 1, si può far crescere con le ondate); `run.cards` conta solo le copie, per il massimo.
+
+Pannello in basso (`ui/hud.js`): i pulsanti non sono mai `disabled` (classe `off`) così il suggerimento `withTip` funziona sempre; i testi dei suggerimenti sono `help` in `data/upgrades.js` e `data/abilities.js`.
 
 ### Suoni
 

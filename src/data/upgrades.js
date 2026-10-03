@@ -1,14 +1,21 @@
 // Potenziamenti comprati con l'ORO durante la partita.
 // Il costo del livello L è: base × grow^L (arrotondato).
 //   mod(u, L) applica L livelli ai bonus dei potenziamenti (vedi systems/stats.js)
+//   help(s, L) spiegazione per il suggerimento (s = statistiche attuali, L = livello)
 export const UPGRADES = [
-  { id: 'dmg',   icon: '⚔️', name: 'Danno',     base: 8,  grow: 1.32, mod: (u, L) => { u.dmg += 0.30 * L; } },
-  { id: 'rate',  icon: '⚡', name: 'Velocità',  base: 10, grow: 1.40, mod: (u, L) => { u.rate += 0.10 * L; } },
-  { id: 'range', icon: '📡', name: 'Gittata',   base: 12, grow: 1.60, max: 8, mod: (u, L) => { u.range += 0.06 * L; } },
-  { id: 'hp',    icon: '❤️', name: 'Vita',      base: 8,  grow: 1.30, mod: (u, L) => { u.hpFlat += 25 * L; } },
-  { id: 'regen', icon: '💚', name: 'Rigenera',  base: 10, grow: 1.38, mod: (u, L) => { u.regen += 0.8 * L; } },
+  { id: 'dmg',   icon: '⚔️', name: 'Danno',     base: 8,  grow: 1.32, mod: (u, L) => { u.dmg += 0.30 * L; },
+    help: s => `Danno di ogni colpo della torre (e, in proporzione, dei colleghi). +30% per livello. Ora: ${Math.round(s.dmg)} a colpo.` },
+  { id: 'rate',  icon: '⚡', name: 'Velocità',  base: 10, grow: 1.40, mod: (u, L) => { u.rate += 0.10 * L; },
+    help: s => `Quanti colpi al secondo spara la torre. +10% per livello. Ora: ${s.rate.toFixed(1)} colpi/s.` },
+  { id: 'range', icon: '📡', name: 'Gittata',   base: 12, grow: 1.60, max: 8, mod: (u, L) => { u.range += 0.06 * L; },
+    help: s => `Quanto lontano spara la torre (il cerchio tratteggiato). +6% per livello, massimo 8 livelli. Ora: ${Math.round(s.range)} m.` },
+  { id: 'hp',    icon: '❤️', name: 'Vita',      base: 8,  grow: 1.30, mod: (u, L) => { u.hpFlat += 25 * L; },
+    help: s => `Vita massima del palazzo. +25 per livello. Ora: ${Math.round(s.maxHp)}.` },
+  { id: 'regen', icon: '💚', name: 'Rigenera',  base: 10, grow: 1.38, mod: (u, L) => { u.regen += 0.8 * L; },
+    help: s => `Vita che il palazzo recupera da solo ogni secondo. +0,8 per livello. Ora: ${s.regen.toFixed(1)}/s.` },
   // Recinto elettrico intorno alla torre, a settori: liv.1 copre 0-90°, liv.2 0-180°, liv.3 0-270°, liv.4 tutto.
-  { id: 'fence', icon: '🔌', name: 'Recinto',   base: 30, grow: 2.2, max: 4, mod: (u, L) => { u.fence += L; } },
+  { id: 'fence', icon: '🔌', name: 'Recinto',   base: 30, grow: 2.2, max: 4, mod: (u, L) => { u.fence += L; },
+    help: (s, L) => `Recinto elettrico intorno al palazzo: fulmina i nemici che si avvicinano. Liv.1 copre 0-90° (in alto a destra), liv.2 fino a 180°, liv.3 fino a 270°, liv.4 tutto il giro. Ora: ${L ? `${L * 90}°` : 'non costruito'}.` },
 ];
 
 // Potenziamenti PERMANENTI comprati con i BUONI PASTO (valgono per sempre).
