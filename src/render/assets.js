@@ -38,11 +38,12 @@ export async function loadAssets() {
   const cache = new Map();
   // Restituisce { img, w, h }: l'immagine e la sua misura nel mondo di gioco
   // (scale 2 per i boss). I piedi sono sul bordo in basso, al centro.
-  function person(lookId, frame = 0, scale = 1, white = false) {
-    const key = `${lookId}|${frame}|${white}`;
+  // tint: false = normale, true = tutto bianco (colpito), oppure un colore (es. rosso per i boss infuriati)
+  function person(lookId, frame = 0, scale = 1, tint = false) {
+    const key = `${lookId}|${frame}|${tint}`;
     let img = cache.get(key);
     if (!img) {
-      img = white ? silhouette(person(lookId, frame).img, '#ffffff') : build(lookId, frame);
+      img = tint ? silhouette(person(lookId, frame).img, tint === true ? '#ffffff' : tint) : build(lookId, frame);
       cache.set(key, img);
     }
     const k = WORLD_PER_PX * scale;

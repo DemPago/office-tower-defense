@@ -22,6 +22,7 @@ export function updateEnemies(run, dt) {
       if (e.dead) continue;
     }
     if (e.slowT > 0) e.slowT -= dt;
+    if (e.boss) bossMood(run, e);
     if (e.stunT > 0) { e.stunT -= dt; continue; }
     if (e.def.heal) healNearby(run, e, dt);
 
@@ -59,6 +60,23 @@ export function updateEnemies(run, dt) {
     if (e.lunge > 0) e.lunge -= dt;
   }
   run.enemies = run.enemies.filter(e => !e.dead);
+}
+
+// Boss: passi pesanti che fanno tremare il terreno e rabbia a metà vita.
+function bossMood(run, e) {
+  const step = Math.floor(e.anim * 2.5) % 4;
+  if (e.moving && step !== e.lastStep && step % 2 === 0) {
+    shake(run, e.scale >= 3 ? 1.6 : 0.8);
+    burst(run, e.x + (step ? 6 : -6), e.y, '#8a8d93', 4, 40); // polvere
+  }
+  e.lastStep = step;
+  if (!e.enraged && e.hp < e.maxHp * 0.5) {
+    e.enraged = true;
+    e.speed *= 1.3;
+    floatText(run, e.x, e.y - e.size - 12, 'INFURIATO!', '#d7263d', 11);
+    shake(run, 6);
+    sfx(run, 'enrage');
+  }
 }
 
 // Il kamikaze arriva alla torre ed esplode: danno enorme, ma muore (senza lasciare oro).

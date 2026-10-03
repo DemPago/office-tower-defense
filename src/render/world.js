@@ -30,6 +30,7 @@ export function createRenderer(canvas, assets) {
   let sceneIdx = 0, prevIdx = null, fade = 0;
   // Fumo e polvere sono solo decorazione: vivono qui e non nello stato del gioco.
   const smoke = [];
+  const trails = [];
   const dust = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), v: 0.01 + Math.random() * 0.02, a: Math.random() * 6 }));
   let lastTime = performance.now() / 1000;
 
@@ -104,6 +105,8 @@ export function createRenderer(canvas, assets) {
     for (const a of actors) if (a.y >= TOWER.y + 20) a.draw();
     updateSmoke(smoke, run, dt);
     drawSmoke(ctx, smoke);
+    updateTrails(trails, run, dt);
+    drawTrails(ctx, trails);
     if (run) {
       drawShots(ctx, run, time);
       drawFx(ctx, run);
@@ -117,6 +120,7 @@ export function createRenderer(canvas, assets) {
     const W = canvas.width / view.ui, H = canvas.height / view.ui;
     if (fade > 0.2) drawSceneTitle(ctx, cur.name, W, H, fade);
     if (run) {
+      drawBossPointer(ctx, run, view, W, H);
       drawBanner(ctx, run, W, H);
       drawBossBar(ctx, run, W);
     }
@@ -528,15 +532,16 @@ function drawEnemy(ctx, assets, e) {
   const y = Math.round(feet - s); // cima della testa, per barre e simboli
 
   ctx.globalAlpha = Math.min(1, (e.age || 0) / 0.4); // compare in dissolvenza
-  if (e.boss) {
-    ctx.fillStyle = 'rgba(215,38,61,0.4)';
-    ctx.beginPath();
-    ctx.ellipse(e.x, e.y, s * 0.55, s * 0.18, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  if (e.boss) drawBossAura(ctx, e, x, feet, s);
   drawPersonAt(ctx, assets.person(e.look, frame, k), x, feet);
-  if (e.elite) {
-    // ÉLITE: occhi rossi che brillano
+  if (e.enraged) {
+    // infuriato: pulsa di rosso
+    ctx.globalAlpha = 0.25 + 0.15 * Math.sin(performance.now() / 120);
+    drawPersonAt(ctx, assets.person(e.look, frame, k, '#ff2a3d'), x, feet);
+    ctx.globalAlpha = 1;
+  }
+  if (e.elite || e.boss) {
+    // ÉLITE e boss: occhi rossi che brillano
     const sp = assets.person(e.look, frame, k);
     const left = x - sp.w / 2, top = feet - sp.h + sp.k * 2;
     const ey = top + (EYES.y + 1) * sp.k;
@@ -568,18 +573,20 @@ function drawEnemy(ctx, assets, e) {
     ctx.textAlign = 'center';
     ctx.fillText('zZ', e.x, y - 2);
   }
-  if (e.boss && !LOOKS[e.look].hat) {
-    // corona d'oro sporca
-    const cx = Math.round(e.x), cy = Math.round(y + s * 0.06);
+  if (e.boss && !LOOKS[e.look].hat && LOOKS[e.look].hairStyle !== 'wild') {
+    // corona d'oro, in proporzione al boss
+    const c = k / 2, cx = e.x, cy = y + s * 0.02;
     ctx.fillStyle = PAL.black;
-    ctx.fillRect(cx - 9, cy - 5, 18, 9);
+    ctx.fillRect(cx - 9 * c, cy - 5 * c, 18 * c, 9 * c);
     ctx.fillStyle = PAL.hazard;
-    ctx.fillRect(cx - 8, cy, 16, 3);
-    ctx.fillRect(cx - 8, cy - 4, 3, 4);
-    ctx.fillRect(cx - 1, cy - 4, 3, 4);
-    ctx.fillRect(cx + 5, cy - 4, 3, 4);
+    ctx.fillRect(cx - 8 * c, cy, 16 * c, 3 * c);
+    ctx.fillRect(cx - 8 * c, cy - 4 * c, 3 * c, 4 * c);
+    ctx.fillRect(cx - 1.5 * c, cy - 4 * c, 3 * c, 4 * c);
+    ctx.fillRect(cx + 5 * c, cy - 4 * c, 3 * c, 4 * c);
+    ctx.fillStyle = '#fff3b0';
+    ctx.fillRect(cx - 7 * c, cy, 2 * c, c);
     ctx.fillStyle = PAL.red;
-    ctx.fillRect(cx - 1, cy, 2, 2);
+    ctx.fillRect(cx - c, cy + c * 0.5, 2 * c, 2 * c);
   }
   if (e.hp < e.maxHp && !e.boss) {
     const bw = Math.round(s * 0.7), bx = Math.round(e.x - bw / 2), by = y - 2;
@@ -589,6 +596,87 @@ function drawEnemy(ctx, assets, e) {
     ctx.fillRect(bx, by, bw, 2);
     ctx.fillStyle = PAL.red;
     ctx.fillRect(bx, by, Math.max(1, Math.round(bw * e.hp / e.maxHp)), 2);
+  }
+}
+
+// Alone pulsante dietro al boss, del suo colore.
+function drawBossAura(ctx, e, x, feet, s) {
+  const t = performance.now() / 1000;
+  const r = s * (0.75 + Math.sin(t * 3) * 0.06);
+  const cy = feet - s * 0.45;
+  const g = ctx.createRadialGradient(x, cy, s * 0.1, x, cy, r);
+  g.addColorStop(0, e.enraged ? 'rgba(255,42,61,0.45)' : hexA(e.aura, 0.4));
+  g.addColorStop(1, hexA(e.aura, 0));
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = g;
+  ctx.fillRect(x - r, cy - r, r * 2, r * 2);
+  ctx.restore();
+  // cerchio a terra
+  ctx.strokeStyle = hexA(e.aura, 0.6);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(x, feet, s * 0.5, s * 0.16, 0, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function hexA(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+// Scie di particelle dei boss (solo decorazione: vivono nel renderer).
+function updateTrails(trails, run, dt) {
+  if (run) {
+    for (const e of run.enemies) {
+      if (!e.boss || !e.trail || Math.random() > dt * 18) continue;
+      const s = e.size;
+      if (e.trail === 'smoke') trails.push({ x: e.x + s * 0.18, y: e.y - s * 0.7, vx: 4, vy: -14, life: 1.6, max: 1.6, c: '#8a8d93', size: 1.5, grow: 2 });
+      if (e.trail === 'sparks') trails.push({ x: e.x + (Math.random() - 0.5) * s * 0.6, y: e.y - Math.random() * s, vx: (Math.random() - 0.5) * 50, vy: (Math.random() - 0.5) * 50, life: 0.35, max: 0.35, c: Math.random() < 0.5 ? PAL.cyan : PAL.white, size: 1, grow: 0 });
+      if (e.trail === 'stars') trails.push({ x: e.x + (Math.random() - 0.5) * s * 0.9, y: e.y - Math.random() * s * 0.8, vx: 0, vy: 6, life: 1.2, max: 1.2, c: Math.random() < 0.4 ? PAL.cyan : PAL.white, size: 1, grow: 0, twinkle: true });
+      if (e.trail === 'code') trails.push({ x: e.x + (Math.random() - 0.5) * s * 0.8, y: e.y - s * 0.9, vx: 0, vy: 18, life: 1, max: 1, c: PAL.toxic, size: 1, grow: 0 });
+    }
+  }
+  for (const p of trails) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.size += p.grow * dt; }
+  for (let i = trails.length - 1; i >= 0; i--) if (trails[i].life <= 0) trails.splice(i, 1);
+}
+
+function drawTrails(ctx, trails) {
+  for (const p of trails) {
+    ctx.globalAlpha = Math.min(1, p.life / p.max * 1.5) * (p.twinkle && Math.random() < 0.3 ? 0.3 : 1);
+    ctx.fillStyle = p.c;
+    ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Freccia sul bordo dello schermo che indica da dove arriva il boss.
+function drawBossPointer(ctx, run, view, W, H) {
+  for (const e of run.enemies) {
+    if (!e.boss) continue;
+    const sx = (view.ox + e.x * view.scale) / view.ui, sy = (view.oy + (e.y - e.size / 2) * view.scale) / view.ui;
+    const m = 30;
+    if (sx > m && sx < W - m && sy > m + 40 && sy < H - m) continue; // già visibile
+    const cx = W / 2, cy = H / 2, dx = sx - cx, dy = sy - cy;
+    const t = Math.min((W / 2 - m) / Math.abs(dx || 1), (H / 2 - m) / Math.abs(dy || 1));
+    const px = cx + dx * t, py = cy + dy * t, a = Math.atan2(dy, dx);
+    const pulse = 1 + Math.sin(performance.now() / 150) * 0.15;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(a);
+    ctx.scale(pulse, pulse);
+    ctx.fillStyle = PAL.black;
+    ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-8, -10); ctx.lineTo(-8, 10); ctx.fill();
+    ctx.fillStyle = PAL.red;
+    ctx.beginPath(); ctx.moveTo(11, 0); ctx.lineTo(-6, -7); ctx.lineTo(-6, 7); ctx.fill();
+    ctx.restore();
+    ctx.font = `7px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = PAL.black;
+    ctx.fillText('⚠ BOSS', px - Math.cos(a) * 24 + 1, py - Math.sin(a) * 24 + 4);
+    ctx.fillStyle = PAL.red;
+    ctx.fillText('⚠ BOSS', px - Math.cos(a) * 24, py - Math.sin(a) * 24 + 3);
+    return; // un indicatore basta (anche per i gruppi)
   }
 }
 

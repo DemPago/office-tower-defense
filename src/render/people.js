@@ -1,13 +1,16 @@
 // Personaggi in pixel art HD disegnati via codice (niente immagini).
 // Ogni "look" descrive com'è vestito un personaggio; drawPerson lo disegna su una
-// griglia di 32×68 pixel (12 righe in alto servono per cappelli e capelli alti).
+// griglia di 40×68 pixel (12 righe in alto servono per cappelli e capelli alti).
 // Nel mondo di gioco ogni pixel di questa griglia vale mezzo pixel del mondo
 // (WORLD_PER_PX): così i personaggi hanno il doppio dei dettagli dello sfondo.
-export const GRID = { w: 32, h: 68, top: 12 };
+export const GRID = { w: 40, h: 68, top: 12 };
+// Il corpo è disegnato su 32 colonne centrali: 4 colonne libere per lato servono
+// a mantelli larghi e oggetti in mano.
+const OX = 4;
 export const WORLD_PER_PX = 0.5;
 export const FRAMES = 4; // fotogrammi della camminata
 // Posizione degli occhi nella griglia (per gli occhi rossi dei nemici élite).
-export const EYES = { y: GRID.top + 10, xs: [12, 18] };
+export const EYES = { y: GRID.top + 10, xs: [12 + OX, 18 + OX] };
 
 const SKIN = { light: '#e0b08a', mid: '#c8946b', tan: '#a8704a', dark: '#7a4a2e' };
 
@@ -53,16 +56,16 @@ export const LOOKS = {
   portavoce:  { skin: SKIN.light, hair: '#d9b45a', hairStyle: 'bun', top: '#2f4f8f', shirt: '#e8e2d0', skirt: '#2f4f8f', shoes: '#141416', item: 'phone', angry: true },
 
   // Boss
-  teamleader: { skin: SKIN.mid, hair: '#8a3b1e', hairStyle: 'short', top: '#7a1f2b', shirt: '#e8e2d0', tie: '#141416', pants: '#2a2a2e', item: 'megaphone', angry: true },
-  capoarea:   { skin: SKIN.tan, hair: '#2a2a2e', hairStyle: 'bald', facial: 'mustache', top: '#3a3c42', shirt: '#d9d4c7', tie: '#a67c00', pants: '#2a2a2e', build: 'fat', item: 'phone', angry: true },
-  direttore:  { skin: SKIN.light, hair: '#8a8d93', hairStyle: 'slick', top: '#1b1b1e', shirt: '#e8e2d0', tie: '#7a0f1c', pants: '#1b1b1e', build: 'fat', item: 'cigar', angry: true },
-  leadership: { skin: SKIN.mid, hair: '#141416', hairStyle: 'slick', glasses: 'shades', top: '#2a2a2e', shirt: '#e8e2d0', tie: '#f2b705', pants: '#2a2a2e', item: 'phone', angry: true },
-  dg:         { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'slick', glasses: 'shades', top: '#0d0d0f', shirt: '#e8e2d0', tie: '#f2b705', pants: '#0d0d0f', item: 'cigar', angry: true },
-  consiglio:  { skin: SKIN.light, hair: '#8a8d93', hairStyle: 'bald', glasses: 'glasses', top: '#3a3c42', shirt: '#e8e2d0', tie: '#2f4f8f', pants: '#3a3c42', item: 'briefcase', angry: true },
-  ceo:        { skin: SKIN.mid, hair: '#8a8d93', hairStyle: 'short', glasses: 'glasses', top: '#141416', shirt: '#141416', pants: '#3a4a6a', shoes: '#d9d4c7', build: 'thin', item: 'laptop', angry: true },
-  socio:      { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'bald', facial: 'mustache', glasses: 'glasses', hat: 'tophat', hatColor: '#0d0d0f', top: '#2a2a2e', shirt: '#e8e2d0', tie: '#f2b705', pants: '#2a2a2e', build: 'fat', item: 'cigar', angry: true },
-  docbrown:   { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'wild', glasses: 'goggles', top: '#3a3226', shirt: '#d9d4c7', coat: '#e8e2d0', pants: '#3a3226', item: 'wrench', angry: true },
-  galattico:  { skin: SKIN.mid, hair: '#c0c4cc', hairStyle: 'slick', glasses: 'shades', top: '#5d275d', shirt: '#2de2e6', tie: '#2de2e6', pants: '#3a1a3a', shoes: '#2de2e6', build: 'fat', item: 'phone', angry: true },
+  teamleader: { skin: SKIN.mid, hair: '#8a3b1e', hairStyle: 'short', build: 'huge', top: '#7a1f2b', shirt: '#e8e2d0', tie: '#141416', pants: '#2a2a2e', headphones: true, item: 'megaphone', scar: true, angry: true },
+  capoarea:   { skin: SKIN.tan, hair: '#2a2a2e', hairStyle: 'bald', facial: 'mustache', build: 'huge', top: '#3a3c42', shirt: '#d9d4c7', tie: '#a67c00', pants: '#2a2a2e', chain: '#f2b705', item: 'phone', angry: true },
+  direttore:  { skin: SKIN.light, hair: '#8a8d93', hairStyle: 'slick', build: 'huge', top: '#1b1b1e', shirt: '#e8e2d0', tie: '#7a0f1c', pants: '#1b1b1e', cape: '#5a0f18', capeTrim: '#a67c00', item: 'cigar', scar: true, angry: true },
+  leadership: { skin: SKIN.mid, hair: '#141416', hairStyle: 'slick', glasses: 'shades', build: 'fat', top: '#2a2a2e', shirt: '#e8e2d0', tie: '#f2b705', pants: '#2a2a2e', chain: '#f2b705', item: 'phone', angry: true },
+  dg:         { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'slick', glasses: 'shades', build: 'huge', top: '#0d0d0f', shirt: '#e8e2d0', tie: '#f2b705', pants: '#0d0d0f', cape: '#141416', capeTrim: '#f2b705', chain: '#f2b705', item: 'cigar', angry: true },
+  consiglio:  { skin: SKIN.light, hair: '#8a8d93', hairStyle: 'bald', glasses: 'glasses', top: '#3a3c42', shirt: '#e8e2d0', tie: '#2f4f8f', pants: '#3a3c42', chain: '#c0c4cc', item: 'briefcase', angry: true },
+  ceo:        { skin: SKIN.mid, hair: '#8a8d93', hairStyle: 'short', glasses: 'glasses', build: 'huge', top: '#141416', shirt: '#141416', pants: '#3a4a6a', shoes: '#d9d4c7', headphones: true, item: 'laptop', angry: true },
+  socio:      { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'bald', facial: 'mustache', monocle: true, hat: 'tophat', hatColor: '#0d0d0f', build: 'huge', top: '#2a2a2e', shirt: '#e8e2d0', tie: '#f2b705', pants: '#2a2a2e', cape: '#3a1a3a', capeTrim: '#f2b705', chain: '#f2b705', item: 'cane', angry: true },
+  docbrown:   { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'wild', glasses: 'goggles', top: '#3a3226', shirt: '#d9d4c7', coat: '#e8e2d0', pants: '#3a3226', item: 'device', angry: true },
+  galattico:  { skin: SKIN.mid, hair: '#c0c4cc', hairStyle: 'slick', glasses: 'shades', build: 'huge', top: '#5d275d', shirt: '#2de2e6', tie: '#2de2e6', pants: '#3a1a3a', shoes: '#2de2e6', cape: '#1a1240', capeTrim: '#2de2e6', capeStars: true, chain: '#2de2e6', angry: true },
 
   // Protagonista e colleghi (rinforzi)
   player:     { skin: SKIN.mid, hair: '#141416', hairStyle: 'short', hat: 'hardhat', hatColor: '#f2b705', top: '#2f4f6f', shirt: '#2f4f6f', vest: '#f2b705', pants: '#3a4a6a' },
@@ -86,17 +89,33 @@ const INK = '#141416', MOUTH = '#5a1e1e', WHITE = '#e8e2d0';
 // frame 0-3: ciclo della camminata (gambe e braccia alternate)
 export function drawPerson(g, L, frame) {
   const oy = GRID.top;
-  const px = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y + oy, w, h); };
+  const px = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x + OX, y + oy, w, h); };
 
-  const tw = L.build === 'fat' ? 20 : L.build === 'thin' ? 12 : 16;
+  // corporatura: huge = boss con spalle larghe
+  const tw = L.build === 'huge' ? 24 : L.build === 'fat' ? 20 : L.build === 'thin' ? 12 : 16;
   const tx = 16 - tw / 2;
-  const legW = L.build === 'fat' ? 6 : L.build === 'thin' ? 4 : 5;
+  const legW = L.build === 'huge' ? 7 : L.build === 'fat' ? 6 : L.build === 'thin' ? 4 : 5;
   const pants = L.pants || '#2a2a2e';
   const shoes = L.shoes || INK;
   const liftL = frame === 0 ? 2 : 0, liftR = frame === 2 ? 2 : 0;
   const swing = [2, 0, -2, 0][frame];
   const skinDk = shade(L.skin, 0.82);
 
+  // Mantello (dietro a tutto): si allarga verso il basso, con bordo dorato
+  if (L.cape) {
+    for (let r = 0; r < 34; r++) {
+      const half = tw / 2 + 3 + Math.floor(r / 4);
+      px(16 - half, 17 + r, half * 2, 1, r % 6 === 5 ? shade(L.cape, 0.8) : L.cape);
+      px(16 - half, 17 + r, 1, 1, L.capeTrim || shade(L.cape, 1.4));
+      px(16 + half - 1, 17 + r, 1, 1, L.capeTrim || shade(L.cape, 1.4));
+    }
+    const bottom = 17 + 34, half = tw / 2 + 3 + 8;
+    px(16 - half, bottom, half * 2, 1, L.capeTrim || shade(L.cape, 1.4));
+    if (L.capeStars) for (let i = 0; i < 14; i++) px(16 - half + 1 + (i * 7) % (half * 2 - 2), 20 + (i * 11) % 30, 1, 1, i % 3 ? '#e8e2d0' : '#2de2e6');
+    // colletto alto ai lati della testa
+    px(tx - 3, 13, 3, 7, L.cape); px(tx + tw, 13, 3, 7, shade(L.cape, 0.8));
+    px(tx - 3, 13, 1, 7, L.capeTrim || shade(L.cape, 1.4)); px(tx + tw + 2, 13, 1, 7, L.capeTrim || shade(L.cape, 1.4));
+  }
   // Camice lungo (dietro alle gambe)
   if (L.coat) px(tx - 2, 19, tw + 4, 27, shade(L.coat, 0.85));
 
@@ -185,6 +204,11 @@ export function drawPerson(g, L, frame) {
     px(tx + 3, 23, 3, 4, '#f2b705');
     px(tx + 4, 24, 1, 2, '#a67c00');
   }
+  if (L.chain) {
+    for (let i = 0; i < 9; i++) px(tx + 2 + i * ((tw - 6) / 8), 22 + Math.round(Math.sin(i / 8 * Math.PI) * 4), 1, 1, L.chain);
+    px(16, 26, 2, 2, L.chain);
+  }
+  if (L.build === 'huge') px(tx - 2, 19, tw + 4, 2, shade(top, 1.1)); // spalline
   // cintura
   px(tx, 38, tw, 1, shade(pants, 0.55));
   if (!L.skirt) px(15, 38, 2, 1, '#c0c4cc');
@@ -261,6 +285,8 @@ export function drawPerson(g, L, frame) {
   }
   if (L.facial === 'longbeard') { px(12, 18, 8, 5, h); px(13, 23, 6, 3, h); px(14, 26, 4, 2, h); px(15, 19, 1, 6, shade(h, 0.85)); }
   if (L.facial === 'mustache') { px(12, 13, 8, 1, h); px(11, 14, 2, 1, h); px(19, 14, 2, 1, h); }
+  if (L.monocle) { px(17, 9, 4, 1, '#f2b705'); px(17, 12, 4, 1, '#f2b705'); px(17, 9, 1, 4, '#f2b705'); px(20, 9, 1, 4, '#f2b705'); px(20, 13, 1, 6, '#a67c00'); }
+  if (L.scar) { px(19, 6, 1, 1, '#a04040'); px(20, 7, 1, 2, '#a04040'); px(19, 9, 1, 1, '#a04040'); }
 
   // capelli
   const hs = L.hairStyle, hi = shade(h, 1.35), hd = shade(h, 0.75);
@@ -371,6 +397,13 @@ function drawItem(px, L, hx, hy, tw, tx) {
       break;
     case 'box':
       px(hx - 5, hy - 9, 11, 10, '#8b6a3e'); px(hx - 5, hy - 9, 11, 2, '#a5824f'); px(hx - 1, hy - 9, 2, 10, '#c9b48a'); px(hx + 5, hy - 9, 1, 10, '#6b4a2b');
+      break;
+    case 'cane':
+      px(hx + 1, hy - 4, 2, 22, '#141416'); px(hx, hy - 6, 4, 3, '#f2b705'); px(hx + 1, hy - 6, 1, 1, '#fff3b0');
+      break;
+    case 'device':
+      px(hx - 2, hy - 6, 8, 7, '#5b5f66'); px(hx - 1, hy - 5, 2, 2, '#d7263d'); px(hx + 2, hy - 5, 3, 1, '#2de2e6');
+      px(hx + 4, hy - 12, 1, 6, '#c0c4cc'); px(hx + 3, hy - 13, 3, 1, '#2de2e6'); px(hx + 1, hy - 3, 4, 1, '#7bd332');
       break;
     case 'stamp':
       px(hx + 1, hy - 7, 2, 5, '#6b4a2b'); px(hx, hy - 9, 4, 2, '#8b6a3e'); px(hx - 1, hy - 2, 6, 3, '#7a1f2b');

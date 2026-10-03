@@ -64,6 +64,7 @@ Tutti i suoni sono generati dal browser (Web Audio API), senza file. All'arrivo 
 Quando perdi lasci le tue **3 iniziali** come nei cabinati. La classifica è online (Supabase) se `src/config.js` è compilato, altrimenti resta nel browser. Per crearla: incolla `supabase/schema.sql` nel SQL Editor di Supabase e metti URL e chiave pubblica in `src/config.js`.
 
 ## 👾 Boss (ogni 10 ondate)
+I boss sono enormi (fino a 3,5 volte un nemico normale), con aura colorata, occhi rossi, passi che fanno tremare il terreno e scie di fumo, scintille o stelle. Entrano dal bordo come gli altri: una freccia **⚠ BOSS** indica da dove arrivano. A metà vita diventano rossi e più veloci (**INFURIATO!**).
 | Ondata | Boss |
 |---|---|
 | 10 | Team Leader |

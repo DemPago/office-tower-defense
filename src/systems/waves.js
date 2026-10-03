@@ -76,12 +76,14 @@ function makeBoss(b, w) {
     const hp = base.hp * hpScale(w) * b.hpFactor / group;
     list.push(makeEnemy(base, w, {
       name: b.name, look: b.look, boss: true,
-      scale: group > 4 ? 1 : 2,
+      scale: b.scale,
+      aura: b.aura,
+      trail: b.trail || null,
       hp, maxHp: hp,
       speed: b.speed,
       atk: base.atk * atkScale(w) * b.atkFactor,
       gold: 30 * goldScale(w) / group,
-      size: group > 4 ? 28 : 56,
+      size: 28 * b.scale,
     }));
   }
   return list;
