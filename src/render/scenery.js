@@ -6,8 +6,10 @@ import { PAL, FONT, shade } from './palette.js';
 import * as P from './props.js';
 
 // Lo sfondo continua oltre i bordi del mondo, per riempire anche schermi larghi.
-export const MARGIN = 280;
-const AREA = { x: -MARGIN, y: -MARGIN, w: WORLD.w + MARGIN * 2, h: WORLD.h + MARGIN * 2 };
+export const MARGIN = 240;
+// Gli sfondi sono disegnati a risoluzione doppia (come personaggi e palazzo).
+export const SCENE_RES = 2;
+export const AREA = { x: -MARGIN, y: -MARGIN, w: WORLD.w + MARGIN * 2, h: WORLD.h + MARGIN * 2 };
 // Cortile fortificato intorno al palazzo e i 4 corridoi d'accesso (N, S, E, O).
 export const YARD = { x: TOWER.x - 112, y: TOWER.y - 104, w: 224, h: 200 };
 const LANE = 28; // mezza larghezza dei corridoi
@@ -58,10 +60,11 @@ export function sceneIndexForWave(wave) {
 export function buildScene(index) {
   const scene = SCENES[index];
   const c = document.createElement('canvas');
-  c.width = AREA.w;
-  c.height = AREA.h;
+  c.width = AREA.w * SCENE_RES;
+  c.height = AREA.h * SCENE_RES;
   const g = c.getContext('2d');
-  g.translate(MARGIN, MARGIN); // si disegna in coordinate del mondo
+  g.scale(SCENE_RES, SCENE_RES);
+  g.translate(MARGIN, MARGIN); // si disegna in coordinate del mondo, con dettagli a mezzo pixel
   const rnd = seeded(101 + index * 7);
   const data = { leds: [], neons: [], lights: [] };
   const yardStyle = scene.build(g, rnd, data) || {};
@@ -78,12 +81,14 @@ function drawYard(g, rnd, { floor = PAL.concrete, seam = PAL.concreteDk } = {}) 
   P.rect(g, x, y, w, h, floor);
   for (let yy = y; yy < y + h; yy += 16) {
     for (let xx = x; xx < x + w; xx += 16) {
-      P.rect(g, xx, yy, 16, 1, seam);
-      P.rect(g, xx, yy, 1, 16, seam);
+      P.rect(g, xx, yy, 16, 0.5, seam);
+      P.rect(g, xx, yy, 0.5, 16, seam);
+      P.rect(g, xx + 0.5, yy + 0.5, 15.5, 0.5, shade(floor, 1.12));
+      P.rect(g, xx + 0.5, yy + 0.5, 0.5, 15.5, shade(floor, 1.08));
       if (rnd() < 0.25) P.rect(g, xx + 1, yy + 1, 15, 15, 'rgba(20,20,22,0.15)');
     }
   }
-  P.noise(g, { x, y, w, h }, 500, [shade(floor, 1.2), shade(floor, 0.8)], rnd);
+  P.noise(g, { x, y, w, h }, 2600, [shade(floor, 1.18), shade(floor, 0.82), shade(floor, 0.9)], rnd);
   for (let i = 0; i < 6; i++) P.stain(g, x + 10 + rnd() * (w - 20), y + 10 + rnd() * (h - 20), 5 + rnd() * 8, 3 + rnd() * 4, 'rgba(0,0,0,0.22)');
   for (let i = 0; i < 4; i++) P.crack(g, x + 10 + rnd() * (w - 20), y + 10 + rnd() * (h - 20), rnd, 6);
 
@@ -113,11 +118,13 @@ function drawYard(g, rnd, { floor = PAL.concrete, seam = PAL.concreteDk } = {}) 
 
 function buildParking(g, rnd) {
   P.rect(g, AREA.x, AREA.y, AREA.w, AREA.h, PAL.asphalt);
-  P.noise(g, AREA, many(14000), [PAL.asphalt2, PAL.asphaltHi, PAL.black], rnd);
+  P.noise(g, AREA, many(60000), [PAL.asphalt2, PAL.asphaltHi, PAL.black, '#38383d'], rnd);
+  P.noise(g, AREA, many(4000), ['#55555c', '#1c1c20'], rnd, 1); // sassolini nell'asfalto
   for (let i = 0; i < many(22); i++) {
     const x = AREA.x + rnd() * AREA.w, y = AREA.y + rnd() * AREA.h, w = 30 + rnd() * 60, h = 20 + rnd() * 40;
-    P.rect(g, x - 1, y - 1, w + 2, h + 2, PAL.black);
+    P.rect(g, x - 0.5, y - 0.5, w + 1, h + 1, '#1a1a1d');
     P.rect(g, x, y, w, h, '#303035');
+    P.noise(g, { x, y, w, h }, Math.round(w * h / 3), ['#3a3a40', '#2a2a2e'], rnd);
   }
   // Strade di accesso con la riga gialla
   P.rect(g, TOWER.x - LANE, AREA.y, LANE * 2, AREA.h, PAL.road);
@@ -169,13 +176,15 @@ function buildArchive(g, rnd) {
   for (let y = AREA.y; y < AREA.y + AREA.h; y += 24) {
     for (let x = AREA.x + ((y / 24) % 2 ? 12 : 0) - 12; x < AREA.x + AREA.w; x += 24) {
       P.rect(g, x, y, 24, 24, slab[Math.floor(rnd() * slab.length)]);
-      P.rect(g, x, y, 24, 1, '#5a554d');
-      P.rect(g, x, y, 1, 24, '#5a554d');
+      P.rect(g, x, y, 24, 0.5, '#5a554d');
+      P.rect(g, x, y, 0.5, 24, '#5a554d');
+      P.rect(g, x + 0.5, y + 0.5, 23.5, 0.5, '#99938a');
+      P.rect(g, x + 0.5, y + 0.5, 0.5, 23.5, '#928c82');
       if (rnd() < 0.08) P.crack(g, x + 4 + rnd() * 16, y + 4 + rnd() * 16, rnd, 4, '#4a4640');
       if (rnd() < 0.05) P.weeds(g, x + 1, y + 1);
     }
   }
-  P.noise(g, AREA, many(9000), ['#8f897d', '#615c54'], rnd);
+  P.noise(g, AREA, many(40000), ['#8f897d', '#615c54', '#6e685f'], rnd);
   // Corridoi: tappeto rosso consumato
   for (const [x, y, w, h] of [[TOWER.x - LANE + 6, AREA.y, LANE * 2 - 12, AREA.h], [AREA.x, TOWER.y - LANE + 6, AREA.w, LANE * 2 - 12]]) {
     P.rect(g, x, y, w, h, '#6b1d24');
@@ -208,12 +217,13 @@ function buildDataCenter(g, rnd, data) {
   for (let y = AREA.y; y < AREA.y + AREA.h; y += 16) {
     for (let x = AREA.x; x < AREA.x + AREA.w; x += 16) {
       P.rect(g, x, y, 16, 16, '#353a43');
-      P.rect(g, x, y, 16, 1, '#252930');
-      P.rect(g, x, y, 1, 16, '#252930');
-      if (rnd() < 0.18) for (let a = 3; a < 14; a += 3) for (let b = 3; b < 14; b += 3) P.rect(g, x + a, y + b, 1, 1, '#1c1f25');
+      P.rect(g, x, y, 16, 0.5, '#20242a');
+      P.rect(g, x, y, 0.5, 16, '#20242a');
+      P.rect(g, x + 0.5, y + 0.5, 15.5, 0.5, '#454b55');
+      if (rnd() < 0.22) for (let a = 2.5; a < 14; a += 1.5) for (let b = 2.5; b < 14; b += 1.5) P.rect(g, x + a, y + b, 0.5, 0.5, '#1c1f25');
     }
   }
-  P.noise(g, AREA, many(5000), ['#40464f', '#2a2e35'], rnd);
+  P.noise(g, AREA, many(20000), ['#40464f', '#2a2e35'], rnd);
   // Corridoi con le strisce di sicurezza
   for (const v of [true, false]) {
     if (v) {
@@ -257,7 +267,7 @@ function blinkLeds(ctx, time, data) {
     const led = data.leds[i];
     if ((i * 7 + tick) % 5 === 0) continue; // ogni tanto si spengono
     ctx.fillStyle = led.c;
-    ctx.fillRect(led.x, led.y, 1, 1);
+    ctx.fillRect(led.x, led.y, 1, 0.5);
   }
 }
 
@@ -268,10 +278,13 @@ function buildMall(g, rnd, data) {
     for (let x = AREA.x; x < AREA.x + AREA.w; x += 16) {
       const dark = ((x + y) / 16) % 2;
       P.rect(g, x, y, 16, 16, dark ? '#8f7f73' : '#a8968a');
-      if (rnd() < 0.3) P.rect(g, x + 2, y + 2, 4, 1, 'rgba(255,255,255,0.18)'); // riflessi
+      P.rect(g, x, y, 16, 0.5, 'rgba(60,50,45,0.5)');
+      P.rect(g, x, y, 0.5, 16, 'rgba(60,50,45,0.5)');
+      for (let k = 0; k < 5; k++) P.rect(g, x + 3 + k, y + 2 + k, 0.5, 0.5, 'rgba(255,255,255,0.22)'); // riflesso lucido
+      if (rnd() < 0.3) P.rect(g, x + 9, y + 10, 3, 0.5, 'rgba(255,255,255,0.15)');
     }
   }
-  P.noise(g, AREA, many(7000), ['#6e6158', '#b9a99a'], rnd);
+  P.noise(g, AREA, many(26000), ['#6e6158', '#b9a99a', '#8a7a6e'], rnd);
   // Corridoi: moquette blu sporca
   P.rect(g, TOWER.x - LANE + 4, AREA.y, LANE * 2 - 8, AREA.h, '#2b3a5a');
   P.rect(g, AREA.x, TOWER.y - LANE + 4, AREA.w, LANE * 2 - 8, '#2b3a5a');
@@ -324,8 +337,9 @@ function flickerNeon(ctx, time, data) {
 
 function buildIndustrial(g, rnd, data) {
   P.rect(g, AREA.x, AREA.y, AREA.w, AREA.h, '#4d3f30');
-  P.noise(g, AREA, many(16000), ['#5e4e3c', '#3d3226', '#6b5a45', '#2e261d'], rnd);
-  P.noise(g, AREA, many(2500), ['#8a8d93', '#5b5f66'], rnd, 2); // ghiaia
+  P.noise(g, AREA, many(60000), ['#5e4e3c', '#3d3226', '#6b5a45', '#2e261d'], rnd);
+  P.noise(g, AREA, many(9000), ['#8a8d93', '#5b5f66', '#a8a296'], rnd, 1); // ghiaia
+  P.noise(g, AREA, many(3000), ['#6e6a64', '#4a4743'], rnd, 1.5);
   // Piazzole di cemento
   scatter(rnd, many(10), 30, (x, y) => {
     const w = 50 + rnd() * 60, h = 30 + rnd() * 40;
@@ -336,8 +350,11 @@ function buildIndustrial(g, rnd, data) {
   // Strade sterrate con i solchi delle ruote
   for (const [x, y, w, h] of [[TOWER.x - LANE, AREA.y, LANE * 2, AREA.h], [AREA.x, TOWER.y - LANE, AREA.w, LANE * 2]]) {
     P.rect(g, x, y, w, h, '#3d3226');
-    if (w < h) { P.rect(g, x + 10, y, 4, h, '#2e261d'); P.rect(g, x + w - 14, y, 4, h, '#2e261d'); }
-    else { P.rect(g, x, y + 10, w, 4, '#2e261d'); P.rect(g, x, y + h - 14, w, 4, '#2e261d'); }
+    if (w < h) {
+      for (const tx of [x + 10, x + w - 14]) { P.rect(g, tx, y, 4, h, '#2e261d'); for (let t = y; t < y + h; t += 2) P.rect(g, tx + 0.5, t, 3, 0.5, '#251e17'); }
+    } else {
+      for (const ty of [y + 10, y + h - 14]) { P.rect(g, x, ty, w, 4, '#2e261d'); for (let t = x; t < x + w; t += 2) P.rect(g, t, ty + 0.5, 0.5, 3, '#251e17'); }
+    }
   }
   // Piazzali di container, in file, a volte impilati
   const cols = ['#7a1f2b', '#2f4f6f', '#3e6b2a', '#a67c00', '#8a3b1e', '#3a3c42'];
@@ -402,9 +419,10 @@ function buildRooftop(g, rnd, data) {
   P.rect(g, roof.x - 6, roof.y - 6, roof.w + 12, roof.h + 12, PAL.concreteDk);
   P.rect(g, roof.x - 6, roof.y - 6, roof.w + 12, 3, PAL.concreteHi);
   P.rect(g, roof.x, roof.y, roof.w, roof.h, '#2b2d33');
-  for (let y = roof.y; y < roof.y + roof.h; y += 32) P.rect(g, roof.x, y, roof.w, 1, '#1d1f24');
-  for (let x = roof.x; x < roof.x + roof.w; x += 48) P.rect(g, x, roof.y, 1, roof.h, '#24262b');
-  P.noise(g, roof, Math.round(roof.w * roof.h / 14), ['#34363d', '#222429', '#3d4048'], rnd);
+  for (let y = roof.y; y < roof.y + roof.h; y += 32) { P.rect(g, roof.x, y, roof.w, 0.5, '#1d1f24'); P.rect(g, roof.x, y + 0.5, roof.w, 0.5, '#383a41'); }
+  for (let x = roof.x; x < roof.x + roof.w; x += 48) P.rect(g, x, roof.y, 0.5, roof.h, '#24262b');
+  P.noise(g, roof, Math.round(roof.w * roof.h / 4), ['#34363d', '#222429', '#3d4048', '#2e3036'], rnd);
+  for (let i = 0; i < many(60); i++) P.crack(g, roof.x + rnd() * roof.w, roof.y + rnd() * roof.h, rnd, 3, '#1d1f24'); // grinze
   // Passerelle
   P.rect(g, TOWER.x - LANE + 6, roof.y, LANE * 2 - 12, roof.h, '#55585f');
   P.rect(g, roof.x, TOWER.y - LANE + 6, roof.w, LANE * 2 - 12, '#55585f');

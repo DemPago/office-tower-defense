@@ -8,7 +8,7 @@ import { FENCE } from '../systems/combat.js';
 import { LOOKS, EYES, FRAMES } from './people.js';
 import { PAL, FONT, SPRAY } from './palette.js';
 import { hazardStripes, sandbag } from './props.js';
-import { buildScene, sceneIndexForWave, MARGIN } from './scenery.js';
+import { buildScene, sceneIndexForWave, MARGIN, AREA } from './scenery.js';
 
 // Raggio (in pixel del mondo) visibile intorno al palazzo sul lato corto dello schermo:
 // più è piccolo, più la visuale è ravvicinata e tutto appare grande.
@@ -74,11 +74,11 @@ export function createRenderer(canvas, assets) {
     ctx.imageSmoothingEnabled = false;
 
     const cur = scene(sceneIdx);
-    ctx.drawImage(cur.canvas, -MARGIN, -MARGIN);
+    ctx.drawImage(cur.canvas, -MARGIN, -MARGIN, AREA.w, AREA.h);
     if (cur.ambient) cur.ambient(ctx, time);
     if (fade > 0 && prevIdx !== null) {
       ctx.globalAlpha = fade;
-      ctx.drawImage(scene(prevIdx).canvas, -MARGIN, -MARGIN);
+      ctx.drawImage(scene(prevIdx).canvas, -MARGIN, -MARGIN, AREA.w, AREA.h);
       ctx.globalAlpha = 1;
     }
 
