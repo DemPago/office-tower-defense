@@ -6,7 +6,7 @@ import { UPGRADES } from '../data/upgrades.js';
 import { ABILITIES } from '../data/abilities.js';
 import { upgradeCost } from '../systems/economy.js';
 import { canUse, manaCost } from '../systems/abilities.js';
-import { MANA } from '../data/abilities.js';
+import { maxMana } from '../data/abilities.js';
 import { fmt } from '../util.js';
 
 const $ = id => document.getElementById(id);
@@ -105,8 +105,12 @@ export function createHud({ onBuy, onAbility }) {
     $('hp-fill').style.width = hpPct.toFixed(1) + '%';
     setText($('hp-text'), `${fmt(Math.ceil(run.tower.hp))}/${fmt(run.stats.maxHp)}`);
     setText($('btn-speed'), `x${speed}`);
-    $('mp-fill').style.width = (run.mana / MANA.max * 100).toFixed(1) + '%';
-    setText($('mp-text'), `${Math.floor(run.mana)} 💧`);
+    const mm = maxMana(run);
+    $('mp-fill').style.width = Math.min(100, run.mana / mm * 100).toFixed(1) + '%';
+    setText($('mp-text'), `${Math.floor(run.mana)}/${mm} 💧`);
+    // riga con le statistiche della torre
+    const s = run.stats;
+    setText($('stats-line'), `⚔️ Danno ${fmt(s.dmg)} a colpo · ⚡ ${s.rate.toFixed(1)} colpi/s · 📡 Gittata ${Math.round(s.range)} · 💧 +${s.manaRegen.toFixed(1)} mana/s`);
 
     for (const def of UPGRADES) {
       const el = upgradeEls[def.id];

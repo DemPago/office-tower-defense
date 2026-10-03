@@ -12,15 +12,15 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 
 1. **La torre sta al centro e spara da sola** al nemico più vicino dentro la gittata (il cerchio tratteggiato). I nemici arrivano da tutte le direzioni.
 2. Ogni nemico eliminato dà **oro 💰**: spendilo nel pannello in basso per Danno, Velocità, Gittata, Vita, Rigenerazione e **🔌 Recinto elettrico** (a settori: livello 1 copre 0-90°, livello 2 fino a 180°, livello 3 fino a 270°, livello 4 tutto il giro).
-3. **Dopo ogni ondata scegli 1 carta su 3**: sono potenziamenti che si sommano (colpi multipli, rimbalzi, esplosioni, veleno, critici…).
+3. **Dopo ogni ondata scegli 1 carta su 3**: ti vengono proposte prima le carte che non hai ancora; se ne riprendi una che hai già, sale di livello e l'effetto si somma.
 4. **Ogni 5 ondate arrivano i rinforzi**: puoi **assumere** un collega nuovo (6 postazioni intorno al palazzo) o **promuoverne** uno che hai già. ⚠ **Attenzione al cortile**: per ogni nemico che ci entra, tutti i colleghi perdono 100 vita al secondo; a zero si dimettono. Ogni collega difende uno **spicchio** (l'arco colorato a terra): 90° al livello 1, e ogni promozione lo allarga di altri 90° (Junior → Middle → Professional → Senior → 👑 King).
-5. Usa i **poteri** quando sei in difficoltà: costano **mana** (la barra viola accanto alla vita), che si ricarica da solo.
+5. Usa i **poteri** quando sei in difficoltà: costano **mana** (la barra viola accanto alla vita). Il mana si ricarica lentamente (0,8 al secondo, aumentabile con le carte) e il massimo cresce di 5 a ogni ondata.
 6. Quando la torre crolla vieni **licenziato**, ma guadagni **buoni pasto 🎫** da spendere nell'**Ufficio del personale** in bonus permanenti.
 
 ### Comandi
 | Tasto | Azione |
 |---|---|
-| `1` `2` `3` `4` | 💣 Bomba di carta (60 mana) · ☕ Caffè bollente (35) · 📅 Riunione urgente (45) · 🔍 Audit fiscale (80) |
+| `1` `2` `3` `4` | 💣 Bomba di carta (45 mana) · ☕ Caffè bollente (25) · 📅 Riunione urgente (35) · 🔍 Audit fiscale (60) |
 | `5` | 💥 Mitra: compare solo contro la forma bestiale dei boss, gratis |
 | `Spazio` / `Esc` | Pausa |
 | `x1` in alto | Velocità di gioco x1 / x2 / x3 |

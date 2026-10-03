@@ -331,3 +331,14 @@ h2 {
 .abl.special.active { animation: none; background: #b02030; }
 .abl.special .nm { color: var(--hazard); }
 @keyframes mitra { 50% { background: #d7263d; } }
+
+/* Carta già presa: si potenzia */
+.card.upgrade .rar { color: var(--hazard); }
+.card.upgrade .own { color: var(--hazard); }
+
+/* Riga con le statistiche della torre, sopra ai pulsanti */
+#stats-line {
+  text-align: center; font-size: 7px; color: var(--white);
+  padding: 2px 0 1px; text-shadow: 1px 1px 0 var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}

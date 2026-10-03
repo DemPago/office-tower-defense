@@ -1,5 +1,5 @@
 // Combattimento: movimento dei nemici, spari della torre, danni, morti.
-import { TOWER } from '../state.js';
+import { TOWER, SPAWN_RADIUS } from '../state.js';
 import { dist, fmt, angleOf } from '../util.js';
 import { floatText, burst, ring, shake, sfx, banner } from './fx.js';
 import { MITRA } from './abilities.js';
@@ -290,9 +290,15 @@ function transformBoss(run, e) {
   if (run.boss && run.boss.list.includes(e)) run.boss.name = `${e.bossName}: ${A.name} GIGANTE`;
   run.fx.flash = 1;
   shake(run, 14);
-  burst(run, e.x, e.y - e.size * 0.4, '#ffffff', 30, 160);
-  ring(run, e.x, e.y - e.size * 0.3, e.size, '#ffffff');
-  floatText(run, e.x, e.y - e.size - 12, 'FORMA BESTIALE!', '#ff3e8a', 11);
+  burst(run, e.x, e.y - 20, '#ffffff', 30, 160);
+  ring(run, e.x, e.y - 15, 60, '#ffffff');
+  floatText(run, e.x, e.y - 50, 'FORMA BESTIALE!', '#ff3e8a', 11);
+  // sparisce nel lampo e rientra dal bordo, dal lato opposto
+  const a = Math.atan2(e.y - TOWER.y, e.x - TOWER.x) + Math.PI + (Math.random() - 0.5);
+  e.x = TOWER.x + Math.cos(a) * SPAWN_RADIUS;
+  e.y = TOWER.y + Math.sin(a) * SPAWN_RADIUS;
+  e.age = 0;
+  e.moving = true;
   // il power-up: si annuncia in grande, con la sirena
   banner(run, "È INIZIATA LA REPERIBILITÀ!", 'Il mitra è pronto: premi 💥 MITRA o il tasto 5', '#f2b705');
   run.fx.banner.life = run.fx.banner.max = 4;
@@ -314,6 +320,7 @@ function killEnemy(run, e) {
   burst(run, e.x, e.y - e.size * 0.3, '#e8e2d0', e.boss ? 24 : 6, e.boss ? 140 : 80);
   burst(run, e.x, e.y - e.size * 0.3, '#d7263d', e.boss ? 16 : 4, e.boss ? 120 : 60);
   if (run.stats.healOnKill) run.tower.hp = Math.min(run.stats.maxHp, run.tower.hp + run.stats.healOnKill);
+  if (run.stats.manaOnKill) run.mana += run.stats.manaOnKill; // il massimo lo applica updateAbilities
   // Capo vendite e vicedirettore: quando cadono, delegano a due sottoposti.
   if (e.def.split) {
     for (const dx of [-8, 8]) {

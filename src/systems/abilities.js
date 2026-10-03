@@ -1,5 +1,5 @@
 // Poteri attivi (vedi data/abilities.js per nomi e ricariche).
-import { ABILITIES, MANA } from '../data/abilities.js';
+import { ABILITIES, maxMana } from '../data/abilities.js';
 import { dealDamage } from './combat.js';
 import { banner, burst, shake, sfx } from './fx.js';
 
@@ -54,7 +54,7 @@ export function useAbility(run, id) {
 
 // Ricarica del mana e della piccola pausa dopo l'uso.
 export function updateAbilities(run, dt) {
-  run.mana = Math.min(MANA.max, run.mana + MANA.regen * dt);
+  run.mana = Math.min(maxMana(run), run.mana + run.stats.manaRegen * dt);
   run.mitraT = Math.max(0, (run.mitraT || 0) - dt);
   // se la bestia muore prima di usarlo, il mitra non serve più
   if (run.mitraReady && !run.enemies.some(e => e.beast)) run.mitraReady = false;

@@ -73,7 +73,7 @@ export async function loadAssets() {
     const k = WORLD_PER_PX * scale;
     return { img, w: img.width * k, h: img.height * k, k };
   }
-  // Come person(), ma per gli animali dei boss.
+  // Come person(), ma per gli animali dei boss (griglia a risoluzione doppia dei personaggi).
   function animal(id, frame = 0, scale = 1, tint = false) {
     const key = `A|${id}|${frame}|${tint}`;
     let img = cache.get(key);
@@ -81,7 +81,7 @@ export async function loadAssets() {
       img = tint ? silhouette(animal(id, frame).img, tint === true ? '#ffffff' : tint) : buildAnimal(id, frame);
       cache.set(key, img);
     }
-    const k = WORLD_PER_PX * scale;
+    const k = WORLD_PER_PX * scale / 2;
     return { img, w: img.width * k, h: img.height * k, k };
   }
   return { person, animal };

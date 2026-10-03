@@ -3,6 +3,7 @@
 import { CARDS } from '../data/cards.js';
 import { UPGRADES, META_UPGRADES } from '../data/upgrades.js';
 import { ALLIES } from '../data/allies.js';
+import { MANA } from '../data/abilities.js';
 
 // La torre senza nessun bonus.
 export const BASE = {
@@ -21,6 +22,7 @@ function emptyBonus() {
     dmg: 0, rate: 0, range: 0, hp: 0, hpFlat: 0, regen: 0, armor: 0,
     crit: 0, critMult: 0, multishot: 0, bounce: 0, aoe: 0, slow: 0, dot: 0,
     gold: 0, healOnKill: 0, cdr: 0, startGold: 0, rerolls: 0, fence: 0,
+    manaRegen: 0, manaMax: 0, manaOnKill: 0,
   };
 }
 
@@ -72,6 +74,9 @@ export function computeStats(run, meta) {
     goldMult: 1 + c.gold + m.gold,
     healOnKill: c.healOnKill,
     manaMult: Math.max(0.4, 1 - c.cdr), // costo dei poteri (carta Manuale ITIL)
+    manaRegen: MANA.regen + c.manaRegen, // mana al secondo
+    manaMax: c.manaMax,                  // mana massimo in più
+    manaOnKill: c.manaOnKill,            // mana per ogni nemico eliminato
     fence: u.fence,          // quarti di cerchio coperti dal recinto elettrico (0-4)
   };
 }
