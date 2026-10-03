@@ -10,7 +10,7 @@
 // ATTENZIONE: la gittata deve restare sopra quella dei cecchini (165), o ti colpiscono da fuori tiro.
 // I numeri sono tarati con `node tools/sim.mjs armi`: tutte devono arrivare circa alla stessa ondata.
 export const WEAPONS = [
-  { id: 'pistol',   icon: '🔫', name: 'Pistola',         kind: 'tower',  dmg: 1,    rate: 1,    range: 1,
+  { id: 'pistol',   icon: '🔫', name: 'Pistola',         kind: 'tower',  dmg: 0.88, rate: 1,    range: 1.05,
     desc: 'Equilibrata: colpi rapidi a un bersaglio alla volta.' },
   { id: 'crossbow', icon: '🏹', name: 'Balestra',        kind: 'xbow',   dmg: 1.95,  rate: 0.42, range: 1.1, pierce: 2, pierceDmg: 0.2,
     desc: 'Lenta e potente: il dardo trapassa i nemici in fila (perdendo forza).' },

@@ -9,7 +9,7 @@ export const HEROES = [
   { id: 'peppe',   name: 'Peppe',      weapon: 'laser', stats: { rate: 0.15, manaRegen: 0.25, hp: -0.15 }, desc: 'Esperto AI sciupato dal running' },
   { id: 'dem',     name: 'Dem',        weapon: 'daggers', stats: { gold: 0.25, hp: 0.1, dmg: -0.1 }, desc: 'Al servizio dei poveri e italiano vero' },
   { id: 'nando',   name: 'Nando',      weapon: 'crossbow', stats: { crit: 0.1, range: 0.1, rate: -0.1 }, desc: 'Capelli ricci e occhiali' },
-  { id: 'tony',    name: 'Tony',       weapon: 'pistol', stats: { dmg: 0.08, crit: 0.05, regen: -0.4 }, desc: 'Completo bianco, sigaro e cicatrice: il boss di Miami' },
+  { id: 'tony',    name: 'Tony',       weapon: 'pistol', stats: { dmg: 0.05, crit: 0.1, regen: -0.5, hp: -0.1 }, desc: 'Completo bianco, sigaro e cicatrice: il boss di Miami' },
   { id: 'vanessa', name: 'Vanessa',    weapon: 'hearts', stats: { regen: 0.6, hp: 0.15, dmg: -0.1 }, desc: 'Bionda, decisa, inarrestabile' },
   { id: 'clara',   name: 'Clara',      weapon: 'energy', stats: { manaRegen: 0.4, manaMax: 25, hp: -0.1 }, desc: 'Caschetto moro e occhialoni' },
   { id: 'pesce',   name: 'Uomo Pesce', weapon: 'sonic', stats: { hp: 0.3, armor: 0.1, rate: -0.15 }, desc: 'Nessuno sa come sia stato assunto' },

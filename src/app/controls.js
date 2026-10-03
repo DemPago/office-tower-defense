@@ -33,6 +33,7 @@ export function setupControls(app) {
   });
 
   document.addEventListener('keydown', e => {
+    if (app.tutorial.isActive()) return;
     if (app.initials.onKey(e)) return;
     if (e.key === 'f' || e.key === 'F') { toggleFullscreen(); return; }
     if (e.key === 'm' || e.key === 'M') { toggleMute(); refreshSoundButton(); return; }
@@ -42,5 +43,5 @@ export function setupControls(app) {
     if (ab && !app.paused) useAbility(app.run, ab.id);
   });
   // Se cambi scheda del browser, il gioco si mette in pausa da solo.
-  document.addEventListener('visibilitychange', () => { if (document.hidden) flow.setPaused(true); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && !app.tutorial.isActive()) flow.setPaused(true); });
 }

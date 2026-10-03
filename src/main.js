@@ -14,6 +14,7 @@ import { play } from './audio.js';
 import { createFlow } from './app/flow.js';
 import { createInitials } from './app/initials.js';
 import { setupControls } from './app/controls.js';
+import { createTutorial } from './ui/tutorial.js';
 
 const $ = id => document.getElementById(id);
 
@@ -38,6 +39,12 @@ const hud = createHud({
   onBuy: id => { if (app.run && buyUpgrade(app.run, app.meta, id)) play('buy'); },
   onAbility: id => app.run && !app.paused && useAbility(app.run, id),
 });
+app.tutorial = createTutorial({
+  onPause: () => { app.paused = true; },
+  onResume: () => { app.paused = false; },
+  onDone: () => { app.meta.tutorialDone = true; saveMeta(app.meta); },
+});
+app.showTutorial = () => setTimeout(() => app.tutorial.start(renderer.screenRect), 150);
 app.initials = createInitials(app);
 app.flow = createFlow(app);
 setupControls(app);

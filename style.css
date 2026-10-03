@@ -394,3 +394,25 @@ h2 {
 .weapon:hover { background: var(--steel); }
 .weapon.sel { border-color: var(--hazard); background: #3a3420; color: var(--hazard); }
 #weapon-desc { color: var(--grey); font-size: 7px; min-height: 12px; max-width: 380px; }
+
+/* Tutorial */
+#tutorial { position: fixed; inset: 0; z-index: 60; }
+#tutorial .tut-hole {
+  position: absolute; border: 3px solid var(--hazard);
+  box-shadow: 0 0 0 9999px rgba(13,13,15,.78), 0 0 18px var(--hazard);
+  transition: all .25s; pointer-events: none;
+}
+#tutorial .tut-hole.none { left: 50% !important; top: 50% !important; width: 0 !important; height: 0 !important; border: none; }
+#tutorial .tut-box {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  width: min(92vw, 420px);
+  padding: 14px 16px;
+  background: var(--char); border: 3px solid var(--hazard);
+  box-shadow: 5px 5px 0 rgba(0,0,0,.5);
+  display: flex; flex-direction: column; gap: 8px;
+}
+#tutorial .tut-step { color: var(--grey); font-size: 7px; }
+#tutorial .tut-title { font-family: var(--spray); font-weight: normal; font-size: 20px; color: var(--hazard); }
+#tutorial .tut-text { font-size: 9px; line-height: 1.8; color: var(--white); }
+#tutorial .tut-buttons { display: flex; justify-content: space-between; gap: 8px; }
+#tutorial .btn { min-width: 0; }

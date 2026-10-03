@@ -7,7 +7,7 @@
 //   enemies.js  nemici, boss, scie, corpi
 //   effects.js  colpi, particelle, numeri, atmosfera
 //   overlay.js  scritte sopra al mondo (banner, barra del boss, avvisi)
-import { TOWER } from '../state.js';
+import { TOWER, YARD } from '../state.js';
 import { allyPos } from '../systems/allies.js';
 import { PAL } from './palette.js';
 import { buildScene, sceneIndexForWave, MARGIN, AREA } from './scenery.js';
@@ -142,5 +142,12 @@ export function createRenderer(canvas, assets) {
     }
   }
 
-  return { resize, draw };
+  // Riquadro sullo schermo (pixel CSS) di una parte del mondo, per il tutorial.
+  function screenRect(name) {
+    const area = name === 'tower' ? { x: TOWER.x - 40, y: TOWER.y - 110, w: 80, h: 140 } : { x: YARD.x - 10, y: YARD.y - 14, w: YARD.w + 20, h: YARD.h + 26 };
+    const c = canvas.getBoundingClientRect(), k = c.width / canvas.width;
+    return { left: c.left + (view.ox + area.x * view.scale) * k, top: c.top + (view.oy + area.y * view.scale) * k, width: area.w * view.scale * k, height: area.h * view.scale * k };
+  }
+
+  return { resize, draw, screenRect };
 }

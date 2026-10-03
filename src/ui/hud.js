@@ -105,7 +105,7 @@ export function createHud({ onBuy, onAbility }) {
     setText($('gold'), fmt(run.gold));
     const hpPct = Math.max(0, run.tower.hp / run.stats.maxHp * 100);
     $('hp-fill').style.width = hpPct.toFixed(1) + '%';
-    setText($('hp-text'), `${fmt(Math.ceil(run.tower.hp))}/${fmt(run.stats.maxHp)}`);
+    setText($('hp-text'), `${fmt(Math.ceil(run.tower.hp))}/${fmt(Math.ceil(run.stats.maxHp))}`);
     setText($('btn-speed'), `x${speed}`);
     const mm = maxMana(run);
     $('mp-fill').style.width = Math.min(100, run.mana / mm * 100).toFixed(1) + '%';

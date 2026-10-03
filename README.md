@@ -10,6 +10,8 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 
 ## 🗺️ Come si gioca
 
+Alla prima partita parte un **tutorial** a passi che ti mostra tutto; puoi rivederlo dal pulsante **❓ Come si gioca** nel menu.
+
 1. **La torre sta al centro e spara da sola** al nemico più vicino dentro la gittata (il cerchio tratteggiato). I nemici arrivano da tutte le direzioni.
 2. Ogni nemico eliminato dà **oro 💰**: spendilo nel pannello in basso per Danno, Velocità, Gittata, Vita, Rigenerazione e **🔌 Recinto elettrico** (a settori: livello 1 copre 0-90°, livello 2 fino a 180°, livello 3 fino a 270°, livello 4 tutto il giro).
 3. **Dopo ogni ondata scegli 1 carta su 3**: ti vengono proposte prima le carte che non hai ancora; se ne riprendi una che hai già, sale di livello e l'effetto si somma.

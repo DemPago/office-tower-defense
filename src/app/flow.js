@@ -43,6 +43,11 @@ export function createFlow(app) {
     app.overHandled = false;
     screens.hideAll();
     document.body.classList.add('playing');
+    // prima partita (o richiesto dal menu): parte il tutorial
+    if (!meta.tutorialDone || app.wantTutorial) {
+      app.wantTutorial = false;
+      app.showTutorial();
+    }
   }
 
   function toMenu() {
@@ -111,6 +116,7 @@ export function createFlow(app) {
     : 'Prova Office Tower Defense 🏢');
 
   $('btn-play').addEventListener('click', newRun);
+  $('btn-howto').addEventListener('click', () => { app.wantTutorial = true; newRun(); });
   $('btn-shop').addEventListener('click', openShop);
   $('btn-shop-back').addEventListener('click', showMenu);
   $('btn-board').addEventListener('click', async () => screens.showBoard(await getTop(10)));
