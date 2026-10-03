@@ -11,8 +11,12 @@ import { hazardStripes, sandbag } from './props.js';
 import { buildScene, sceneIndexForWave, MARGIN, AREA } from './scenery.js';
 
 // Raggio (in pixel del mondo) visibile intorno al palazzo sul lato corto dello schermo:
-// più è piccolo, più la visuale è ravvicinata e tutto appare grande.
+// è solo indicativo, perché lo zoom viene arrotondato per avere pixel nitidi (vedi resize).
 const VIEW_R = 205;
+// Pixel dello schermo per pixel del mondo, aggiornato in resize(): serve ad "agganciare"
+// gli sprite alla griglia dei pixel, così restano netti.
+let PX = 2;
+const snap = v => Math.round(v * PX) / PX;
 const CAMERA = { x: TOWER.x, y: TOWER.y - 16 };
 
 // Misure del palazzo (la torre).
@@ -47,9 +51,13 @@ export function createRenderer(canvas, assets) {
     const w = canvas.clientWidth, h = canvas.clientHeight;
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
-    view.scale = Math.min(canvas.width, canvas.height) / (VIEW_R * 2);
-    view.ox = canvas.width / 2 - CAMERA.x * view.scale;
-    view.oy = canvas.height / 2 - CAMERA.y * view.scale;
+    // Pixel nitidi: i disegni hanno pixel da mezzo pixel del mondo, quindi lo zoom è sempre
+    // un multiplo di 2 (ogni pixel del disegno = un numero intero di pixel dello schermo).
+    const raw = Math.min(canvas.width, canvas.height) / (VIEW_R * 2);
+    const n = Math.max(1, Math.round(raw * 0.5 + 0.25));
+    view.scale = PX = n * 2;
+    view.ox = Math.round(canvas.width / 2 - CAMERA.x * view.scale);
+    view.oy = Math.round(canvas.height / 2 - CAMERA.y * view.scale);
     // scala per scritte e barre disegnate "sopra" al mondo
     view.ui = dpr * Math.max(1, Math.min(2.4, Math.min(w, h) / 380));
   }
@@ -71,7 +79,7 @@ export function createRenderer(canvas, assets) {
 
     const shake = run ? run.fx.shake : 0;
     const sx = (Math.random() - 0.5) * shake, sy = (Math.random() - 0.5) * shake;
-    ctx.setTransform(view.scale, 0, 0, view.scale, view.ox + sx * view.scale, view.oy + sy * view.scale);
+    ctx.setTransform(view.scale, 0, 0, view.scale, Math.round(view.ox + sx * view.scale), Math.round(view.oy + sy * view.scale));
     ctx.imageSmoothingEnabled = false;
 
     const cur = scene(sceneIdx);
@@ -442,14 +450,15 @@ function drawTower(ctx, assets, run, time) {
 // Disegna uno sprite (da assets.person o assets.animal) con i piedi nel punto (x, feetY).
 // flip = specchiato (gli animali, visti di profilo, guardano verso il palazzo).
 function drawPersonAt(ctx, sp, x, feetY, flip = false) {
+  const left = snap(x - sp.w / 2), top = snap(feetY - sp.h + sp.k * 2);
   if (!flip) {
-    ctx.drawImage(sp.img, x - sp.w / 2, feetY - sp.h + sp.k * 2, sp.w, sp.h);
+    ctx.drawImage(sp.img, left, top, sp.w, sp.h);
     return;
   }
   ctx.save();
-  ctx.translate(x, 0);
+  ctx.translate(left + sp.w, 0);
   ctx.scale(-1, 1);
-  ctx.drawImage(sp.img, -sp.w / 2, feetY - sp.h + sp.k * 2, sp.w, sp.h);
+  ctx.drawImage(sp.img, 0, top, sp.w, sp.h);
   ctx.restore();
 }
 

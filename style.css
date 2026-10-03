@@ -342,3 +342,14 @@ h2 {
   padding: 2px 0 1px; text-shadow: 1px 1px 0 var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+
+/* Telefono: barra in alto compatta (ondata abbreviata, vita e mana più stretti) */
+@media (max-width: 520px) {
+  #top { gap: 4px; padding-inline: 6px; }
+  #wave { font-size: 7px; }
+  #mp { flex-basis: 24%; }
+  #hp-text, #mp-text { font-size: 6px; }
+  #top button { width: 24px; }
+  #gold-box { font-size: 7px; }
+  #stats-line { font-size: 6px; }
+}

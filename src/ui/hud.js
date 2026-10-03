@@ -99,7 +99,8 @@ export function createHud({ onBuy, onAbility }) {
 
   function update(run, speed) {
     lastRun = run;
-    setText($('wave'), run.wave ? `ONDATA ${run.wave}` : 'PRONTI');
+    const narrow = innerWidth <= 520;
+    setText($('wave'), run.wave ? `${narrow ? 'OND.' : 'ONDATA'} ${run.wave}` : 'PRONTI');
     setText($('gold'), fmt(run.gold));
     const hpPct = Math.max(0, run.tower.hp / run.stats.maxHp * 100);
     $('hp-fill').style.width = hpPct.toFixed(1) + '%';
