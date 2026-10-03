@@ -14,6 +14,7 @@ JavaScript puro + Canvas 2D, **nessuna dipendenza, nessun build step, nessun tes
 python3 -m http.server 8000          # avvia in locale → http://localhost:8000 (i moduli ES non funzionano con file://)
 node tools/check.mjs                 # sintassi + verifica che ogni funzione importata/usata da un altro file esista (lanciarlo SEMPRE prima di pubblicare)
 node tools/sim.mjs                   # simulazione del bilanciamento senza grafica (bot che gioca molte partite)
+node tools/determinism.mjs           # 5 partite con casualità fissa: dopo un refactoring il risultato deve restare identico
 ```
 
 Aprendo il gioco con `?debug` nell'indirizzo la partita è raggiungibile da console come `window.otd.run` (utile per preparare situazioni nei test). Per verificare la grafica si usa Chrome headless con `--remote-debugging-port` pilotato via DevTools Protocol (WebSocket nativo di Node): screenshot con `Page.captureScreenshot`, click con `Runtime.evaluate`. Dopo modifiche il browser può tenere in cache i moduli: ricaricare con Cmd+Shift+R.
@@ -29,7 +30,9 @@ Separazione rigida in quattro strati, tutti moduli ES sotto `src/`:
 - **`render/`**: disegno su canvas. Legge `run`, non lo modifica (fumo e polvere decorativi vivono nel renderer).
 - **`ui/`**: barra in alto, pannello e schermate HTML sovrapposte (`index.html` contiene il markup statico delle schermate `scr-*`).
 
-`main.js` collega tutto: carica gli asset, gestisce input, schermate e game loop (`requestAnimationFrame`, dt limitato a 0.05 s, a velocità x2/x3 fa più `update` piccoli invece di uno grande).
+`main.js` contiene solo l'oggetto `app` (stato dell'applicazione: `meta`, `run`, `paused`, `speed`…) e il game loop (`requestAnimationFrame`, dt limitato a 0.05 s, a velocità x2/x3 fa più `update` piccoli invece di uno grande). Il resto è in `src/app/`: `flow.js` (schermate e passaggi di fase), `initials.js` (iniziali e invio punteggio), `controls.js` (pulsanti in alto e tastiera); ognuno riceve `app`.
+
+Regola di modularità: un file per responsabilità, idealmente sotto le ~250 righe. I file "indice" (`systems/combat.js`, `render/world.js`, `render/scenery.js`) raccolgono e riesportano i pezzi: chi li importa non deve sapere in quale file sta ogni funzione.
 
 ### Stato e fasi
 
@@ -72,8 +75,9 @@ Personaggi giocabili: look in `render/people.js`, elenco e sblocco in `data/hero
 **Nessuna immagine**: tutto è disegnato via codice.
 - `render/people.js`: personaggi in **pixel art HD**. Ogni `LOOKS[id]` descrive un vestito su una griglia 32×68 (12 righe in alto per cappelli), camminata a 4 fotogrammi. Un pixel della griglia vale `WORLD_PER_PX` = 0.5 pixel del mondo, quindi i personaggi hanno il doppio del dettaglio dello sfondo. `render/assets.js#person(look, frame, scale, white)` restituisce `{ img, w, h, k }` con la misura nel mondo (scale 2 per i boss); un look nuovo va aggiunto in `LOOKS` e referenziato con `look:` nei dati.
 - Il palazzo in `render/world.js` è disegnato anch'esso a risoluzione doppia (`ctx.scale(0.5)`), con la facciata statica in cache.
-- `render/scenery.js`: 6 scenari (uno per reparto, cambiano ogni 10 ondate con una dissolvenza) disegnati una volta su un canvas a **risoluzione doppia** (`SCENE_RES`) con random a seed fisso, più un'animazione leggera opzionale (`ambient`). Gli oggetti di scena riusabili sono in `render/props.js`: si disegnano in coordinate del mondo ma con dettagli a passi di **mezzo pixel** (`rect` arrotonda a 0.5), per avere la stessa densità di dettaglio dei personaggi.
-- `render/world.js`: camera, palazzo, nemici (quelli nascosti dietro al palazzo si vedono in trasparenza), rinforzi, recinto, colpi, effetti.
+- `render/scenery.js` + `render/scenes/` (un file per scenario, più `common.js` e `yard.js`): 6 scenari (uno per reparto, cambiano ogni 10 ondate con una dissolvenza) disegnati una volta su un canvas a **risoluzione doppia** (`SCENE_RES`) con random a seed fisso, più un'animazione leggera opzionale (`ambient`). Gli oggetti di scena riusabili sono in `render/props.js`: si disegnano in coordinate del mondo ma con dettagli a passi di **mezzo pixel** (`rect` arrotonda a 0.5), per avere la stessa densità di dettaglio dei personaggi.
+- `render/world.js`: solo l'ordine di disegno; i pezzi sono in `view.js` (camera, zoom a pixel nitidi con `snap`, `drawPersonAt`), `tower.js`, `allies.js`, `enemies.js`, `effects.js`, `overlay.js` (scritte in coordinate dello schermo).
+- `systems/combat.js` è un indice: la logica sta in `enemies.js`, `shooting.js`, `fence.js`, `damage.js`.
 - `render/palette.js`: palette `PAL`, la stessa delle variabili CSS in `style.css`, da mantenere allineate. Font: Press Start 2P (testi) e Permanent Marker (titoli/graffiti), caricati prima di generare gli sfondi.
 
 ### Salvataggi e classifica
