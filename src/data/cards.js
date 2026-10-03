@@ -34,6 +34,10 @@ export const CARDS = [
   { id: 'energy',    icon: '🔋', name: 'Pausa caffè extra',   rarity: 'common', max: 5,  linear: true, desc: m => `+${num(0.3, m)} mana al secondo`,   mod: (c, m) => { c.manaRegen += 0.3 * m; } },
   { id: 'reserve',   icon: '🗄️', name: 'Riserva di cancelleria', rarity: 'common', max: 5, linear: true, desc: m => `+${Math.round(25 * m)} mana massimo`, mod: (c, m) => { c.manaMax += 25 * m; } },
   { id: 'inbox',     icon: '📥', name: 'Inbox zero',          rarity: 'rare',   max: 3,  linear: true, desc: m => `Ogni nemico eliminato dà ${num(1, m)} mana`, mod: (c, m) => { c.manaOnKill += m; } },
+  { id: 'concrete',  icon: '🧱', name: 'Muro di cemento',     rarity: 'rare',   max: 3,  linear: true, desc: m => `Muro: +${pct(0.6, m)}% vita (blocchi di cemento)`, mod: (c, m) => { c.wallHp += 0.6 * m; } },
+  { id: 'barbed',    icon: '➰', name: 'Filo spinato',        rarity: 'rare',   max: 3,  linear: true, desc: m => `Chi prende a colpi il muro si ferisce (${pct(0.5, m)}% del tuo danno)`, mod: (c, m) => { c.wallThorns += 0.5 * m; } },
+  { id: 'steel',     icon: '🛡️', name: "Lastre d'acciaio",    rarity: 'epic',   max: 2,  linear: true, desc: m => `Muro: +${pct(0.4, m)}% vita e respinge il ${pct(0.35, m)}% dei colpi dei cecchini`, mod: (c, m) => { c.wallHp += 0.4 * m; c.wallReflect += 0.35 * m; } },
+  { id: 'selfrepair',icon: '🔧', name: 'Muro autoriparante',  rarity: 'rare',   max: 3,  linear: true, desc: m => `Il muro si ripara del ${num(2, m)}% al secondo durante l'ondata`, mod: (c, m) => { c.wallRegen += 0.02 * m; } },
   { id: 'scrum',     icon: '📋', name: 'Scrum Master',        rarity: 'epic',   max: 3,  linear: true, desc: m => `+${pct(0.6, m)}% danno e +${pct(0.15, m)}% velocità`, mod: (c, m) => { c.dmg += 0.6 * m; c.rate += 0.15 * m; } },
 ];
 

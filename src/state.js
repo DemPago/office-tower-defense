@@ -5,6 +5,7 @@ import { UPGRADES } from './data/upgrades.js';
 import { computeStats, metaBonuses } from './systems/stats.js';
 import { unlockedHeroes } from './data/heroes.js';
 import { weaponDef } from './data/weapons.js';
+import { buildWall, repairWall } from './systems/wall.js';
 
 // Mondo di gioco in pixel logici: un quadrato con la torre al centro,
 // attaccabile da tutte le direzioni (360°).
@@ -37,6 +38,7 @@ export function createRun(meta) {
     allies: [],              // rinforzi: { id, level, slot, ... }
     allyChoices: null,       // i 3 colleghi proposti durante la fase 'ally'
     intruders: 0,            // nemici vivi dentro al cortile in questo momento
+    wall: buildWall(),       // tratti del muro di cinta (systems/wall.js)
     abilityCd: Object.fromEntries(ABILITIES.map(a => [a.id, 0])),
     mana: MANA.start,
     tower: { hp: 0, cooldown: 0, hitFlash: 0 },
@@ -51,5 +53,6 @@ export function createRun(meta) {
   };
   run.stats = computeStats(run, meta);
   run.tower.hp = run.stats.maxHp;
+  repairWall(run);
   return run;
 }

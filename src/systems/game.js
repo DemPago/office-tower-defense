@@ -2,6 +2,7 @@
 // e decide quando un'ondata finisce, quando scegliere le carte e quando si perde.
 import { updateSpawns, startWave } from './waves.js';
 import { updateEnemies, updateEnemyShots, updateTower, updateShots, updateFence } from './combat.js';
+import { updateWall, repairWall } from './wall.js';
 import { updateAbilities } from './abilities.js';
 import { offerCards } from './cards.js';
 import { offerAllies, updateAllies, animateAllies, updateYard, restAllies } from './allies.js';
@@ -32,6 +33,7 @@ export function update(run, dt) {
   updateTower(run, dt);
   updateAllies(run, dt);
   updateYard(run, dt);
+  updateWall(run, dt);
   updateFence(run, dt);
   updateShots(run, dt);
   updateAbilities(run, dt);
@@ -44,6 +46,7 @@ export function update(run, dt) {
     run.shots = [];
     run.intruders = 0;
     restAllies(run);
+    repairWall(run);
     // Completati tutti i livelli (i 6 reparti): si sblocca un nuovo personaggio.
     if (run.wave % UNLOCK_WAVE === 0) {
       const hero = unlockNextHero(run.meta);

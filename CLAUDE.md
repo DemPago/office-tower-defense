@@ -60,6 +60,10 @@ Carte: le scelte stanno in `run.cardPicks` con la potenza `cardPower(ondata)` de
 
 Pannello in basso (`ui/hud.js`): i pulsanti non sono mai `disabled` (classe `off`) così il suggerimento `withTip` funziona sempre; i testi dei suggerimenti sono `help` in `data/upgrades.js` e `data/abilities.js`.
 
+### Muro di cinta
+
+`systems/wall.js`: `run.wall` = tratti con vita intorno a `YARD`. `blockingSegment` ferma chi va a piedi (attacca il tratto), `segmentToward` dà il tratto sulla linea verso il palazzo (bersaglio dei cecchini), `repairWall` a inizio partita e a fine ondata. Materiali e bonus dalle carte muro (`stats.wallHp/wallThorns/wallReflect/wallRegen`); disegno dinamico in `render/wall.js` (non è nello sfondo statico).
+
 ### Boss, animali, mitra e personaggi
 
 I boss (`data/bosses.js`) hanno un `animal` (`data/animals.js`, disegnato in `render/animals.js`, vista di profilo e specchiato verso il palazzo) e una scorta (`escort`) creata in `waves.js#makeBoss`. A vita finita `combat.js#transformBoss` li trasforma nell'animale gigante (seconda vita, `run.fx.flash` per il lampo bianco) e rende disponibile il potere speciale `mitra` (`run.mitraReady`/`run.mitraT`, cadenza ×`MITRA.rateMult`). I poteri normali costano mana (`MANA` in `data/abilities.js`).

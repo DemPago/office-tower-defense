@@ -22,17 +22,8 @@ export function drawYard(g, rnd, { floor = PAL.concrete, seam = PAL.concreteDk }
   for (let i = 0; i < 6; i++) P.stain(g, x + 10 + rnd() * (w - 20), y + 10 + rnd() * (h - 20), 5 + rnd() * 8, 3 + rnd() * 4, 'rgba(0,0,0,0.22)');
   for (let i = 0; i < 4; i++) P.crack(g, x + 10 + rnd() * (w - 20), y + 10 + rnd() * (h - 20), rnd, 6);
 
-  // Sacchi di sabbia lungo i bordi, con un varco per ogni corridoio
-  for (let xx = x + 2; xx < x + w - 10; xx += 12) {
-    if (Math.abs(xx + 5 - TOWER.x) < LANE) continue;
-    P.sandbag(g, xx, y - 7);
-    P.sandbag(g, xx, y + h - 2);
-  }
-  for (let yy = y + 6; yy < y + h - 6; yy += 9) {
-    if (Math.abs(yy + 3 - TOWER.y) < LANE) continue;
-    P.sandbag(g, x - 8, yy);
-    P.sandbag(g, x + w - 3, yy);
-  }
+  // Il muro di sacchi di sabbia non è qui: è disegnato a ogni frame da render/wall.js,
+  // perché si rompe durante la partita.
   // Barriere ai lati dei varchi e lampioni agli angoli
   P.barrier(g, TOWER.x - LANE - 22, y - 16);
   P.barrier(g, TOWER.x + LANE + 2, y - 16);

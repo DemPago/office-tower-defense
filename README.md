@@ -69,6 +69,10 @@ Tutti i suoni sono generati dal browser (Web Audio API), senza file. All'arrivo 
 ## 🏆 Classifica
 Quando perdi lasci le tue **3 iniziali** come nei cabinati. La classifica è online (Supabase) se `src/config.js` è compilato, altrimenti resta nel browser. Per crearla: incolla `supabase/schema.sql` nel SQL Editor di Supabase e metti URL e chiave pubblica in `src/config.js`.
 
+## 🧱 Il muro di cinta
+Il cortile è chiuso da un muro di sacchi di sabbia, fatto a tratti: i nemici a piedi si fermano a sfondarlo, i **kamikaze** ci esplodono contro e i **cecchini** aprono **brecce** da lontano. Dalle brecce si entra nel cortile (e i colleghi perdono vita). A fine ondata il muro si ripara.
+Con le carte puoi cambiarlo: 🧱 **Muro di cemento** (più vita), ➰ **Filo spinato** (chi lo colpisce si ferisce), 🛡️ **Lastre d'acciaio** (respinge i colpi dei cecchini), 🔧 **Muro autoriparante**.
+
 ## 🔫 Armi della torre
 Nel menu scegli come spara il palazzo:
 

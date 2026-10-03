@@ -24,6 +24,7 @@ function emptyBonus() {
     crit: 0, critMult: 0, multishot: 0, bounce: 0, aoe: 0, slow: 0, dot: 0,
     gold: 0, healOnKill: 0, cdr: 0, startGold: 0, rerolls: 0, fence: 0,
     manaRegen: 0, manaMax: 0, manaOnKill: 0,
+    wallHp: 0, wallThorns: 0, wallReflect: 0, wallRegen: 0,
   };
 }
 
@@ -80,6 +81,10 @@ export function computeStats(run, meta) {
     manaRegen: MANA.regen + c.manaRegen, // mana al secondo
     manaMax: c.manaMax,                  // mana massimo in più
     manaOnKill: c.manaOnKill,            // mana per ogni nemico eliminato
+    wallHp: c.wallHp,                    // muro: vita in più (frazione)
+    wallThorns: c.wallThorns,            // muro: danno a chi lo colpisce (frazione del danno della torre)
+    wallReflect: Math.min(0.8, c.wallReflect), // muro: probabilità di respingere i colpi dei cecchini
+    wallRegen: c.wallRegen,              // muro: riparazione al secondo (frazione)
     fence: u.fence,          // quarti di cerchio coperti dal recinto elettrico (0-4)
   };
 }

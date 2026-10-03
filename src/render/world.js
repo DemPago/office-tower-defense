@@ -18,6 +18,7 @@ import { drawShadow, drawEnemy, drawGhost, updateTrails, drawTrails, drawCorpse,
 import { drawDust, drawGrade, drawRange, drawShots, drawFx } from './effects.js';
 import { drawZombieWorld, drawZombieGrade } from './zombie.js';
 import { isZombieWave } from '../data/enemies.js';
+import { drawWall } from './wall.js';
 import { drawSceneTitle, drawBanner, drawBossBar, drawIntruderWarning, drawBossPointer } from './overlay.js';
 
 export function createRenderer(canvas, assets) {
@@ -91,6 +92,7 @@ export function createRenderer(canvas, assets) {
 
     if (run && run.intruders > 0) drawYardAlarm(ctx, time);
     if (run) {
+      drawWall(ctx, run, time);
       drawSectors(ctx, run, time);
       drawRange(ctx, run.stats.range, time);
       for (const c of run.fx.corpses) drawCorpse(ctx, assets, c);
