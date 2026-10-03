@@ -4,7 +4,7 @@ import { updateSpawns, startWave } from './waves.js';
 import { updateEnemies, updateEnemyShots, updateTower, updateShots, updateFence } from './combat.js';
 import { updateAbilities } from './abilities.js';
 import { offerCards } from './cards.js';
-import { offerAllies, updateAllies, animateAllies } from './allies.js';
+import { offerAllies, updateAllies, animateAllies, updateYard, restAllies } from './allies.js';
 import { REINFORCE_EVERY } from '../data/allies.js';
 import { updateFx, floatText } from './fx.js';
 import { TOWER } from '../state.js';
@@ -28,6 +28,7 @@ export function update(run, dt) {
   updateEnemyShots(run, dt);
   updateTower(run, dt);
   updateAllies(run, dt);
+  updateYard(run, dt);
   updateFence(run, dt);
   updateShots(run, dt);
   updateAbilities(run, dt);
@@ -38,6 +39,8 @@ export function update(run, dt) {
     floatText(run, TOWER.x, TOWER.y - 90, `Ondata superata! +${bonus}💰`, '#7bd332', 9);
     run.enemyShots = [];
     run.shots = [];
+    run.intruders = 0;
+    restAllies(run);
     // Ogni tot ondate arrivano i rinforzi, poi si sceglie comunque la carta.
     if (run.wave % REINFORCE_EVERY === 0) offerAllies(run);
     else offerCards(run);

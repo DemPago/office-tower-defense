@@ -1,5 +1,5 @@
 // Scelta delle carte fra un'ondata e l'altra.
-import { CARDS, RARITY } from '../data/cards.js';
+import { CARDS, RARITY, cardPower } from '../data/cards.js';
 import { refreshStats } from './economy.js';
 
 // Estrae 3 carte diverse, pesate per rarità, escludendo quelle già al massimo.
@@ -32,6 +32,7 @@ export function pickCard(run, meta, index) {
   const card = run.cardChoices?.[index];
   if (run.phase !== 'cards' || !card) return false;
   run.cards[card.id] = (run.cards[card.id] || 0) + 1;
+  run.cardPicks.push({ id: card.id, m: cardPower(run.wave) });
   if (card.onPick) card.onPick(run);
   refreshStats(run, meta);
   run.fx.sounds.push('pick');

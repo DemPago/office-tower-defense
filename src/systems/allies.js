@@ -1,11 +1,11 @@
 // Rinforzi: scelta del collega e i loro spari.
-import { ALLIES, ALLY_LEVELS, ALLY_LEVEL_MULT, ALLY_SLOTS, ALLY_RING, allyArc } from '../data/allies.js';
-import { TOWER } from '../state.js';
+import { ALLIES, ALLY_LEVELS, ALLY_LEVEL_MULT, ALLY_SLOTS, ALLY_RING, allyArc, allyHp, YARD_DRAIN } from '../data/allies.js';
+import { TOWER, YARD } from '../state.js';
 import { dist } from '../util.js';
 import { fire, pickTargets } from './combat.js';
 import { offerCards } from './cards.js';
 import { refreshStats } from './economy.js';
-import { banner, ring, sfx, floatText } from './fx.js';
+import { banner, ring, sfx, floatText, burst } from './fx.js';
 import { angleOf, inArc } from '../util.js';
 
 // Velocità dei colpi: abbastanza lente da vederli partire dalla postazione.
@@ -66,12 +66,14 @@ export function pickAlly(run, meta, index) {
   if (run.phase !== 'ally' || !choice) return false;
   let ally;
   if (choice.kind === 'hire') {
-    ally = { uid: Math.random(), id: choice.def.id, level: 1, slot: choice.slot, cooldown: 0, recoil: 0, spawn: 0 };
+    ally = { uid: Math.random(), id: choice.def.id, level: 1, slot: choice.slot, cooldown: 0, recoil: 0, spawn: 0, hp: allyHp(1), maxHp: allyHp(1) };
     run.allies.push(ally);
   } else {
     ally = choice.ally;
     ally.level++;
     ally.promoFlash = 1.5;
+    ally.maxHp = allyHp(ally.level);
+    ally.hp = ally.maxHp; // la promozione rimette in forma
   }
   const { def } = choice;
   const pos = allyPos(ally);
@@ -92,7 +94,42 @@ export function animateAllies(run, dt) {
   for (const ally of run.allies) {
     ally.spawn = Math.min(1, ally.spawn + dt * 2);
     ally.promoFlash = Math.max(0, (ally.promoFlash || 0) - dt);
+    ally.hurt = Math.max(0, (ally.hurt || 0) - dt);
   }
+}
+
+function inYard(e) {
+  return e.x > YARD.x && e.x < YARD.x + YARD.w && e.y > YARD.y && e.y < YARD.y + YARD.h;
+}
+
+// Intrusi nel cortile: finché un nemico è vivo là dentro, tutti i colleghi perdono vita
+// (YARD_DRAIN al secondo per ogni intruso). A zero il collega si dimette e libera la postazione.
+export function updateYard(run, dt) {
+  run.intruders = run.enemies.filter(e => !e.dead && inYard(e)).length;
+  if (!run.intruders || !run.allies.length) return;
+  let lost = false;
+  for (const ally of run.allies) {
+    ally.hp -= YARD_DRAIN * run.intruders * dt;
+    ally.hurt = 0.12;
+    if (ally.hp <= 0) {
+      const pos = allyPos(ally);
+      const def = allyDef(ally.id);
+      burst(run, pos.x, pos.y - 12, '#e8e2d0', 14, 90);
+      floatText(run, pos.x, pos.y - 40, 'SI È DIMESSO!', '#d7263d', 8);
+      banner(run, `${def.icon} ${def.name.toUpperCase()}`, 'Troppi intrusi nel cortile: se ne va!', '#d7263d');
+      sfx(run, 'hurt');
+      lost = true;
+    }
+  }
+  if (lost) {
+    run.allies = run.allies.filter(a => a.hp > 0);
+    refreshStats(run, run.meta); // i maghi persi non danno più il loro bonus
+  }
+}
+
+// A fine ondata i colleghi sopravvissuti tornano in piena forma.
+export function restAllies(run) {
+  for (const ally of run.allies) ally.hp = ally.maxHp;
 }
 
 export function updateAllies(run, dt) {

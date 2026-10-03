@@ -1,7 +1,7 @@
 // Scenari: uno per reparto, cambia ogni 10 ondate (dopo il boss).
 // Ogni scenario disegna una volta il suo sfondo su un canvas (random a seed fisso)
 // e può avere un'animazione leggera (led, neon, fari) disegnata a ogni frame.
-import { WORLD, TOWER } from '../state.js';
+import { WORLD, TOWER, YARD } from '../state.js';
 import { PAL, FONT, shade } from './palette.js';
 import * as P from './props.js';
 
@@ -11,7 +11,7 @@ export const MARGIN = 240;
 export const SCENE_RES = 2;
 export const AREA = { x: -MARGIN, y: -MARGIN, w: WORLD.w + MARGIN * 2, h: WORLD.h + MARGIN * 2 };
 // Cortile fortificato intorno al palazzo e i 4 corridoi d'accesso (N, S, E, O).
-export const YARD = { x: TOWER.x - 112, y: TOWER.y - 104, w: 224, h: 200 };
+export { YARD };
 const LANE = 28; // mezza larghezza dei corridoi
 
 function seeded(seed) {

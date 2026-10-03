@@ -12,11 +12,11 @@ JavaScript puro + Canvas 2D, **nessuna dipendenza, nessun build step, nessun tes
 
 ```bash
 python3 -m http.server 8000          # avvia in locale → http://localhost:8000 (i moduli ES non funzionano con file://)
+node tools/check.mjs                 # sintassi + verifica che ogni funzione importata/usata da un altro file esista (lanciarlo SEMPRE prima di pubblicare)
 node tools/sim.mjs                   # simulazione del bilanciamento senza grafica (bot che gioca molte partite)
-for f in $(find src -name '*.js'); do node --check "$f"; done   # controllo di sintassi
 ```
 
-Per verificare la grafica si usa Chrome headless con `--remote-debugging-port` pilotato via DevTools Protocol (WebSocket nativo di Node): screenshot con `Page.captureScreenshot`, click con `Runtime.evaluate`. Dopo modifiche il browser può tenere in cache i moduli: ricaricare con Cmd+Shift+R.
+Aprendo il gioco con `?debug` nell'indirizzo la partita è raggiungibile da console come `window.otd.run` (utile per preparare situazioni nei test). Per verificare la grafica si usa Chrome headless con `--remote-debugging-port` pilotato via DevTools Protocol (WebSocket nativo di Node): screenshot con `Page.captureScreenshot`, click con `Runtime.evaluate`. Dopo modifiche il browser può tenere in cache i moduli: ricaricare con Cmd+Shift+R.
 
 Bilanciamento attuale di riferimento (`tools/sim.mjs`): senza potenziamenti ~ondata 5, bot completo mediana ~30-40, con progressi permanenti ~45-50. I boss (ogni 10 ondate) fanno da muro.
 
@@ -51,7 +51,9 @@ Angoli: si usano gradi "da geometria" (0 = destra, 90 = su) con `util.js#angleOf
 
 `data/enemies.js`: ogni nemico ha un **ruolo** (`ROLES`: `tank` con taunt, `sniper`, `charger` kamikaze, `special` con `heal` o `split`) che ne fissa statistiche e comportamento; `ROLE_WEIGHTS` decide la composizione delle ondate. `DECADES` assegna a ogni reparto (10 ondate) un nemico per ruolo; dopo la 60 si ricomincia in versione élite. La logica dei ruoli è in `systems/combat.js` (`updateEnemies`, `explode`, `pickTargets` che mette i tank per primi). I boss (`data/bosses.js`) partono da `BOSS_BASE` in `systems/waves.js`.
 
-Rinforzi: `run.allies` contiene unità indipendenti (si possono avere due colleghi dello stesso tipo); `offerAllies` propone carte `hire` (postazione libera) o `promote`.
+Rinforzi: `run.allies` contiene unità indipendenti (si possono avere due colleghi dello stesso tipo); `offerAllies` propone carte `hire` (postazione libera) o `promote`. I colleghi hanno vita (`allyHp`): per ogni nemico vivo dentro `YARD` (state.js) perdono `YARD_DRAIN` HP al secondo (`updateYard`), a zero si dimettono; a fine ondata si curano (`restAllies`).
+
+Carte: l'effetto è moltiplicato per `cardPower(ondata)` al momento della scelta; le scelte stanno in `run.cardPicks` (`run.cards` conta solo le copie, per il massimo).
 
 ### Suoni
 

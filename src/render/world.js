@@ -1,7 +1,7 @@
 // Disegno del mondo di gioco sul canvas. Legge lo stato, non lo modifica mai.
 // Stile: grunge urbano in pixel art. Gli sfondi (uno per reparto) sono in scenery.js,
 // gli oggetti di scena in props.js, i personaggi in people.js.
-import { TOWER } from '../state.js';
+import { TOWER, YARD } from '../state.js';
 import { allyDef, allyPos } from '../systems/allies.js';
 import { ALLY_SLOTS, allyArc } from '../data/allies.js';
 import { FENCE } from '../systems/combat.js';
@@ -83,6 +83,7 @@ export function createRenderer(canvas, assets) {
       ctx.globalAlpha = 1;
     }
 
+    if (run && run.intruders > 0) drawYardAlarm(ctx, time);
     if (run) {
       drawSectors(ctx, run, time);
       drawRange(ctx, run.stats.range, time);
@@ -119,6 +120,7 @@ export function createRenderer(canvas, assets) {
     ctx.setTransform(view.ui, 0, 0, view.ui, 0, 0);
     const W = canvas.width / view.ui, H = canvas.height / view.ui;
     if (fade > 0.2) drawSceneTitle(ctx, cur.name, W, H, fade);
+    if (run && run.intruders > 0 && run.allies.length) drawIntruderWarning(ctx, run, W, time);
     if (run) {
       drawBossPointer(ctx, run, view, W, H);
       drawBanner(ctx, run, W, H);
@@ -479,7 +481,21 @@ function drawAlly(ctx, assets, ally, time) {
   }
   ctx.globalAlpha = ally.spawn;
   drawPersonAt(ctx, assets.person(def.look, 0, 1), x, y - 1 + drop + recoil);
+  if (ally.hurt > 0) {
+    // sta perdendo vita: lampeggia di rosso
+    ctx.globalAlpha = 0.45;
+    drawPersonAt(ctx, assets.person(def.look, 0, 1, '#ff2a3d'), x, y - 1 + drop + recoil);
+  }
   ctx.globalAlpha = 1;
+  if (ally.hp < ally.maxHp && ally.spawn >= 1) {
+    const bw = 18, bx = x - bw / 2, by = y - 34, k = Math.max(0, ally.hp / ally.maxHp);
+    ctx.fillStyle = PAL.black;
+    ctx.fillRect(bx - 0.5, by - 0.5, bw + 1, 3);
+    ctx.fillStyle = PAL.blood;
+    ctx.fillRect(bx, by, bw, 2);
+    ctx.fillStyle = k > 0.5 ? PAL.toxic : k > 0.25 ? PAL.hazard : PAL.red;
+    ctx.fillRect(bx, by, bw * k, 2);
+  }
   if (recoil) {
     // lampo allo sparo, sopra la testa
     ctx.fillStyle = PAL.white;
@@ -597,6 +613,31 @@ function drawEnemy(ctx, assets, e) {
     ctx.fillStyle = PAL.red;
     ctx.fillRect(bx, by, Math.max(1, Math.round(bw * e.hp / e.maxHp)), 2);
   }
+}
+
+// Cortile violato: il bordo lampeggia di rosso.
+function drawYardAlarm(ctx, time) {
+  const a = 0.35 + 0.35 * Math.sin(time * 10);
+  ctx.save();
+  ctx.strokeStyle = `rgba(215,38,61,${a})`;
+  ctx.lineWidth = 3;
+  ctx.strokeRect(YARD.x - 7, YARD.y - 7, YARD.w + 14, YARD.h + 14);
+  ctx.fillStyle = `rgba(215,38,61,${a * 0.12})`;
+  ctx.fillRect(YARD.x, YARD.y, YARD.w, YARD.h);
+  ctx.restore();
+}
+
+function drawIntruderWarning(ctx, run, W, time) {
+  if (Math.sin(time * 8) < -0.3) return; // lampeggia
+  const y = run.boss ? 58 : 18;
+  const text = `⚠ ${run.intruders} INTRUS${run.intruders > 1 ? 'I' : 'O'} NEL CORTILE: i colleghi perdono vita!`;
+  ctx.font = `7px ${FONT}`;
+  ctx.textAlign = 'center';
+  const w = ctx.measureText(text).width + 16;
+  ctx.fillStyle = 'rgba(13,13,15,0.8)';
+  ctx.fillRect(W / 2 - w / 2, y - 10, w, 15);
+  ctx.fillStyle = PAL.red;
+  ctx.fillText(text, W / 2, y);
 }
 
 // Alone pulsante dietro al boss, del suo colore.

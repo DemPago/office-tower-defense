@@ -11,10 +11,13 @@ export const TOWER = { x: 320, y: 320, radius: 26 };
 // Distanza dalla torre a cui compaiono i nemici (uguale per tutti gli schermi,
 // così la difficoltà non dipende dalla grandezza del monitor).
 export const SPAWN_RADIUS = 330;
+// Cortile fortificato intorno al palazzo: se un nemico ci entra, i colleghi perdono vita.
+export const YARD = { x: TOWER.x - 112, y: TOWER.y - 104, w: 224, h: 200 };
 
 export function createRun(meta) {
   const mb = metaBonuses(meta);
   const run = {
+    meta,                    // progressi permanenti (servono per ricalcolare le statistiche)
     phase: 'break',          // 'break' (pausa fra ondate) | 'wave' | 'ally' | 'cards' | 'over'
     breakTimer: 2,           // secondi prima della prossima ondata
     wave: 0,
@@ -25,9 +28,11 @@ export function createRun(meta) {
     bossesKilled: 0,
     upgrades: Object.fromEntries(UPGRADES.map(u => [u.id, 0])),
     cards: {},               // id carta -> quante copie prese
+    cardPicks: [],           // carte prese: { id, m = potenza al momento della scelta }
     cardChoices: null,       // le 3 carte proposte durante la fase 'cards'
     allies: [],              // rinforzi: { id, level, slot, ... }
     allyChoices: null,       // i 3 colleghi proposti durante la fase 'ally'
+    intruders: 0,            // nemici vivi dentro al cortile in questo momento
     abilityCd: Object.fromEntries(ABILITIES.map(a => [a.id, 0])),
     tower: { hp: 0, cooldown: 0, hitFlash: 0 },
     stats: null,

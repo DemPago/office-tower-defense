@@ -15,6 +15,12 @@ export const ALLIES = [
 ];
 
 export const ALLY_LEVELS = ['Junior', 'Middle', 'Professional', 'Senior', '👑 King'];
+// Vita dei colleghi: cresce con le promozioni.
+export function allyHp(level) {
+  return 500 + 250 * (level - 1);
+}
+// Vita persa da OGNI collega, al secondo, per OGNI nemico vivo dentro al cortile.
+export const YARD_DRAIN = 100;
 // Moltiplicatore del danno per livello (Junior = 1).
 export const ALLY_LEVEL_MULT = [1, 1.5, 2.2, 3.2, 4.5];
 

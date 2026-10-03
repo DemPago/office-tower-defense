@@ -1,6 +1,6 @@
 // Schermate sopra al gioco: menu, ufficio del personale (negozio permanente),
 // scelta delle carte, pausa e fine partita.
-import { RARITY } from '../data/cards.js';
+import { RARITY, cardPower } from '../data/cards.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
 import { ALLY_LEVELS, allyArc } from '../data/allies.js';
 import { slotName } from '../systems/allies.js';
@@ -57,7 +57,7 @@ export function showCards(run, onPick, onReroll) {
       <span class="rar">${r.label}</span>
       <span class="ico">${card.icon}</span>
       <b>${card.name}</b>
-      <small>${card.desc}</small>
+      <small>${card.desc(cardPower(run.wave))}</small>
       <span class="own">${owned ? `Hai già: ${owned}` : 'Nuova!'}</span>`;
     el.addEventListener('click', () => onPick(i));
     box.appendChild(el);
@@ -98,6 +98,41 @@ export function showAllies(run, onPick) {
   $('cards-title').textContent = '🚨 RINFORZI IN ARRIVO!';
   $('cards-sub').textContent = 'Assumi un collega nuovo o promuovi uno che hai già';
   show('scr-cards');
+}
+
+export function showOver(run, reward, isRecord) {
+  $('over-wave').textContent = `Sei arrivato all'ondata ${run.wave}`;
+  $('over-stats').textContent = `${run.kills} nemici eliminati · ${run.bossesKilled} boss sconfitti`;
+  $('over-reward').textContent = `+${fmt(reward)} 🎫 buoni pasto`;
+  $('over-record').hidden = !isRecord;
+  $('initials-box').hidden = false;
+  $('over-after').hidden = true;
+  $('btn-save-score').disabled = false;
+  $('btn-save-score').textContent = 'SALVA';
+  show('scr-over');
+}
+
+// Mostra le 3 lettere; quella selezionata lampeggia.
+export function renderInitials(chars, cursor) {
+  document.querySelectorAll('#initials .slot').forEach((slot, i) => {
+    slot.querySelector('.ch').textContent = chars[i];
+    slot.classList.toggle('cur', i === cursor);
+  });
+}
+
+function renderBoard(list, top, mine) {
+  list.innerHTML = '';
+  if (!top.rows.length) {
+    list.innerHTML = '<li class="empty">Ancora nessun punteggio. Sii il primo!</li>';
+    return;
+  }
+  top.rows.forEach((r, i) => {
+    const li = document.createElement('li');
+    const isMine = mine && (mine.id ? r.id === mine.id : r.ts === mine.ts);
+    li.className = isMine ? 'me' : '';
+    li.innerHTML = `<span class="pos">${i + 1}</span><span class="ini">${r.initials}</span><span class="w">ONDATA ${r.wave}</span><span class="k">${fmt(r.kills)}💀</span>`;
+    list.appendChild(li);
+  });
 }
 
 // Dopo aver salvato (o saltato): posizione raggiunta e classifica.

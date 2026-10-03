@@ -40,10 +40,8 @@ export function computeStats(run, meta) {
     if (L) def.mod(u, L);
   }
   const c = emptyBonus();
-  for (const card of CARDS) {
-    const n = run.cards[card.id] || 0;
-    for (let i = 0; i < n; i++) card.mod(c);
-  }
+  // ogni carta presa conta con la potenza dell'ondata in cui è stata scelta
+  for (const pick of run.cardPicks) CARDS.find(card => card.id === pick.id).mod(c, pick.m);
   const m = metaBonuses(meta);
 
   // Bonus dei maghi (rinforzi con aura): valgono per torre e colleghi.

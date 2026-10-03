@@ -222,6 +222,9 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+// Solo per i test: con ?debug nell'indirizzo la partita è raggiungibile da console (window.otd.run).
+if (location.search.includes('debug')) window.otd = { get run() { return run; }, meta };
+
 window.addEventListener('resize', renderer.resize);
 renderer.resize();
 toMenu();
