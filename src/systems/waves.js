@@ -1,5 +1,6 @@
 // Ondate: quanti nemici, quali, quanto sono forti e da dove arrivano.
 import { ENEMIES, ROLE_WEIGHTS, decadeFor } from '../data/enemies.js';
+import { ANIMALS } from '../data/animals.js';
 import { bossForWave } from '../data/bosses.js';
 import { TOWER, SPAWN_RADIUS } from '../state.js';
 import { banner, sfx } from './fx.js';
@@ -31,7 +32,7 @@ function spawnPoint() {
 }
 
 export function makeEnemy(def, w, extra = {}) {
-  const p = spawnPoint();
+  const p = extra.at || spawnPoint();
   const decade = decadeFor(w);
   const elite = decade.elite;
   // i reparti più avanzati sono un po' più robusti
@@ -68,13 +69,21 @@ export function makeEnemy(def, w, extra = {}) {
 // Base dei boss: un "dipendente medio" a cui si applicano i moltiplicatori del boss.
 const BOSS_BASE = { name: 'Boss', look: 'impiegato', role: 'boss', hp: 10, speed: 20, atk: 2, range: 0, gold: 1 };
 
+// Animali di scorta: veloci, poca vita, mordono da vicino.
+const ESCORT_BASE = { name: 'Scorta', role: 'escort', hp: 7, speed: 50, atk: 2, range: 0, gold: 2 };
+
+// Restituisce { bosses, escorts }: il boss (o il gruppo) e i suoi animali, che arrivano dallo stesso lato.
 function makeBoss(b, w) {
   const base = BOSS_BASE;
   const group = b.group || 1;
   const list = [];
+  const at = spawnPoint();
   for (let i = 0; i < group; i++) {
-    const hp = base.hp * hpScale(w) * b.hpFactor / group;
+    // 0.75: i boss hanno anche una seconda vita (la forma bestiale), quindi la prima è più corta
+    const hp = base.hp * hpScale(w) * b.hpFactor * 0.75 / group;
     list.push(makeEnemy(base, w, {
+      at: { x: at.x + (Math.random() - 0.5) * 50, y: at.y + (Math.random() - 0.5) * 50 },
+      animalId: b.animal, bossName: b.name,
       name: b.name, look: b.look, boss: true,
       scale: b.scale,
       aura: b.aura,
@@ -86,7 +95,15 @@ function makeBoss(b, w) {
       size: 28 * b.scale,
     }));
   }
-  return list;
+  const A = ANIMALS[b.animal];
+  const escorts = [];
+  for (let i = 0; i < (b.escort || 0); i++) {
+    escorts.push(makeEnemy(ESCORT_BASE, w, {
+      at: { x: at.x + (Math.random() - 0.5) * 70, y: at.y + (Math.random() - 0.5) * 70 },
+      name: A.name, animal: b.animal, look: null, speed: A.speed * (0.9 + Math.random() * 0.2), size: 18,
+    }));
+  }
+  return { bosses: list, escorts };
 }
 
 export function startWave(run) {
@@ -121,8 +138,8 @@ export function updateSpawns(run, dt) {
     const next = run.spawnQueue.shift();
     run.spawnTimer -= next.delay;
     if (next.enemies) {
-      const bosses = next.enemies();
-      run.enemies.push(...bosses);
+      const { bosses, escorts } = next.enemies();
+      run.enemies.push(...bosses, ...escorts);
       run.boss = { name: next.boss.name, list: bosses };
     } else {
       run.enemies.push(next.enemy());

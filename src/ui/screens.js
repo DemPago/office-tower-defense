@@ -3,6 +3,7 @@
 import { RARITY, cardPower } from '../data/cards.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
 import { ALLY_LEVELS, allyArc } from '../data/allies.js';
+import { HEROES, UNLOCK_WAVE, unlockedHeroes } from '../data/heroes.js';
 import { slotName } from '../systems/allies.js';
 import { fmt } from '../util.js';
 
@@ -17,9 +18,33 @@ export function hideAll() {
   show(null);
 }
 
-export function showMenu(meta) {
+// portrait(id, locked) restituisce un canvas col ritratto; onHero(id) quando ne scegli uno.
+export function showMenu(meta, portrait, onHero) {
   $('menu-best').textContent = meta.best ? `Record: ondata ${meta.best}` : 'Nessuna partita ancora';
   $('menu-buoni').textContent = `🎫 ${fmt(meta.buoni)} buoni pasto`;
+  const have = unlockedHeroes(meta);
+  const current = have.includes(meta.hero) ? meta.hero : 'peppe';
+  const list = $('hero-list');
+  list.innerHTML = '';
+  for (const h of HEROES) {
+    const locked = !have.includes(h.id);
+    const btn = document.createElement('button');
+    btn.className = 'hero' + (h.id === current ? ' sel' : '') + (locked ? ' locked' : '');
+    btn.appendChild(portrait(h.id, locked));
+    const name = document.createElement('span');
+    name.textContent = locked ? '🔒' : h.name;
+    btn.appendChild(name);
+    const describe = () => {
+      $('hero-desc').textContent = locked
+        ? `🔒 Si sblocca completando tutti i livelli (ondata ${UNLOCK_WAVE})`
+        : `${h.name}: ${h.desc}`;
+    };
+    btn.addEventListener('pointerenter', describe);
+    btn.addEventListener('click', () => { if (!locked) onHero(h.id); else describe(); });
+    list.appendChild(btn);
+  }
+  const sel = HEROES.find(h => h.id === current);
+  $('hero-desc').textContent = `${sel.name}: ${sel.desc}`;
   show('scr-menu');
 }
 

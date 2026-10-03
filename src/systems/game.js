@@ -8,6 +8,8 @@ import { offerAllies, updateAllies, animateAllies, updateYard, restAllies } from
 import { REINFORCE_EVERY } from '../data/allies.js';
 import { updateFx, floatText } from './fx.js';
 import { TOWER } from '../state.js';
+import { UNLOCK_WAVE, unlockNextHero } from '../data/heroes.js';
+import { banner } from './fx.js';
 
 export function update(run, dt) {
   updateFx(run, dt);
@@ -17,6 +19,7 @@ export function update(run, dt) {
 
   if (run.phase === 'break') {
     updateTower(run, dt); // la torre si rigenera anche in pausa
+    updateAbilities(run, dt); // e il mana si ricarica
     run.breakTimer -= dt;
     if (run.breakTimer <= 0) startWave(run);
     return;
@@ -41,6 +44,14 @@ export function update(run, dt) {
     run.shots = [];
     run.intruders = 0;
     restAllies(run);
+    // Completati tutti i livelli (i 6 reparti): si sblocca un nuovo personaggio.
+    if (run.wave % UNLOCK_WAVE === 0) {
+      const hero = unlockNextHero(run.meta);
+      if (hero) {
+        run.newHero = hero.id;
+        banner(run, `NUOVO PERSONAGGIO: ${hero.name.toUpperCase()}!`, 'Lo trovi nel menu iniziale', '#ff3e8a');
+      }
+    }
     // Ogni tot ondate arrivano i rinforzi, poi si sceglie comunque la carta.
     if (run.wave % REINFORCE_EVERY === 0) offerAllies(run);
     else offerCards(run);

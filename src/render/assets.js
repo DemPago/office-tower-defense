@@ -2,6 +2,8 @@
 // Ogni sprite ha un contorno nero di 1 pixel ed esiste in versione normale e
 // tutta bianca (per il lampo quando un personaggio viene colpito).
 import { LOOKS, GRID, WORLD_PER_PX, drawPerson } from './people.js';
+import { AGRID, drawAnimal } from './animals.js';
+import { ANIMALS } from '../data/animals.js';
 
 function silhouette(src, color) {
   const c = document.createElement('canvas');
@@ -13,6 +15,28 @@ function silhouette(src, color) {
   g.fillStyle = color;
   g.fillRect(0, 0, c.width, c.height);
   return c;
+}
+
+// Aggiunge un contorno scuro tutto intorno a uno sprite.
+function outlined(base) {
+  const out = document.createElement('canvas');
+  out.width = base.width;
+  out.height = base.height;
+  const og = out.getContext('2d');
+  const black = silhouette(base, '#0d0d0f');
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) og.drawImage(black, dx, dy);
+  og.drawImage(base, 0, 0);
+  return out;
+}
+
+function buildAnimal(id, frame) {
+  const base = document.createElement('canvas');
+  base.width = AGRID.w + 2;
+  base.height = AGRID.h + 2;
+  const bg = base.getContext('2d');
+  bg.translate(1, 1);
+  drawAnimal(bg, ANIMALS[id], frame);
+  return outlined(base);
 }
 
 function build(lookId, frame) {
@@ -49,5 +73,16 @@ export async function loadAssets() {
     const k = WORLD_PER_PX * scale;
     return { img, w: img.width * k, h: img.height * k, k };
   }
-  return { person };
+  // Come person(), ma per gli animali dei boss.
+  function animal(id, frame = 0, scale = 1, tint = false) {
+    const key = `A|${id}|${frame}|${tint}`;
+    let img = cache.get(key);
+    if (!img) {
+      img = tint ? silhouette(animal(id, frame).img, tint === true ? '#ffffff' : tint) : buildAnimal(id, frame);
+      cache.set(key, img);
+    }
+    const k = WORLD_PER_PX * scale;
+    return { img, w: img.width * k, h: img.height * k, k };
+  }
+  return { person, animal };
 }

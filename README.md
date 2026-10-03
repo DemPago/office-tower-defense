@@ -14,13 +14,14 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 2. Ogni nemico eliminato dà **oro 💰**: spendilo nel pannello in basso per Danno, Velocità, Gittata, Vita, Rigenerazione e **🔌 Recinto elettrico** (a settori: livello 1 copre 0-90°, livello 2 fino a 180°, livello 3 fino a 270°, livello 4 tutto il giro).
 3. **Dopo ogni ondata scegli 1 carta su 3**: sono potenziamenti che si sommano (colpi multipli, rimbalzi, esplosioni, veleno, critici…).
 4. **Ogni 5 ondate arrivano i rinforzi**: puoi **assumere** un collega nuovo (6 postazioni intorno al palazzo) o **promuoverne** uno che hai già. ⚠ **Attenzione al cortile**: per ogni nemico che ci entra, tutti i colleghi perdono 100 vita al secondo; a zero si dimettono. Ogni collega difende uno **spicchio** (l'arco colorato a terra): 90° al livello 1, e ogni promozione lo allarga di altri 90° (Junior → Middle → Professional → Senior → 👑 King).
-5. Usa i **poteri** quando sei in difficoltà: si ricaricano col tempo.
+5. Usa i **poteri** quando sei in difficoltà: costano **mana** (la barra viola accanto alla vita), che si ricarica da solo.
 6. Quando la torre crolla vieni **licenziato**, ma guadagni **buoni pasto 🎫** da spendere nell'**Ufficio del personale** in bonus permanenti.
 
 ### Comandi
 | Tasto | Azione |
 |---|---|
-| `1` `2` `3` `4` | 💣 Bomba di carta · ☕ Caffè bollente · 📅 Riunione urgente · 🔍 Audit fiscale |
+| `1` `2` `3` `4` | 💣 Bomba di carta (60 mana) · ☕ Caffè bollente (35) · 📅 Riunione urgente (45) · 🔍 Audit fiscale (80) |
+| `5` | 💥 Mitra: compare solo contro la forma bestiale dei boss, gratis |
 | `Spazio` / `Esc` | Pausa |
 | `x1` in alto | Velocità di gioco x1 / x2 / x3 |
 | `F` / ⛶ | Schermo intero |
@@ -64,8 +65,11 @@ Tutti i suoni sono generati dal browser (Web Audio API), senza file. All'arrivo 
 ## 🏆 Classifica
 Quando perdi lasci le tue **3 iniziali** come nei cabinati. La classifica è online (Supabase) se `src/config.js` è compilato, altrimenti resta nel browser. Per crearla: incolla `supabase/schema.sql` nel SQL Editor di Supabase e metti URL e chiave pubblica in `src/config.js`.
 
+## 🧑 Personaggi
+Nel menu scegli chi sta sul tetto del palazzo: all'inizio **Peppe** (calvo con gli occhiali) e **Dem** (il tipico italiano). Ogni volta che completi tutti i livelli (ondata 60) ne sblocchi uno nuovo: **Nando**, **Tony**, **Vanessa**, **Clara** e l'**Uomo Pesce**.
+
 ## 👾 Boss (ogni 10 ondate)
-I boss sono enormi (fino a 3,5 volte un nemico normale), con aura colorata, occhi rossi, passi che fanno tremare il terreno e scie di fumo, scintille o stelle. Entrano dal bordo come gli altri: una freccia **⚠ BOSS** indica da dove arrivano. A metà vita diventano rossi e più veloci (**INFURIATO!**).
+I boss sono enormi (fino a 3,5 volte un nemico normale), con aura colorata, occhi rossi, passi che fanno tremare il terreno e scie di fumo, scintille o stelle. Entrano dal bordo come gli altri, scortati dal loro animale: una freccia **⚠ BOSS** indica da dove arrivano. A metà vita diventano rossi e più veloci (**INFURIATO!**). Quando finisci la loro vita lo schermo si illumina e **tornano come il loro animale GIGANTE** (pitbull, toro, lupo, gorilla, orso, corvi, serpente, leone, ratto, drago): è il momento del **💥 MITRA**.
 | Ondata | Boss |
 |---|---|
 | 10 | Team Leader |

@@ -67,7 +67,16 @@ export const LOOKS = {
   docbrown:   { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'wild', glasses: 'goggles', top: '#3a3226', shirt: '#d9d4c7', coat: '#e8e2d0', pants: '#3a3226', item: 'device', angry: true },
   galattico:  { skin: SKIN.mid, hair: '#c0c4cc', hairStyle: 'slick', glasses: 'shades', build: 'huge', top: '#5d275d', shirt: '#2de2e6', tie: '#2de2e6', pants: '#3a1a3a', shoes: '#2de2e6', cape: '#1a1240', capeTrim: '#2de2e6', capeStars: true, chain: '#2de2e6', angry: true },
 
-  // Protagonista e colleghi (rinforzi)
+  // Personaggi giocabili (sul tetto del palazzo)
+  peppe:      { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'bald', glasses: 'glasses', facial: 'mustache', top: '#6e6a64', shirt: '#e8e2d0', tie: '#2f4f8f', pants: '#3a3226' },
+  dem:        { skin: SKIN.tan, hair: '#141416', hairStyle: 'slick', facial: 'stubble', top: '#e8e2d0', shirt: '#e8e2d0', sleeves: 'short', chain: '#f2b705', pants: '#2a3a5a', shoes: '#5a3a22' },
+  nando:      { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'curly', glasses: 'glasses', top: '#3e6b2a', shirt: '#3e6b2a', pants: '#3a4a6a', shoes: '#d9d4c7' },
+  tony:       { skin: SKIN.tan, hair: '#0d0d0f', hairStyle: 'slick', scar: true, top: '#e8e2d0', shirt: '#b02030', chain: '#f2b705', pants: '#e8e2d0', shoes: '#e8e2d0', item: 'cigar' },
+  vanessa:    { skin: SKIN.light, hair: '#e0c060', hairStyle: 'long', top: '#b02a5a', shirt: '#e8e2d0', skirt: '#2a2a2e', shoes: '#b02a5a' },
+  clara:      { skin: SKIN.light, hair: '#1e1e22', hairStyle: 'bob', glasses: 'big', top: '#257179', shirt: '#e8e2d0', pants: '#2a2a2e' },
+  pesce:      { skin: '#4a8a9a', hair: '#2f6070', hairStyle: 'fin', glasses: 'fish', gills: true, top: '#1f2a44', shirt: '#e8e2d0', tie: '#e8641b', pants: '#1f2a44' },
+
+  // Protagonista (vecchio look) e colleghi (rinforzi)
   player:     { skin: SKIN.mid, hair: '#141416', hairStyle: 'short', hat: 'hardhat', hatColor: '#f2b705', top: '#2f4f6f', shirt: '#2f4f6f', vest: '#f2b705', pants: '#3a4a6a' },
   pm:         { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'short', glasses: 'glasses', top: '#3a6ea5', shirt: '#e8e2d0', tie: '#141416', pants: '#2a2a2e', item: 'laptop' },
   sm:         { skin: SKIN.tan, hair: '#141416', hairStyle: 'short', hat: 'cap', hatColor: '#141416', top: '#3e6b2a', shirt: '#3e6b2a', pants: '#3a3226', item: 'crossbow' },
@@ -268,6 +277,16 @@ export function drawPerson(g, L, frame) {
     px(11, 9, 10, 3, '#0d0d0f');
     px(12, 9, 2, 1, '#5b5f66'); px(18, 9, 2, 1, '#5b5f66');
     px(10, 10, 1, 1, INK); px(21, 10, 1, 1, INK);
+  } else if (L.glasses === 'big') {
+    px(10, 8, 6, 6, INK); px(16, 8, 6, 6, INK);
+    px(11, 9, 4, 4, '#9fc3d6'); px(17, 9, 4, 4, '#9fc3d6');
+    px(13, 10, 1, 2, INK); px(18, 10, 1, 2, INK);
+    px(11, 9, 1, 1, WHITE); px(17, 9, 1, 1, WHITE);
+  } else if (L.glasses === 'fish') {
+    // occhi da pesce: grandi, tondi, sporgenti
+    px(10, 8, 5, 5, WHITE); px(17, 8, 5, 5, WHITE);
+    px(12, 9, 2, 3, INK); px(18, 9, 2, 3, INK);
+    px(10, 8, 1, 1, L.skin); px(14, 12, 1, 1, L.skin); px(21, 8, 1, 1, L.skin); px(17, 12, 1, 1, L.skin);
   } else if (L.glasses === 'goggles') {
     px(9, 9, 14, 4, '#5a4632');
     px(11, 9, 4, 4, INK); px(17, 9, 4, 4, INK);
@@ -284,6 +303,8 @@ export function drawPerson(g, L, frame) {
     px(12, 17, 8, 1, shade(h, 0.8));
   }
   if (L.facial === 'longbeard') { px(12, 18, 8, 5, h); px(13, 23, 6, 3, h); px(14, 26, 4, 2, h); px(15, 19, 1, 6, shade(h, 0.85)); }
+  if (L.facial === 'stubble') for (let x = 11; x < 21; x += 2) for (let y = 13; y < 17; y += 2) px(x + ((y >> 1) % 2), y, 1, 1, shade(L.skin, 0.62));
+  if (L.gills) { px(10, 12, 1, 3, shade(L.skin, 0.6)); px(12, 13, 1, 2, shade(L.skin, 0.6)); px(20, 12, 1, 3, shade(L.skin, 0.6)); }
   if (L.facial === 'mustache') { px(12, 13, 8, 1, h); px(11, 14, 2, 1, h); px(19, 14, 2, 1, h); }
   if (L.monocle) { px(17, 9, 4, 1, '#f2b705'); px(17, 12, 4, 1, '#f2b705'); px(17, 9, 1, 4, '#f2b705'); px(20, 9, 1, 4, '#f2b705'); px(20, 13, 1, 6, '#a67c00'); }
   if (L.scar) { px(19, 6, 1, 1, '#a04040'); px(20, 7, 1, 2, '#a04040'); px(19, 9, 1, 1, '#a04040'); }
@@ -303,6 +324,22 @@ export function drawPerson(g, L, frame) {
   if (hs === 'slick') {
     px(10, 2, 12, 3, h); px(9, 4, 2, 4, h); px(21, 4, 2, 5, hd);
     px(12, 3, 7, 1, hi); px(19, 2, 2, 1, hd);
+  }
+  if (hs === 'curly') {
+    // ricci: tanti cerchietti
+    for (const [x, y] of [[9, 1], [12, 0], [15, 0], [18, 0], [21, 1], [8, 4], [22, 4], [8, 7], [22, 7], [11, 3], [14, 2], [17, 2], [20, 3]]) {
+      px(x, y, 3, 3, h); px(x, y, 1, 1, hi); px(x + 2, y + 2, 1, 1, hd);
+    }
+  }
+  if (hs === 'bob') {
+    // caschetto: frangia dritta e lati fino al mento
+    px(10, 1, 12, 5, h); px(11, 0, 10, 1, h); px(12, 1, 6, 1, hi);
+    px(8, 3, 3, 13, h); px(21, 3, 3, 13, hd); px(8, 15, 3, 1, hd); px(21, 15, 3, 1, hd);
+  }
+  if (hs === 'fin') {
+    // pinna dorsale sulla testa
+    for (let r = 0; r < 7; r++) px(13 + Math.floor(r / 2), -3 + r, 7 - r, 1, r % 2 ? h : hi);
+    px(12, 3, 9, 1, hd);
   }
   if (hs === 'bald') { px(9, 8, 2, 4, h); px(21, 8, 2, 4, hd); px(13, 5, 3, 1, shade(L.skin, 1.18)); }
   if (hs === 'wild') {

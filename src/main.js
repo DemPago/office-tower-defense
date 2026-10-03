@@ -38,6 +38,29 @@ const hud = createHud({
 
 // ─── Flusso delle schermate ─────────────────────────────────────
 
+// ─── Menu e scelta del personaggio ──────────────────────────────
+
+// Ritratto del personaggio (testa e busto) per il menu; i bloccati sono solo una sagoma.
+function heroPortrait(id, locked) {
+  const sp = assets.person(id, 1, 1, locked ? '#141416' : false);
+  const c = document.createElement('canvas');
+  c.width = 84;
+  c.height = 84;
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.drawImage(sp.img, 0, 8, sp.img.width, 42, 0, 0, sp.img.width * 2, 84);
+  return c;
+}
+
+function showMenu() {
+  screens.showMenu(meta, heroPortrait, id => {
+    meta.hero = id;
+    saveMeta(meta);
+    play('pick');
+    showMenu();
+  });
+}
+
 function newRun() {
   run = createRun(meta);
   paused = false;
@@ -49,7 +72,7 @@ function newRun() {
 function toMenu() {
   run = null;
   document.body.classList.remove('playing');
-  screens.showMenu(meta);
+  showMenu();
 }
 
 function setPaused(p) {
@@ -134,7 +157,7 @@ document.querySelectorAll('#initials .slot').forEach((slot, i) => {
 $('btn-save-score').addEventListener('click', saveScore);
 $('btn-skip-score').addEventListener('click', async () => screens.showOverAfter(null, await getTop(10)));
 $('btn-board').addEventListener('click', async () => screens.showBoard(await getTop(10)));
-$('btn-board-back').addEventListener('click', () => screens.showMenu(meta));
+$('btn-board-back').addEventListener('click', () => showMenu());
 
 // Tastiera sulla schermata delle iniziali: lettere, frecce, Backspace, Invio.
 function initialsKey(e) {
@@ -156,7 +179,7 @@ function initialsKey(e) {
 
 $('btn-play').addEventListener('click', newRun);
 $('btn-shop').addEventListener('click', openShop);
-$('btn-shop-back').addEventListener('click', () => screens.showMenu(meta));
+$('btn-shop-back').addEventListener('click', () => showMenu());
 $('btn-resume').addEventListener('click', () => setPaused(false));
 $('btn-quit').addEventListener('click', toMenu);
 $('btn-retry').addEventListener('click', newRun);
@@ -210,6 +233,8 @@ function frame(now) {
   if (run && !paused) {
     // A velocità x2/x3 si fanno più passi piccoli invece di uno grande.
     for (let i = 0; i < speed; i++) update(run, dt);
+    // nuovo personaggio sbloccato: si salva subito
+    if (run.newHero) { run.newHero = null; saveMeta(meta); }
     // suoni ordinati dai sistemi in questo frame
     for (const s of run.fx.sounds) play(s);
     run.fx.sounds.length = 0;

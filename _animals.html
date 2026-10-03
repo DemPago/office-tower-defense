@@ -1,0 +1,18 @@
+<body style="margin:0;background:#2a2a2e"><canvas id="c" width="1400" height="700"></canvas>
+<script type="module">
+import { loadAssets } from './src/render/assets.js';
+import { ANIMALS } from './src/data/animals.js';
+const a = await loadAssets();
+const g = document.getElementById('c').getContext('2d'); g.imageSmoothingEnabled = false;
+g.fillStyle = '#4a4743'; g.fillRect(0, 0, 1400, 700);
+Object.keys(ANIMALS).forEach((id, i) => {
+  const col = i % 5, row = Math.floor(i / 5);
+  const x = 20 + col * 275, y = 20 + row * 340;
+  const sp = a.animal(id, 0, 1);
+  g.drawImage(sp.img, x, y, sp.img.width * 4, sp.img.height * 4);
+  for (let f = 0; f < 4; f++) { const t = a.animal(id, f, 1); g.drawImage(t.img, x + f * 66, y + 180, t.img.width, t.img.height); }
+  const p = a.person('impiegato', 0, 1); g.drawImage(p.img, x + 200, y + 230, p.img.width, p.img.height);
+  g.fillStyle = '#fff'; g.font = '13px monospace'; g.fillText(id, x, y + 320);
+});
+document.title = 'ok';
+</script></body>

@@ -115,6 +115,11 @@ export function createRenderer(canvas, assets) {
 
     // Da qui si disegna in coordinate dello schermo
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (run && run.fx.flash > 0) {
+      // trasformazione del boss: tutto si illumina di bianco
+      ctx.fillStyle = `rgba(255,255,255,${Math.min(1, run.fx.flash * 1.2)})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
     drawDust(ctx, dust, dt, canvas);
     drawGrade(ctx, canvas);
     ctx.setTransform(view.ui, 0, 0, view.ui, 0, 0);
@@ -229,7 +234,7 @@ function hiddenByTower(e) {
 
 function drawGhost(ctx, assets, e) {
   ctx.globalAlpha = 0.4;
-  drawPersonAt(ctx, assets.person(e.look, 0, e.scale || 1, true), e.x, e.y);
+  drawPersonAt(ctx, enemySprite(assets, e, 0, true), e.x, e.y, facesLeft(e));
   ctx.globalAlpha = 1;
 }
 
@@ -413,9 +418,18 @@ function drawTower(ctx, assets, run, time) {
   const recoil = run && run.tower.recoil > 0 ? 1 : 0;
   const bob = Math.round(Math.sin(time * 2.2) * 0.6);
   const feet = B.top - 3 + recoil + bob;
-  drawPersonAt(ctx, assets.person('player', 0, 1), TOWER.x + 4, feet);
-  // Lampo allo sparo
-  if (recoil) {
+  drawPersonAt(ctx, assets.person(run ? run.hero : 'peppe', 0, 1), TOWER.x + 4, feet);
+  // Lampo allo sparo (enorme col mitra)
+  if (run && run.mitraT > 0 && recoil) {
+    const fx = TOWER.x + 7, fy = feet - 15;
+    ctx.fillStyle = PAL.white;
+    ctx.fillRect(fx - 3, fy - 3, 7, 7);
+    ctx.fillStyle = PAL.orange;
+    ctx.fillRect(fx - 8, fy - 1, 17, 3);
+    ctx.fillRect(fx - 1, fy - 8, 3, 17);
+    ctx.fillStyle = PAL.hazard;
+    ctx.fillRect(fx - 5, fy - 5, 11, 11);
+  } else if (recoil) {
     const fx = TOWER.x + 5, fy = feet - 15;
     ctx.fillStyle = PAL.white;
     ctx.fillRect(fx - 2, fy - 2, 5, 5);
@@ -425,10 +439,25 @@ function drawTower(ctx, assets, run, time) {
   }
 }
 
-// Disegna uno sprite di personaggio (da assets.person) con i piedi nel punto (x, feetY).
-function drawPersonAt(ctx, sp, x, feetY) {
-  ctx.drawImage(sp.img, x - sp.w / 2, feetY - sp.h + sp.k * 2, sp.w, sp.h);
+// Disegna uno sprite (da assets.person o assets.animal) con i piedi nel punto (x, feetY).
+// flip = specchiato (gli animali, visti di profilo, guardano verso il palazzo).
+function drawPersonAt(ctx, sp, x, feetY, flip = false) {
+  if (!flip) {
+    ctx.drawImage(sp.img, x - sp.w / 2, feetY - sp.h + sp.k * 2, sp.w, sp.h);
+    return;
+  }
+  ctx.save();
+  ctx.translate(x, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(sp.img, -sp.w / 2, feetY - sp.h + sp.k * 2, sp.w, sp.h);
+  ctx.restore();
 }
+
+// Sprite di un nemico: persona oppure animale (scorta dei boss e boss trasformati).
+function enemySprite(assets, e, frame, tint = false) {
+  return e.animal ? assets.animal(e.animal, frame, e.scale || 1, tint) : assets.person(e.look, frame, e.scale || 1, tint);
+}
+const facesLeft = e => !!e.animal && e.x > TOWER.x;
 
 function updateSmoke(smoke, run, dt) {
   const ratio = run ? run.tower.hp / run.stats.maxHp : 1;
@@ -549,14 +578,14 @@ function drawEnemy(ctx, assets, e) {
 
   ctx.globalAlpha = Math.min(1, (e.age || 0) / 0.4); // compare in dissolvenza
   if (e.boss) drawBossAura(ctx, e, x, feet, s);
-  drawPersonAt(ctx, assets.person(e.look, frame, k), x, feet);
+  drawPersonAt(ctx, enemySprite(assets, e, frame), x, feet, facesLeft(e));
   if (e.enraged) {
     // infuriato: pulsa di rosso
     ctx.globalAlpha = 0.25 + 0.15 * Math.sin(performance.now() / 120);
-    drawPersonAt(ctx, assets.person(e.look, frame, k, '#ff2a3d'), x, feet);
+    drawPersonAt(ctx, enemySprite(assets, e, frame, '#ff2a3d'), x, feet, facesLeft(e));
     ctx.globalAlpha = 1;
   }
-  if (e.elite || e.boss) {
+  if ((e.elite || e.boss) && !e.animal) {
     // ÉLITE e boss: occhi rossi che brillano
     const sp = assets.person(e.look, frame, k);
     const left = x - sp.w / 2, top = feet - sp.h + sp.k * 2;
@@ -568,7 +597,7 @@ function drawEnemy(ctx, assets, e) {
   }
   if (e.hitFlash > 0) {
     ctx.globalAlpha = 0.6;
-    drawPersonAt(ctx, assets.person(e.look, frame, k, true), x, feet);
+    drawPersonAt(ctx, enemySprite(assets, e, frame, true), x, feet, facesLeft(e));
   }
   ctx.globalAlpha = 1;
   x = Math.round(x - s / 2);
@@ -589,7 +618,7 @@ function drawEnemy(ctx, assets, e) {
     ctx.textAlign = 'center';
     ctx.fillText('zZ', e.x, y - 2);
   }
-  if (e.boss && !LOOKS[e.look].hat && LOOKS[e.look].hairStyle !== 'wild') {
+  if (e.boss && !e.animal && !LOOKS[e.look].hat && LOOKS[e.look].hairStyle !== 'wild') {
     // corona d'oro, in proporzione al boss
     const c = k / 2, cx = e.x, cy = y + s * 0.02;
     ctx.fillStyle = PAL.black;
@@ -778,10 +807,10 @@ function drawCorpse(ctx, assets, c) {
   ctx.globalAlpha = Math.max(0, 1 - k * 1.3);
   ctx.translate(Math.round(c.x), Math.round(c.y));
   ctx.rotate(c.dir * Math.min(1, k * 3) * Math.PI / 2);
-  drawPersonAt(ctx, assets.person(c.look, 0, c.scale || 1), 0, 0);
+  drawPersonAt(ctx, enemySprite(assets, c, 0), 0, 0);
   if (k < 0.2) {
     ctx.globalAlpha = 0.6 * (1 - k / 0.2); // breve lampo bianco all'inizio
-    drawPersonAt(ctx, assets.person(c.look, 0, c.scale || 1, true), 0, 0);
+    drawPersonAt(ctx, enemySprite(assets, c, 0, true), 0, 0);
   }
   ctx.restore();
 }

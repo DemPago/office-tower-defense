@@ -71,7 +71,7 @@ export function computeStats(run, meta) {
     dot: c.dot,
     goldMult: 1 + c.gold + m.gold,
     healOnKill: c.healOnKill,
-    cdMult: Math.max(0.3, 1 - c.cdr),
+    manaMult: Math.max(0.4, 1 - c.cdr), // costo dei poteri (carta Manuale ITIL)
     fence: u.fence,          // quarti di cerchio coperti dal recinto elettrico (0-4)
   };
 }

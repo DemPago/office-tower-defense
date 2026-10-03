@@ -33,7 +33,7 @@ function play(strategy, meta = defaultMeta(), cap = 80) {
       }
     }
     if (strategy.abil) {
-      for (const id of ['bomb', 'coffee', 'meeting', 'audit']) if (run.enemies.length > 8 || run.boss) useAbility(run, id);
+      for (const id of ['mitra', 'bomb', 'coffee', 'meeting', 'audit']) if (run.enemies.length > 8 || run.boss) useAbility(run, id);
     }
   }
   return run.wave;

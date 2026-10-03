@@ -29,7 +29,7 @@ export const CARDS = [
   { id: 'excel',     icon: '📗', name: 'Excel avvelenato',    rarity: 'rare',   max: 5,  desc: m => `I colpi bruciano: +${pct(0.40, m)}% del danno in 3 s`, mod: (c, m) => { c.dot += 0.40 * m; } },
   { id: 'pausa',     icon: '🥪', name: 'Pausa pranzo',        rarity: 'rare',   max: 5,  desc: m => `Ogni nemico ucciso cura ${num(1, m)} vita`,      mod: (c, m) => { c.healOnKill += m; } },
   { id: 'dev',       icon: '💻', name: 'PC lanciato dal Dev', rarity: 'epic',   max: 3,  desc: () => 'I colpi esplodono: 50% di danno ad area',      mod: c => { c.aoe += 1; } },
-  { id: 'itil',      icon: '📚', name: 'Manuale ITIL',        rarity: 'epic',   max: 3,  desc: () => 'Poteri: -20% di ricarica',                     mod: c => { c.cdr += 0.20; } },
+  { id: 'itil',      icon: '📚', name: 'Manuale ITIL',        rarity: 'epic',   max: 3,  desc: () => 'Poteri: -20% costo in mana',                    mod: c => { c.cdr += 0.20; } },
   { id: 'scrum',     icon: '📋', name: 'Scrum Master',        rarity: 'epic',   max: 3,  desc: m => `+${pct(0.6, m)}% danno e +${pct(0.15, m)}% velocità`, mod: (c, m) => { c.dmg += 0.6 * m; c.rate += 0.15 * m; } },
 ];
 

@@ -42,5 +42,6 @@ export function updateFx(run, dt) {
   for (const r of fx.rings) r.life -= dt;
   fx.rings = fx.rings.filter(r => r.life > 0);
   fx.shake = Math.max(0, fx.shake - 30 * dt);
+  fx.flash = Math.max(0, (fx.flash || 0) - dt * 1.2); // lampo bianco della trasformazione
   if (fx.banner && (fx.banner.life -= dt) <= 0) fx.banner = null;
 }

@@ -2,8 +2,10 @@
 import { TOWER } from '../state.js';
 import { dist, fmt, angleOf } from '../util.js';
 import { floatText, burst, ring, shake, sfx } from './fx.js';
+import { MITRA } from './abilities.js';
 import { makeEnemy } from './waves.js';
 import { ENEMIES } from '../data/enemies.js';
+import { ANIMALS } from '../data/animals.js';
 
 // Punto da cui partono i colpi: il personaggio sul tetto della torre.
 const MUZZLE = { x: TOWER.x + 7, y: TOWER.y - 75 };
@@ -151,9 +153,10 @@ export function updateTower(run, dt) {
   const targets = pickTargets(run.enemies, TOWER, s.range, s.multishot);
   if (!targets.length) return;
 
-  t.cooldown = 1 / s.rate;
+  const mitra = run.mitraT > 0;
+  t.cooldown = 1 / (s.rate * (mitra ? MITRA.rateMult : 1));
   t.recoil = 0.08;
-  sfx(run, 'shoot');
+  sfx(run, mitra ? 'mitra' : 'shoot');
   const effects = { slow: s.slow, dot: s.dot, aoeRadius: s.aoeRadius, aoeDmg: s.aoeDmg };
   for (const target of targets) {
     fire(run, MUZZLE.x, MUZZLE.y, target, {
@@ -270,11 +273,37 @@ export function dealDamage(run, e, amount, { crit = false, silent = false, color
   if (e.hp <= 0) killEnemy(run, e);
 }
 
+// Il boss a vita finita non muore: lampo bianco e torna come il suo animale GIGANTE.
+function transformBoss(run, e) {
+  const A = ANIMALS[e.animalId];
+  e.beast = true;
+  e.animal = e.animalId;
+  e.maxHp *= 0.8;
+  e.hp = e.maxHp;
+  e.scale *= 1.4;
+  e.size = 18 * e.scale;
+  e.speed = A.speed * 0.45;
+  e.atk *= 1.3;
+  e.enraged = false;
+  e.slowT = e.stunT = e.dotT = 0;
+  e.name = `${A.name} GIGANTE`;
+  if (run.boss && run.boss.list.includes(e)) run.boss.name = `${e.bossName}: ${A.name} GIGANTE`;
+  run.fx.flash = 1;
+  shake(run, 14);
+  burst(run, e.x, e.y - e.size * 0.4, '#ffffff', 30, 160);
+  ring(run, e.x, e.y - e.size * 0.3, e.size, '#ffffff');
+  floatText(run, e.x, e.y - e.size - 12, 'FORMA BESTIALE!', '#ff3e8a', 11);
+  floatText(run, TOWER.x, TOWER.y - 110, 'USA IL MITRA! (tasto 5)', '#f2b705', 9);
+  run.mitraReady = true;
+  sfx(run, 'transform');
+}
+
 function killEnemy(run, e) {
+  if (e.boss && e.animalId && !e.beast) { transformBoss(run, e); return; }
   e.dead = true;
   run.kills++;
   sfx(run, e.boss ? 'bossdown' : 'kill');
-  run.fx.corpses.push({ look: e.look, scale: e.scale, x: e.x, y: e.y, size: e.size, dir: e.x < TOWER.x ? -1 : 1, life: 0.6, max: 0.6 });
+  run.fx.corpses.push({ look: e.look, animal: e.animal, scale: e.scale, x: e.x, y: e.y, size: e.size, dir: e.x < TOWER.x ? -1 : 1, life: 0.6, max: 0.6 });
   const gold = Math.max(1, Math.round(e.gold * run.stats.goldMult));
   run.gold += gold;
   floatText(run, e.x, e.y - e.size, '+' + fmt(gold) + '💰', '#f2b705', 7);

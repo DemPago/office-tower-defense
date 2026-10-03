@@ -5,7 +5,8 @@
 import { UPGRADES } from '../data/upgrades.js';
 import { ABILITIES } from '../data/abilities.js';
 import { upgradeCost } from '../systems/economy.js';
-import { canUse } from '../systems/abilities.js';
+import { canUse, manaCost } from '../systems/abilities.js';
+import { MANA } from '../data/abilities.js';
 import { fmt } from '../util.js';
 
 const $ = id => document.getElementById(id);
@@ -84,13 +85,16 @@ export function createHud({ onBuy, onAbility }) {
   for (const def of ABILITIES) {
     const btn = document.createElement('button');
     btn.className = 'abl';
-    btn.innerHTML = `<span class="ico">${def.icon}</span><span class="nm">${def.short}</span><span class="key">${def.key}</span><span class="cd"></span><span class="cdt"></span>`;
+    btn.innerHTML = `<span class="ico">${def.icon}</span><span class="nm">${def.short}</span><span class="key">${def.key}</span><span class="mana"></span><span class="cd"></span>`;
     withTip(btn, () => {
-      const cd = lastRun ? Math.round(def.cd * lastRun.stats.cdMult) : def.cd;
-      return `${tipTitle(def.icon, def.name, `tasto ${def.key}`)}<p>${def.help}</p><p class="tip-cost">Ricarica: ${cd} secondi</p>`;
+      const cost = lastRun ? manaCost(lastRun, def.id) : def.mana;
+      const have = lastRun ? Math.floor(lastRun.mana) : 0;
+      const price = def.special ? 'Gratis' : `Costo: ${cost} mana (ne hai ${have})`;
+      return `${tipTitle(def.icon, def.name, `tasto ${def.key}`)}<p>${def.help}</p><p class="tip-cost">${price}</p>`;
     }, () => onAbility(def.id));
     $('abilities').appendChild(btn);
-    abilityEls[def.id] = { btn, cd: btn.querySelector('.cd'), cdt: btn.querySelector('.cdt') };
+    if (def.special) { btn.classList.add('special'); btn.hidden = true; }
+    abilityEls[def.id] = { btn, cd: btn.querySelector('.cd'), mana: btn.querySelector('.mana') };
   }
 
   function update(run, speed) {
@@ -101,6 +105,8 @@ export function createHud({ onBuy, onAbility }) {
     $('hp-fill').style.width = hpPct.toFixed(1) + '%';
     setText($('hp-text'), `${fmt(Math.ceil(run.tower.hp))}/${fmt(run.stats.maxHp)}`);
     setText($('btn-speed'), `x${speed}`);
+    $('mp-fill').style.width = (run.mana / MANA.max * 100).toFixed(1) + '%';
+    setText($('mp-text'), `${Math.floor(run.mana)} 💧`);
 
     for (const def of UPGRADES) {
       const el = upgradeEls[def.id];
@@ -112,10 +118,20 @@ export function createHud({ onBuy, onAbility }) {
     }
     for (const def of ABILITIES) {
       const el = abilityEls[def.id];
-      const left = run.abilityCd[def.id];
-      const total = def.cd * run.stats.cdMult;
-      el.cd.style.height = (left > 0 ? left / total * 100 : 0) + '%';
-      setText(el.cdt, left > 0 ? String(Math.ceil(left)) : '');
+      if (def.special) {
+        // mitra: visibile solo quando è pronto o in uso; la parte scura mostra il tempo che resta
+        const active = run.mitraT > 0;
+        el.btn.hidden = !(run.mitraReady || active);
+        el.btn.classList.toggle('active', active);
+        el.cd.style.height = active ? (1 - run.mitraT / 12) * 100 + '%' : '0%';
+        setText(el.mana, active ? `${Math.ceil(run.mitraT)}s` : 'GRATIS');
+        el.btn.classList.toggle('off', !canUse(run, def.id) && !active);
+        continue;
+      }
+      const cost = manaCost(run, def.id);
+      // la parte scura si abbassa man mano che il mana si avvicina al costo
+      el.cd.style.height = Math.max(0, 1 - run.mana / cost) * 100 + '%';
+      setText(el.mana, `${cost}💧`);
       el.btn.classList.toggle('off', !canUse(run, def.id));
     }
   }

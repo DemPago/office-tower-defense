@@ -57,6 +57,12 @@ Carte: le scelte stanno in `run.cardPicks` con la potenza `cardPower(ondata)` de
 
 Pannello in basso (`ui/hud.js`): i pulsanti non sono mai `disabled` (classe `off`) così il suggerimento `withTip` funziona sempre; i testi dei suggerimenti sono `help` in `data/upgrades.js` e `data/abilities.js`.
 
+### Boss, animali, mitra e personaggi
+
+I boss (`data/bosses.js`) hanno un `animal` (`data/animals.js`, disegnato in `render/animals.js`, vista di profilo e specchiato verso il palazzo) e una scorta (`escort`) creata in `waves.js#makeBoss`. A vita finita `combat.js#transformBoss` li trasforma nell'animale gigante (seconda vita, `run.fx.flash` per il lampo bianco) e rende disponibile il potere speciale `mitra` (`run.mitraReady`/`run.mitraT`, cadenza ×`MITRA.rateMult`). I poteri normali costano mana (`MANA` in `data/abilities.js`).
+
+Personaggi giocabili: look in `render/people.js`, elenco e sblocco in `data/heroes.js` (`meta.heroes`, `meta.hero`; uno nuovo ogni `UNLOCK_WAVE` ondate completate, gestito in `systems/game.js`).
+
 ### Suoni
 
 `src/audio.js` sintetizza tutto con la Web Audio API (nessun file). I sistemi non suonano direttamente: chiamano `fx.js#sfx(run, nome)` che mette il nome in `run.fx.sounds`, e `main.js` li suona a ogni frame. L'audio si attiva al primo input dell'utente. La musica del boss è una composizione originale: non usare melodie protette da copyright (es. la Marcia Imperiale).

@@ -92,6 +92,7 @@ function noise({ dur = 0.1, vol = 0.1, at = 0, type = 'bandpass', freq = 1000, q
 // ─── Effetti ────────────────────────────────────────────────────
 
 const SOUNDS = {
+  mitra:   { gap: 0.04, play: () => { noise({ dur: 0.04, vol: 0.12, freq: 2200, q: 0.6 }); tone({ type: 'square', f1: 160, f2: 90, dur: 0.04, vol: 0.05 }); } },
   shoot:   { gap: 0.06, play: () => tone({ f1: 900, f2: 380, dur: 0.06, vol: 0.035 }) },
   ally:    { gap: 0.08, play: () => tone({ type: 'triangle', f1: 700, f2: 300, dur: 0.07, vol: 0.05 }) },
   kill:    { gap: 0.05, play: () => { noise({ dur: 0.09, vol: 0.12, freq: 1400, q: 0.8 }); tone({ f1: 220, f2: 110, dur: 0.08, vol: 0.05 }); } },
@@ -108,6 +109,7 @@ const SOUNDS = {
   audit:   { gap: 0.5,  play: () => { tone({ type: 'square', f1: 1760, dur: 0.07, vol: 0.05 }); tone({ type: 'square', f1: 2637, dur: 0.25, vol: 0.05, at: 0.08 }); noise({ dur: 0.15, vol: 0.08, freq: 5000, at: 0.02 }); } },
   boss:    { gap: 5,    play: () => bossMarch() },
   charge:  { gap: 0.3,  play: () => tone({ type: 'sawtooth', f1: 200, f2: 700, dur: 0.25, vol: 0.06, filter: 1500 }) },
+  transform: { gap: 1, play: () => { noise({ dur: 1.2, vol: 0.35, type: 'lowpass', freq: 700 }); tone({ type: 'sawtooth', f1: 60, f2: 220, dur: 0.5, vol: 0.2, filter: 900 }); tone({ type: 'sawtooth', f1: 220, f2: 50, dur: 1.1, vol: 0.2, filter: 700, at: 0.45 }); } },
   enrage:  { gap: 1,    play: () => { tone({ type: 'sawtooth', f1: 90, f2: 60, dur: 0.6, vol: 0.18, filter: 600 }); tone({ type: 'sawtooth', f1: 95, f2: 62, dur: 0.6, vol: 0.12, filter: 600 }); noise({ dur: 0.4, vol: 0.15, type: 'lowpass', freq: 400 }); } },
   boom:    { gap: 0.1,  play: () => { noise({ dur: 0.45, vol: 0.3, type: 'lowpass', freq: 800 }); tone({ type: 'sine', f1: 120, f2: 40, dur: 0.4, vol: 0.25 }); } },
 };
