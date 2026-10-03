@@ -20,7 +20,7 @@ function emptyBonus() {
   return {
     dmg: 0, rate: 0, range: 0, hp: 0, hpFlat: 0, regen: 0, armor: 0,
     crit: 0, critMult: 0, multishot: 0, bounce: 0, aoe: 0, slow: 0, dot: 0,
-    gold: 0, healOnKill: 0, cdr: 0, startGold: 0, rerolls: 0,
+    gold: 0, healOnKill: 0, cdr: 0, startGold: 0, rerolls: 0, fence: 0,
   };
 }
 
@@ -58,7 +58,7 @@ export function computeStats(run, meta) {
     dmg: BASE.dmg * (1 + u.dmg) * (1 + c.dmg) * (1 + m.dmg) * (1 + auraDmg),
     rate: Math.min(12, BASE.rate * (1 + u.rate + c.rate + m.rate + auraRate)),
     allyRateMult: 1 + auraRate,
-    range: Math.min(320, BASE.range * (1 + u.range + c.range)),
+    range: Math.min(260, BASE.range * (1 + u.range + c.range)),
     maxHp: (BASE.hp + u.hpFlat + c.hpFlat) * (1 + c.hp + m.hp),
     regen: BASE.regen + u.regen + c.regen,
     armor: Math.min(0.7, c.armor),
@@ -74,5 +74,6 @@ export function computeStats(run, meta) {
     goldMult: 1 + c.gold + m.gold,
     healOnKill: c.healOnKill,
     cdMult: Math.max(0.3, 1 - c.cdr),
+    fence: u.fence,          // quarti di cerchio coperti dal recinto elettrico (0-4)
   };
 }

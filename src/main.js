@@ -13,6 +13,7 @@ import { createRenderer } from './render/world.js';
 import { createHud } from './ui/hud.js';
 import * as screens from './ui/screens.js';
 import { getTop, submitScore, lastInitials } from './leaderboard.js';
+import { initAudio, play, toggleMute, isMuted } from './audio.js';
 
 const $ = id => document.getElementById(id);
 
@@ -31,7 +32,7 @@ try {
 }
 const renderer = createRenderer($('cv'), assets);
 const hud = createHud({
-  onBuy: id => run && buyUpgrade(run, meta, id),
+  onBuy: id => { if (run && buyUpgrade(run, meta, id)) play('buy'); },
   onAbility: id => run && !paused && useAbility(run, id),
 });
 
@@ -163,6 +164,16 @@ $('btn-over-menu').addEventListener('click', toMenu);
 $('btn-pause').addEventListener('click', () => setPaused(!paused));
 $('btn-speed').addEventListener('click', () => { speed = speed === 3 ? 1 : speed + 1; });
 
+// ─── Suoni ──────────────────────────────────────────────────────
+// L'audio parte al primo clic o tasto (regola dei browser).
+addEventListener('pointerdown', initAudio);
+addEventListener('keydown', initAudio);
+function refreshSoundButton() {
+  $('btn-sound').textContent = isMuted() ? '🔇' : '🔊';
+}
+$('btn-sound').addEventListener('click', () => { toggleMute(); refreshSoundButton(); });
+refreshSoundButton();
+
 // ─── Schermo intero ─────────────────────────────────────────────
 const canFullscreen = !!document.documentElement.requestFullscreen;
 function toggleFullscreen() {
@@ -180,6 +191,7 @@ $('btn-play').addEventListener('click', () => {
 document.addEventListener('keydown', e => {
   if (initialsKey(e)) return;
   if (e.key === 'f' || e.key === 'F') { toggleFullscreen(); return; }
+  if (e.key === 'm' || e.key === 'M') { toggleMute(); refreshSoundButton(); return; }
   if (!run) return;
   if (e.key === ' ' || e.key === 'Escape') { e.preventDefault(); setPaused(!paused); return; }
   const ab = ABILITIES.find(a => a.key === e.key);
@@ -198,6 +210,9 @@ function frame(now) {
   if (run && !paused) {
     // A velocità x2/x3 si fanno più passi piccoli invece di uno grande.
     for (let i = 0; i < speed; i++) update(run, dt);
+    // suoni ordinati dai sistemi in questo frame
+    for (const s of run.fx.sounds) play(s);
+    run.fx.sounds.length = 0;
     if (run.phase === 'ally' && $('scr-cards').hidden) onAllyPhase();
     if (run.phase === 'cards' && $('scr-cards').hidden) onCardsPhase();
     if (run.phase === 'over' && !overHandled) onGameOver();

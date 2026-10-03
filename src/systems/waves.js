@@ -1,8 +1,8 @@
 // Ondate: quanti nemici, quali, quanto sono forti e da dove arrivano.
 import { ENEMIES, decadeFor } from '../data/enemies.js';
 import { bossForWave } from '../data/bosses.js';
-import { TOWER } from '../state.js';
-import { banner } from './fx.js';
+import { TOWER, SPAWN_RADIUS } from '../state.js';
+import { banner, sfx } from './fx.js';
 
 // Quanto crescono i nemici rispetto all'ondata 1.
 // Dopo l'ondata 25 si aggiunge una crescita esponenziale, così prima o poi si perde sempre.
@@ -25,10 +25,10 @@ function pickEnemy(w) {
   return ENEMIES[ids[0]];
 }
 
-// Punto di partenza casuale su un arco sopra e ai lati della torre, fuori schermo.
+// Punto di partenza casuale su un cerchio intorno alla torre: arrivano da ogni direzione.
 function spawnPoint() {
-  const a = Math.PI * (1.08 + Math.random() * 0.84);
-  return { x: TOWER.x + Math.cos(a) * 240, y: TOWER.y + Math.sin(a) * 500 };
+  const a = Math.random() * Math.PI * 2;
+  return { x: TOWER.x + Math.cos(a) * SPAWN_RADIUS, y: TOWER.y + Math.sin(a) * SPAWN_RADIUS };
 }
 
 export function makeEnemy(def, w, extra = {}) {
@@ -94,6 +94,7 @@ export function startWave(run) {
   run.spawnTimer = 0;
   run.phase = 'wave';
   const decade = decadeFor(w);
+  sfx(run, boss ? 'boss' : 'wave');
   if (boss) banner(run, boss.name, boss.sub, '#d7263d');
   else if ((w - 1) % 10 === 0) {
     // primo turno di un nuovo reparto: si presentano i nemici nuovi

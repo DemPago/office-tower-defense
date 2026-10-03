@@ -10,10 +10,10 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 
 ## 🗺️ Come si gioca
 
-1. **La torre spara da sola** al nemico più vicino dentro la gittata (il cerchio tratteggiato).
-2. Ogni nemico eliminato dà **oro 💰**: spendilo nel pannello in basso per Danno, Velocità, Gittata, Vita e Rigenerazione.
+1. **La torre sta al centro e spara da sola** al nemico più vicino dentro la gittata (il cerchio tratteggiato). I nemici arrivano da tutte le direzioni.
+2. Ogni nemico eliminato dà **oro 💰**: spendilo nel pannello in basso per Danno, Velocità, Gittata, Vita, Rigenerazione e **🔌 Recinto elettrico** (a settori: livello 1 copre 0-90°, livello 2 fino a 180°, livello 3 fino a 270°, livello 4 tutto il giro).
 3. **Dopo ogni ondata scegli 1 carta su 3**: sono potenziamenti che si sommano (colpi multipli, rimbalzi, esplosioni, veleno, critici…).
-4. **Ogni 5 ondate arrivano i rinforzi**: scegli un collega fra 3 e si piazza in una postazione intorno al palazzo. Se ripeschi un collega che hai già, viene promosso (Junior → Middle → Professional → Senior → 👑 King).
+4. **Ogni 5 ondate arrivano i rinforzi**: scegli un collega fra 3 e si piazza in una postazione intorno al palazzo. Ogni collega difende uno **spicchio** (l'arco colorato a terra): 90° al livello 1, e ogni promozione lo allarga di altri 90° (Junior → Middle → Professional → Senior → 👑 King).
 5. Usa i **poteri** quando sei in difficoltà: si ricaricano col tempo.
 6. Quando la torre crolla vieni **licenziato**, ma guadagni **buoni pasto 🎫** da spendere nell'**Ufficio del personale** in bonus permanenti.
 
@@ -24,6 +24,7 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 | `Spazio` / `Esc` | Pausa |
 | `x1` in alto | Velocità di gioco x1 / x2 / x3 |
 | `F` / ⛶ | Schermo intero |
+| `M` / 🔊 | Suoni on/off |
 
 ## 🦺 Rinforzi (ogni 5 ondate)
 | Collega | Cosa fa |
@@ -44,6 +45,12 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 | 41-50 | Sicurezza | Guardia (corazzata), Vigilante (a distanza), Buttafuori (enorme) |
 | 51-60 | Piani Alti | Assistente (veloce), Segretaria (cura), Vicedirettore (si divide in 2) |
 | 61+ | … si ricomincia | versioni ÉLITE con gli occhi rossi |
+
+## 🌆 Scenari
+Dopo ogni boss cambia lo scenario: parcheggio aziendale → archivio → data center → centro commerciale → zona industriale → tetto del grattacielo, poi si ricomincia.
+
+## 🔊 Suoni
+Tutti i suoni sono generati dal browser (Web Audio API), senza file. All'arrivo di un boss parte una breve marcia originale con ottoni, timpani e rullante.
 
 ## 🏆 Classifica
 Quando perdi lasci le tue **3 iniziali** come nei cabinati. La classifica è online (Supabase) se `src/config.js` è compilato, altrimenti resta nel browser. Per crearla: incolla `supabase/schema.sql` nel SQL Editor di Supabase e metti URL e chiave pubblica in `src/config.js`.

@@ -25,7 +25,7 @@ function play(strategy, meta = defaultMeta(), cap = 80) {
     }
     if (strategy.buy) {
       for (let k = 0; k < 5; k++) {
-        const c = ['dmg', 'rate', 'hp', 'regen', 'range']
+        const c = ['dmg', 'rate', 'hp', 'regen', 'range', 'fence']
           .map(id => [id, upgradeCost(run, id)])
           .filter(x => x[1] !== null)
           .sort((a, b) => a[1] - b[1]);

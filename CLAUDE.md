@@ -35,7 +35,9 @@ Separazione rigida in quattro strati, tutti moduli ES sotto `src/`:
 
 `state.js#createRun(meta)` crea l'unico oggetto di partita `run`. `run.phase` è una macchina a stati: `break` → `wave` → (`ally` ogni 5 ondate) → `cards` → `break` … oppure `over`. `main.js` controlla la fase a ogni frame e apre la schermata corrispondente. Gli effetti visivi (testi, particelle, banner, shake) vengono "ordinati" dai sistemi in `run.fx` tramite `systems/fx.js` e disegnati dal render.
 
-Il mondo logico è fisso **360×560** (`WORLD`), la torre è in `TOWER`. Il renderer scala per stare in altezza o larghezza e disegna lo sfondo anche oltre i bordi (`MX`/`MY` in `render/world.js`) per riempire schermi larghi.
+Il mondo logico è un quadrato fisso **640×640** (`WORLD`) con la torre al centro (`TOWER`): i nemici nascono su un cerchio di raggio `SPAWN_RADIUS` in ogni direzione (fisso, così la difficoltà non dipende dallo schermo). La camera in `render/world.js` mostra un raggio `VIEW_R` intorno al palazzo sul lato corto dello schermo; banner e barra del boss sono disegnati in coordinate dello schermo (`view.ui`).
+
+Angoli: si usano gradi "da geometria" (0 = destra, 90 = su) con `util.js#angleOf`/`inArc`. Il recinto elettrico (`combat.js#updateFence`, livello = quarti coperti a partire da 0°) e i rinforzi (`systems/allies.js#allyCovers`, spicchio centrato sulla postazione, +90° per livello) lavorano a settori.
 
 ### Statistiche
 
@@ -49,11 +51,17 @@ Il mondo logico è fisso **360×560** (`WORLD`), la torre è in `TOWER`. Il rend
 
 `data/enemies.js`: `ENEMIES` è un oggetto per id; `DECADES` definisce un "reparto" di 3 nemici ogni 10 ondate (dopo la 60 si ricomincia in versione élite). Abilità speciali tramite campi del dato: `armor`, `range` (a distanza), `heal` (cura i vicini), `split` (alla morte si divide in 2 nemici di quel tipo). I boss (`data/bosses.js`) sono costruiti a partire dallo stagista con moltiplicatori.
 
+### Suoni
+
+`src/audio.js` sintetizza tutto con la Web Audio API (nessun file). I sistemi non suonano direttamente: chiamano `fx.js#sfx(run, nome)` che mette il nome in `run.fx.sounds`, e `main.js` li suona a ogni frame. L'audio si attiva al primo input dell'utente. La musica del boss è una composizione originale: non usare melodie protette da copyright (es. la Marcia Imperiale).
+
 ### Grafica
 
 **Nessuna immagine**: tutto è disegnato via codice.
 - `render/people.js`: personaggi in pixel art. Ogni `LOOKS[id]` descrive un vestito su una griglia 16×34 (6 righe in alto per i cappelli). `render/assets.js` li genera con contorno nero, li scala (×2 per i boss) e li mette in cache; un look nuovo va aggiunto lì e referenziato con `look:` nei dati.
-- `render/world.js`: sfondo generato una volta con random a seed fisso, palazzo, effetti. La palette `PAL` è la stessa delle variabili CSS in `style.css`: mantenerle allineate. Font: Press Start 2P (testi) e Permanent Marker (titoli/graffiti), caricati prima di generare lo sfondo.
+- `render/scenery.js`: 6 scenari (uno per reparto, cambiano ogni 10 ondate con una dissolvenza) disegnati una volta su un canvas con random a seed fisso, più un'animazione leggera opzionale (`ambient`). Gli oggetti di scena riusabili sono in `render/props.js`.
+- `render/world.js`: camera, palazzo, nemici (quelli nascosti dietro al palazzo si vedono in trasparenza), rinforzi, recinto, colpi, effetti.
+- `render/palette.js`: palette `PAL`, la stessa delle variabili CSS in `style.css`, da mantenere allineate. Font: Press Start 2P (testi) e Permanent Marker (titoli/graffiti), caricati prima di generare gli sfondi.
 
 ### Salvataggi e classifica
 

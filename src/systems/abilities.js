@@ -1,7 +1,7 @@
 // Poteri attivi (vedi data/abilities.js per nomi e ricariche).
 import { ABILITIES } from '../data/abilities.js';
 import { dealDamage } from './combat.js';
-import { banner, burst, shake } from './fx.js';
+import { banner, burst, shake, sfx } from './fx.js';
 
 const EFFECTS = {
   bomb(run) {
@@ -33,6 +33,7 @@ export function useAbility(run, id) {
   if (!canUse(run, id)) return false;
   const def = ABILITIES.find(a => a.id === id);
   EFFECTS[id](run);
+  sfx(run, id);
   run.abilityCd[id] = def.cd * run.stats.cdMult;
   banner(run, `${def.icon} ${def.name.toUpperCase()}`, '', '#2de2e6');
   run.fx.banner.life = run.fx.banner.max = 1.2;

@@ -7,6 +7,8 @@ export const UPGRADES = [
   { id: 'range', icon: '📡', name: 'Gittata',   base: 12, grow: 1.60, max: 8, mod: (u, L) => { u.range += 0.06 * L; } },
   { id: 'hp',    icon: '❤️', name: 'Vita',      base: 8,  grow: 1.30, mod: (u, L) => { u.hpFlat += 25 * L; } },
   { id: 'regen', icon: '💚', name: 'Rigenera',  base: 10, grow: 1.38, mod: (u, L) => { u.regen += 0.8 * L; } },
+  // Recinto elettrico intorno alla torre, a settori: liv.1 copre 0-90°, liv.2 0-180°, liv.3 0-270°, liv.4 tutto.
+  { id: 'fence', icon: '🔌', name: 'Recinto',   base: 30, grow: 2.2, max: 4, mod: (u, L) => { u.fence += L; } },
 ];
 
 // Potenziamenti PERMANENTI comprati con i BUONI PASTO (valgono per sempre).

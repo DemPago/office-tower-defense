@@ -1,7 +1,7 @@
 // Il "regista" della partita: fa avanzare tutti i sistemi di un passo
 // e decide quando un'ondata finisce, quando scegliere le carte e quando si perde.
 import { updateSpawns, startWave } from './waves.js';
-import { updateEnemies, updateEnemyShots, updateTower, updateShots } from './combat.js';
+import { updateEnemies, updateEnemyShots, updateTower, updateShots, updateFence } from './combat.js';
 import { updateAbilities } from './abilities.js';
 import { offerCards } from './cards.js';
 import { offerAllies, updateAllies } from './allies.js';
@@ -27,6 +27,7 @@ export function update(run, dt) {
   updateEnemyShots(run, dt);
   updateTower(run, dt);
   updateAllies(run, dt);
+  updateFence(run, dt);
   updateShots(run, dt);
   updateAbilities(run, dt);
 

@@ -1,12 +1,12 @@
 // Combattimento: movimento dei nemici, spari della torre, danni, morti.
 import { TOWER } from '../state.js';
-import { dist, fmt } from '../util.js';
-import { floatText, burst, ring, shake } from './fx.js';
+import { dist, fmt, angleOf } from '../util.js';
+import { floatText, burst, ring, shake, sfx } from './fx.js';
 import { makeEnemy } from './waves.js';
 import { ENEMIES } from '../data/enemies.js';
 
 // Punto da cui partono i colpi: il personaggio sul tetto della torre.
-const MUZZLE = { x: TOWER.x + 1, y: TOWER.y - 89 };
+const MUZZLE = { x: TOWER.x + 1, y: TOWER.y - 77 };
 
 // ─── Nemici ─────────────────────────────────────────────────────
 
@@ -88,10 +88,12 @@ function damageTower(run, amount) {
   t.hp -= amount * (1 - run.stats.armor);
   t.hitFlash = 0.15;
   shake(run, 2);
+  sfx(run, 'hurt');
   if (t.hp <= 0) {
     t.hp = 0;
     run.phase = 'over';
     shake(run, 10);
+    sfx(run, 'over');
     burst(run, TOWER.x, TOWER.y - 30, '#f97316', 40, 140);
   }
 }
@@ -114,6 +116,7 @@ export function updateTower(run, dt) {
 
   t.cooldown = 1 / s.rate;
   t.recoil = 0.08;
+  sfx(run, 'shoot');
   const effects = { slow: s.slow, dot: s.dot, aoeRadius: s.aoeRadius, aoeDmg: s.aoeDmg };
   for (const target of targets) {
     fire(run, MUZZLE.x, MUZZLE.y, target, {
@@ -190,6 +193,25 @@ function nearest(run, from, filter, maxDist) {
   return best;
 }
 
+// ─── Recinto elettrico ──────────────────────────────────────────
+// Fulmina i nemici vicini alla torre, solo nei quarti di cerchio già costruiti:
+// liv.1 = 0-90°, liv.2 = fino a 180°, liv.3 = fino a 270°, liv.4 = tutto il giro.
+export const FENCE = { inner: 28, outer: 62 };
+
+export function updateFence(run, dt) {
+  const q = run.stats.fence;
+  if (!q) return;
+  const dps = run.stats.dmg * 1.2;
+  for (const e of run.enemies) {
+    if (e.dead) continue;
+    const d = dist(e, TOWER);
+    if (d < FENCE.inner || d > FENCE.outer) continue;
+    if (Math.floor(angleOf(TOWER, e) / 90) >= q) continue;
+    dealDamage(run, e, dps * dt, { silent: true });
+    if (Math.random() < dt * 6) burst(run, e.x, e.y - 8, '#2de2e6', 3, 60);
+  }
+}
+
 // ─── Danni e morti ──────────────────────────────────────────────
 
 export function dealDamage(run, e, amount, { crit = false, silent = false, color = null } = {}) {
@@ -206,6 +228,7 @@ export function dealDamage(run, e, amount, { crit = false, silent = false, color
 function killEnemy(run, e) {
   e.dead = true;
   run.kills++;
+  sfx(run, e.boss ? 'bossdown' : 'kill');
   run.fx.corpses.push({ look: e.look, scale: e.scale, x: e.x, y: e.y, size: e.size, dir: e.x < TOWER.x ? -1 : 1, life: 0.6, max: 0.6 });
   const gold = Math.max(1, Math.round(e.gold * run.stats.goldMult));
   run.gold += gold;
@@ -220,6 +243,7 @@ function killEnemy(run, e) {
       run.enemies.push(makeEnemy(ENEMIES[e.def.split], run.wave, { x: e.x + dx, y: e.y, age: 0.4 }));
     }
     floatText(run, e.x, e.y - e.size - 10, 'DELEGA!', '#ff3e8a', 8);
+    sfx(run, 'split');
   }
   if (e.boss) {
     shake(run, 8);

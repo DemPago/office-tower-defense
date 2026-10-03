@@ -1,11 +1,12 @@
 // Rinforzi: scelta del collega e i loro spari.
-import { ALLIES, ALLY_LEVELS, ALLY_LEVEL_MULT, ALLY_SLOTS } from '../data/allies.js';
+import { ALLIES, ALLY_LEVELS, ALLY_LEVEL_MULT, ALLY_SLOTS, ALLY_RING, allyArc } from '../data/allies.js';
 import { TOWER } from '../state.js';
 import { dist } from '../util.js';
 import { fire } from './combat.js';
 import { offerCards } from './cards.js';
 import { refreshStats } from './economy.js';
-import { banner, ring } from './fx.js';
+import { banner, ring, sfx } from './fx.js';
+import { angleOf, inArc } from '../util.js';
 
 // Velocità dei colpi: abbastanza lente da vederli partire dalla postazione.
 const SHOT_SPEED = { laser: 650, bolt: 360, pc: 230 };
@@ -16,8 +17,13 @@ export function allyDef(id) {
 }
 
 export function allyPos(ally) {
-  const s = ALLY_SLOTS[ally.slot];
-  return { x: TOWER.x + s.x, y: TOWER.y + s.y };
+  const a = ALLY_SLOTS[ally.slot] * Math.PI / 180;
+  return { x: TOWER.x + Math.cos(a) * ALLY_RING, y: TOWER.y - Math.sin(a) * ALLY_RING };
+}
+
+// Il collega spara solo ai nemici dentro il suo spicchio (visto dal centro della torre).
+export function allyCovers(ally, enemy) {
+  return inArc(angleOf(TOWER, enemy), ALLY_SLOTS[ally.slot], allyArc(ally.level));
 }
 
 export function offerAllies(run) {
@@ -48,6 +54,7 @@ export function pickAlly(run, meta, index) {
   const lv = (have ? have.level : 1) - 1;
   banner(run, `${def.icon} ${def.name.toUpperCase()}`, have ? `Promosso a ${ALLY_LEVELS[lv]}!` : 'si unisce alla difesa!', '#ffd23f');
   run.allyChoices = null;
+  sfx(run, 'pick');
   refreshStats(run, meta);
   offerCards(run);
   return true;
@@ -76,12 +83,13 @@ export function updateAllies(run, dt) {
     let target = null, best = def.range;
     for (const e of run.enemies) {
       const d = dist(e, pos);
-      if (!e.dead && d < best) { target = e; best = d; }
+      if (!e.dead && d < best && allyCovers(ally, e)) { target = e; best = d; }
     }
     if (!target) continue;
 
     ally.cooldown = 1 / (def.rate * run.stats.allyRateMult);
     ally.recoil = 0.1;
+    sfx(run, 'ally');
     fire(run, pos.x, pos.y - 20, target, {
       dmg: run.stats.dmg * def.dmg * ALLY_LEVEL_MULT[ally.level - 1],
       bounces: 0,

@@ -34,6 +34,7 @@ export function pickCard(run, meta, index) {
   run.cards[card.id] = (run.cards[card.id] || 0) + 1;
   if (card.onPick) card.onPick(run);
   refreshStats(run, meta);
+  run.fx.sounds.push('pick');
   run.cardChoices = null;
   run.phase = 'break';
   run.breakTimer = 1.5;

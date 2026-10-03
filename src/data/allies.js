@@ -18,9 +18,11 @@ export const ALLY_LEVELS = ['Junior', 'Middle', 'Professional', 'Senior', '👑 
 // Moltiplicatore del danno per livello (Junior = 1).
 export const ALLY_LEVEL_MULT = [1, 1.5, 2.2, 3.2, 4.5];
 
-// Postazioni intorno al palazzo (relative al centro della torre).
-export const ALLY_SLOTS = [
-  { x: -82, y: -8 }, { x: 82, y: -8 },
-  { x: -56, y: -60 }, { x: 56, y: -60 },
-  { x: -64, y: 42 }, { x: 64, y: 42 },
-];
+// Postazioni intorno al palazzo: angolo in gradi (0 = destra, 90 = su, come in geometria).
+// Ogni collega difende uno SPICCHIO centrato sulla sua postazione: 90° al livello 1,
+// e ogni promozione lo allarga di altri 90° (dal livello 4 copre tutto il giro).
+export const ALLY_SLOTS = [45, 135, 225, 315, 0, 180];
+export const ALLY_RING = 80;
+export function allyArc(level) {
+  return Math.min(360, 90 * level);
+}

@@ -95,7 +95,7 @@ button:disabled { cursor: default; }
   display: grid;
   gap: 6px;
 }
-#upgrades { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+#upgrades { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
 #abilities { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 
 .upg {
@@ -259,4 +259,11 @@ h2 {
 /* Schermi grandi: schermate più leggibili */
 @media (min-width: 760px) and (min-height: 760px) {
   .overlay > * { zoom: 1.4; }
+}
+
+/* Schermi grandi: barra in alto e pannello più grandi (contenuto largo al massimo 560px × zoom) */
+@media (min-width: 1000px) and (min-height: 760px) {
+  #top, #panel { zoom: 1.5; }
+  #top { padding-inline: max(8px, calc((100vw / 1.5 - 560px) / 2)); }
+  #panel { padding-inline: max(6px, calc((100vw / 1.5 - 560px) / 2)) !important; }
 }

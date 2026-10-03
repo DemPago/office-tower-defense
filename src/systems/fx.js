@@ -18,6 +18,11 @@ export function ring(run, x, y, radius, color) {
   run.fx.rings.push({ x, y, radius, color, life: 0.35, max: 0.35 });
 }
 
+// Suoni: i sistemi li mettono in coda, main.js li suona (così i sistemi restano senza audio).
+export function sfx(run, name) {
+  if (run.fx.sounds.length < 20) run.fx.sounds.push(name);
+}
+
 export function shake(run, amount) {
   run.fx.shake = Math.max(run.fx.shake, amount);
 }

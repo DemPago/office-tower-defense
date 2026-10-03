@@ -4,9 +4,13 @@ import { ABILITIES } from './data/abilities.js';
 import { UPGRADES } from './data/upgrades.js';
 import { computeStats, metaBonuses } from './systems/stats.js';
 
-// Dimensioni del "mondo" di gioco in pixel logici (verticale, tipo telefono).
-export const WORLD = { w: 360, h: 560 };
-export const TOWER = { x: 180, y: 455, radius: 26 };
+// Mondo di gioco in pixel logici: un quadrato con la torre al centro,
+// attaccabile da tutte le direzioni (360°).
+export const WORLD = { w: 640, h: 640 };
+export const TOWER = { x: 320, y: 320, radius: 26 };
+// Distanza dalla torre a cui compaiono i nemici (uguale per tutti gli schermi,
+// così la difficoltà non dipende dalla grandezza del monitor).
+export const SPAWN_RADIUS = 330;
 
 export function createRun(meta) {
   const mb = metaBonuses(meta);
@@ -32,7 +36,7 @@ export function createRun(meta) {
     enemyShots: [],          // colpi dei nemici a distanza
     spawnQueue: [],
     boss: null,              // il boss vivo (per la barra in alto)
-    fx: { texts: [], parts: [], rings: [], corpses: [], shake: 0, banner: null },
+    fx: { texts: [], parts: [], rings: [], corpses: [], sounds: [], shake: 0, banner: null },
     healFull: false,
   };
   run.stats = computeStats(run, meta);

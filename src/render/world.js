@@ -1,51 +1,56 @@
 // Disegno del mondo di gioco sul canvas. Legge lo stato, non lo modifica mai.
-// Stile: grunge urbano in pixel art (asfalto, cemento, ruggine, segnaletica da cantiere).
-import { WORLD, TOWER } from '../state.js';
-import { ALLY_SLOTS } from '../data/allies.js';
-import { allyDef } from '../systems/allies.js';
+// Stile: grunge urbano in pixel art. Gli sfondi (uno per reparto) sono in scenery.js,
+// gli oggetti di scena in props.js, i personaggi in people.js.
+import { TOWER } from '../state.js';
+import { allyDef, allyPos } from '../systems/allies.js';
+import { ALLY_SLOTS, allyArc } from '../data/allies.js';
+import { FENCE } from '../systems/combat.js';
 import { LOOKS } from './people.js';
+import { PAL, FONT, SPRAY } from './palette.js';
+import { hazardStripes, sandbag } from './props.js';
+import { buildScene, sceneIndexForWave, MARGIN } from './scenery.js';
 
-// Palette grunge (la stessa usata in style.css).
-export const PAL = {
-  black: '#0d0d0f', ink: '#141416',
-  asphalt: '#2a2a2e', asphalt2: '#323237', asphaltHi: '#44444b', road: '#222226',
-  concrete: '#6e6a64', concreteHi: '#8f8a80', concreteDk: '#4a4743',
-  rust: '#8a3b1e', rustHi: '#b8592a', brick: '#6d2e1f', brickHi: '#86402a',
-  sand: '#9c8457', sandHi: '#bfa574', wood: '#6b4a2b',
-  hazard: '#f2b705', hazardDk: '#a67c00', white: '#e8e2d0', grey: '#8a8d93',
-  red: '#d7263d', blood: '#7a0f1c', pink: '#ff3e8a', cyan: '#2de2e6',
-  toxic: '#7bd332', weed: '#3e6b2a', fluo: '#e9f08a', glass: '#1c2430', steel: '#5b5f66',
-};
-const FONT = '"Press Start 2P", monospace';
-const SPRAY = '"Permanent Marker", "Press Start 2P", cursive';
-// Lo sfondo continua oltre i bordi del mondo, così riempie anche gli schermi larghi.
-const MX = 560, MY = 200;
+// Raggio (in pixel del mondo) visibile intorno al palazzo sul lato corto dello schermo:
+// più è piccolo, più la visuale è ravvicinata e tutto appare grande.
+const VIEW_R = 205;
+const CAMERA = { x: TOWER.x, y: TOWER.y - 16 };
 
 // Misure del palazzo (la torre).
-const B = { w: 60, h: 96 };
+const B = { w: 60, h: 84 };
 B.x0 = TOWER.x - B.w / 2;
 B.base = TOWER.y + 24;
 B.top = B.base - B.h;
-// La "base" fortificata intorno al palazzo.
-const YARD = { x: TOWER.x - 104, y: TOWER.y - 96, w: 208, h: 172 };
+
+const ALLY_COLOR = { pm: PAL.red, sm: PAL.toxic, dev: PAL.cyan };
 
 export function createRenderer(canvas, assets) {
   const ctx = canvas.getContext('2d');
-  const bg = buildBackground();
-  const view = { scale: 1, ox: 0, oy: 0 };
+  const view = { scale: 1, ox: 0, oy: 0, ui: 1 };
+  const scenes = new Map(); // scenari già disegnati (si tengono gli ultimi due)
+  let sceneIdx = 0, prevIdx = null, fade = 0;
   // Fumo e polvere sono solo decorazione: vivono qui e non nello stato del gioco.
   const smoke = [];
-  const dust = Array.from({ length: 50 }, () => ({ x: Math.random() * WORLD.w, y: Math.random() * WORLD.h, v: 4 + Math.random() * 8, a: Math.random() }));
+  const dust = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), v: 0.01 + Math.random() * 0.02, a: Math.random() * 6 }));
   let lastTime = performance.now() / 1000;
+
+  function scene(i) {
+    if (!scenes.has(i)) {
+      scenes.set(i, buildScene(i));
+      for (const k of scenes.keys()) if (k !== i && k !== sceneIdx && scenes.size > 2) scenes.delete(k);
+    }
+    return scenes.get(i);
+  }
 
   function resize() {
     const dpr = window.devicePixelRatio || 1;
     const w = canvas.clientWidth, h = canvas.clientHeight;
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
-    view.scale = Math.min(canvas.width / WORLD.w, canvas.height / WORLD.h);
-    view.ox = (canvas.width - WORLD.w * view.scale) / 2;
-    view.oy = (canvas.height - WORLD.h * view.scale) / 2;
+    view.scale = Math.min(canvas.width, canvas.height) / (VIEW_R * 2);
+    view.ox = canvas.width / 2 - CAMERA.x * view.scale;
+    view.oy = canvas.height / 2 - CAMERA.y * view.scale;
+    // scala per scritte e barre disegnate "sopra" al mondo
+    view.ui = dpr * Math.max(1, Math.min(2.4, Math.min(w, h) / 380));
   }
 
   function draw(run) {
@@ -53,9 +58,14 @@ export function createRenderer(canvas, assets) {
     const dt = Math.min(0.05, time - lastTime);
     lastTime = time;
 
+    // Scenario del reparto attuale: quando cambia, dissolvenza dal vecchio al nuovo.
+    const wanted = sceneIndexForWave(run ? run.wave : 1);
+    if (wanted !== sceneIdx) { prevIdx = sceneIdx; sceneIdx = wanted; fade = 1; }
+    fade = Math.max(0, fade - dt / 1.5);
+
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = PAL.asphalt;
+    ctx.fillStyle = PAL.black;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const shake = run ? run.fx.shake : 0;
@@ -63,460 +73,80 @@ export function createRenderer(canvas, assets) {
     ctx.setTransform(view.scale, 0, 0, view.scale, view.ox + sx * view.scale, view.oy + sy * view.scale);
     ctx.imageSmoothingEnabled = false;
 
-    ctx.drawImage(bg, -MX, -MY);
-    drawStreetLights(ctx, time);
+    const cur = scene(sceneIdx);
+    ctx.drawImage(cur.canvas, -MARGIN, -MARGIN);
+    if (cur.ambient) cur.ambient(ctx, time);
+    if (fade > 0 && prevIdx !== null) {
+      ctx.globalAlpha = fade;
+      ctx.drawImage(scene(prevIdx).canvas, -MARGIN, -MARGIN);
+      ctx.globalAlpha = 1;
+    }
 
     if (run) {
+      drawSectors(ctx, run, time);
       drawRange(ctx, run.stats.range, time);
       for (const c of run.fx.corpses) drawCorpse(ctx, assets, c);
       for (const e of run.enemies) drawShadow(ctx, e);
     }
+
+    // Profondità: chi sta più in alto (dietro al palazzo) si disegna prima.
+    const actors = run ? [
+      ...run.enemies.map(e => ({ y: e.y, draw: () => drawEnemy(ctx, assets, e), e })),
+      ...run.allies.map(a => ({ y: allyPos(a).y, draw: () => drawAlly(ctx, assets, a, time) })),
+    ].sort((a, b) => a.y - b.y) : [];
+    const behind = actors.filter(a => a.y < TOWER.y + 20);
+    for (const a of behind) a.draw();
+    drawFence(ctx, run, time, true);
     drawTower(ctx, assets, run, time);
-    if (run) for (const a of run.allies) drawAlly(ctx, assets, a, time);
+    drawFence(ctx, run, time, false);
+    // Nemici nascosti dietro al palazzo: si vedono in trasparenza
+    for (const a of behind) if (a.e && hiddenByTower(a.e)) drawGhost(ctx, assets, a.e);
+    for (const a of actors) if (a.y >= TOWER.y + 20) a.draw();
     updateSmoke(smoke, run, dt);
     drawSmoke(ctx, smoke);
     if (run) {
-      // Prima i nemici più in alto, così quelli più vicini allo schermo stanno davanti.
-      const sorted = [...run.enemies].sort((a, b) => a.y - b.y);
-      for (const e of sorted) drawEnemy(ctx, assets, e);
       drawShots(ctx, run, time);
       drawFx(ctx, run);
     }
-    drawDust(ctx, dust, dt);
-    drawGrade(ctx);
+
+    // Da qui si disegna in coordinate dello schermo
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    drawDust(ctx, dust, dt, canvas);
+    drawGrade(ctx, canvas);
+    ctx.setTransform(view.ui, 0, 0, view.ui, 0, 0);
+    const W = canvas.width / view.ui, H = canvas.height / view.ui;
+    if (fade > 0.2) drawSceneTitle(ctx, cur.name, W, H, fade);
     if (run) {
-      drawBanner(ctx, run);
-      drawBossBar(ctx, run);
+      drawBanner(ctx, run, W, H);
+      drawBossBar(ctx, run, W);
     }
   }
 
   return { resize, draw };
 }
 
-// ─── Sfondo (disegnato una volta sola) ───────────────────────────
-
-function buildBackground() {
-  const c = document.createElement('canvas');
-  c.width = WORLD.w + MX * 2;
-  c.height = WORLD.h + MY * 2;
-  const g = c.getContext('2d');
-  g.translate(MX, MY); // da qui in poi si disegna in coordinate del mondo
-  const rnd = seeded(11);
-  const R = (a, b) => a + rnd() * (b - a);
-  const all = { x: -MX, y: -MY, w: WORLD.w + MX * 2, h: WORLD.h + MY * 2 };
-  const many = n => Math.round(n * (all.w * all.h) / (680 * 880)); // quantità proporzionali all'area
-  const inYard = (x, y, pad = 0) => x > YARD.x - pad && x < YARD.x + YARD.w + pad && y > YARD.y - pad && y < YARD.y + YARD.h + pad;
-  const ROAD_V = { x: 148, w: 64 }, ROAD_H = { y: 92, h: 56 };
-  const onRoad = (x, y) => (x > ROAD_V.x - 4 && x < ROAD_V.x + ROAD_V.w + 4 && y < YARD.y) || (y > ROAD_H.y - 4 && y < ROAD_H.y + ROAD_H.h + 4);
-
-  // Asfalto sporco
-  g.fillStyle = PAL.asphalt;
-  g.fillRect(all.x, all.y, all.w, all.h);
-  for (let i = 0; i < many(9000); i++) {
-    g.fillStyle = [PAL.asphalt2, PAL.asphaltHi, PAL.black][Math.floor(rnd() * 3)];
-    g.fillRect(Math.floor(R(all.x, all.x + all.w)), Math.floor(R(all.y, all.y + all.h)), 1, 1);
-  }
-  // Rattoppi di asfalto più nuovo
-  for (let i = 0; i < many(16); i++) {
-    const x = Math.floor(R(all.x, all.x + all.w)), y = Math.floor(R(-40, WORLD.h + 20));
-    const w = Math.floor(R(24, 80)), h = Math.floor(R(16, 50));
-    g.fillStyle = PAL.black;
-    g.fillRect(x - 1, y - 1, w + 2, h + 2);
-    g.fillStyle = '#303035';
-    g.fillRect(x, y, w, h);
-  }
-
-  // Strade: una verticale verso il palazzo e una orizzontale in alto
-  g.fillStyle = PAL.road;
-  g.fillRect(ROAD_V.x, all.y, ROAD_V.w, YARD.y - all.y);
-  g.fillRect(all.x, ROAD_H.y, all.w, ROAD_H.h);
-  g.fillStyle = PAL.concreteDk;
-  g.fillRect(ROAD_V.x - 3, ROAD_H.y + ROAD_H.h, 3, YARD.y - ROAD_H.y - ROAD_H.h);
-  g.fillRect(ROAD_V.x + ROAD_V.w, ROAD_H.y + ROAD_H.h, 3, YARD.y - ROAD_H.y - ROAD_H.h);
-  g.fillRect(all.x, ROAD_H.y - 3, ROAD_V.x - all.x, 3);
-  g.fillRect(ROAD_V.x + ROAD_V.w, ROAD_H.y - 3, all.w, 3);
-  g.fillRect(all.x, ROAD_H.y + ROAD_H.h, ROAD_V.x - 3 - all.x, 3);
-  g.fillRect(ROAD_V.x + ROAD_V.w + 3, ROAD_H.y + ROAD_H.h, all.w, 3);
-  // Segnaletica sbiadita
-  for (let y = ROAD_H.y + ROAD_H.h + 6; y < YARD.y - 10; y += 18) {
-    if (rnd() < 0.2) continue; // pezzi di striscia mancanti
-    g.fillStyle = 'rgba(242,183,5,0.55)';
-    g.fillRect(ROAD_V.x + ROAD_V.w / 2 - 1, y, 2, 10);
-  }
-  for (let x = all.x; x < all.x + all.w; x += 20) {
-    if (x > ROAD_V.x - 10 && x < ROAD_V.x + ROAD_V.w) continue;
-    if (rnd() < 0.2) continue;
-    g.fillStyle = 'rgba(232,226,208,0.45)';
-    g.fillRect(x, ROAD_H.y + ROAD_H.h / 2 - 1, 12, 2);
-  }
-  // Strisce pedonali
-  for (let i = 0; i < 8; i++) {
-    g.fillStyle = 'rgba(232,226,208,0.35)';
-    g.fillRect(ROAD_V.x + 4 + i * 7.5 | 0, ROAD_H.y + ROAD_H.h + 6, 4, 12);
-  }
-
-  // Crepe con qualche erbaccia
-  for (let i = 0; i < many(55); i++) {
-    let x = R(all.x, all.x + all.w), y = R(-40, WORLD.h + 40), a = R(0, Math.PI * 2);
-    if (inYard(x, y)) continue;
-    g.strokeStyle = PAL.black;
-    g.lineWidth = 1;
-    g.beginPath();
-    g.moveTo(Math.round(x) + 0.5, Math.round(y) + 0.5);
-    const steps = Math.floor(R(4, 14));
-    for (let k = 0; k < steps; k++) {
-      a += R(-0.8, 0.8);
-      x += Math.cos(a) * R(3, 6);
-      y += Math.sin(a) * R(3, 6);
-      g.lineTo(Math.round(x) + 0.5, Math.round(y) + 0.5);
-    }
-    g.stroke();
-    if (rnd() < 0.45) weeds(g, Math.round(x), Math.round(y));
-  }
-
-  // Macchie d'olio e pozzanghere
-  for (let i = 0; i < many(14); i++) {
-    const x = R(all.x, all.x + all.w), y = R(-20, WORLD.h + 20);
-    if (inYard(x, y, 6)) continue;
-    g.fillStyle = 'rgba(0,0,0,0.35)';
-    g.beginPath();
-    g.ellipse(x, y, R(5, 14), R(3, 7), 0, 0, Math.PI * 2);
-    g.fill();
-  }
-  for (let i = 0; i < many(6); i++) {
-    const x = R(all.x, all.x + all.w), y = R(30, WORLD.h - 20);
-    if (inYard(x, y, 10)) continue;
-    const w = R(10, 20), h = R(4, 8);
-    g.fillStyle = '#3d4a57';
-    g.beginPath();
-    g.ellipse(x, y, w, h, 0, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = '#6f8597';
-    g.fillRect(Math.round(x - w / 2), Math.round(y - h / 3), Math.round(w * 0.6), 1);
-  }
-  // Tombini
-  for (const [x, y] of [[180, 72], [110, 120], [300, 300], [40, 420]]) manhole(g, x, y);
-
-  // Cortile di cemento intorno al palazzo, bordato da strisce gialle e nere
-  g.fillStyle = PAL.black;
-  g.fillRect(YARD.x - 5, YARD.y - 5, YARD.w + 10, YARD.h + 10);
-  hazardStripes(g, YARD.x - 4, YARD.y - 4, YARD.w + 8, YARD.h + 8);
-  g.fillStyle = PAL.concrete;
-  g.fillRect(YARD.x, YARD.y, YARD.w, YARD.h);
-  for (let y = YARD.y; y < YARD.y + YARD.h; y += 16) {
-    for (let x = YARD.x; x < YARD.x + YARD.w; x += 16) {
-      g.fillStyle = PAL.concreteDk;
-      g.fillRect(x, y, 16, 1);
-      g.fillRect(x, y, 1, 16);
-      if (rnd() < 0.25) {
-        g.fillStyle = 'rgba(20,20,22,0.18)';
-        g.fillRect(x + 1, y + 1, 15, 15);
-      }
-    }
-  }
-  for (let i = 0; i < 300; i++) {
-    g.fillStyle = rnd() < 0.5 ? PAL.concreteHi : PAL.concreteDk;
-    g.fillRect(Math.floor(R(YARD.x, YARD.x + YARD.w)), Math.floor(R(YARD.y, YARD.y + YARD.h)), 1, 1);
-  }
-  for (let i = 0; i < 5; i++) {
-    g.fillStyle = 'rgba(0,0,0,0.25)';
-    g.beginPath();
-    g.ellipse(R(YARD.x + 10, YARD.x + YARD.w - 10), R(YARD.y + 10, YARD.y + YARD.h - 10), R(5, 12), R(3, 6), 0, 0, Math.PI * 2);
-    g.fill();
-  }
-
-  // Sacchi di sabbia lungo il bordo alto del cortile (con un varco per la strada)
-  for (let x = YARD.x + 2; x < YARD.x + YARD.w - 10; x += 12) {
-    if (x > ROAD_V.x - 6 && x < ROAD_V.x + ROAD_V.w - 4) continue;
-    sandbag(g, x, YARD.y - 6);
-    if (rnd() < 0.6) sandbag(g, x + 6, YARD.y - 11);
-  }
-  // Barriere di cemento ai lati del varco
-  barrier(g, ROAD_V.x - 22, YARD.y - 14);
-  barrier(g, ROAD_V.x + ROAD_V.w + 2, YARD.y - 14);
-
-  // Muro di mattoni in alto, rotto dove passa la strada, con i graffiti
-  brickWall(g, all.x, -40, ROAD_V.x - 6 - all.x, 62, rnd);
-  brickWall(g, ROAD_V.x + ROAD_V.w + 6, -40, all.w, 62, rnd);
-  spray(g, 'SCIOPERO!', 74, 14, PAL.pink, -0.05, 15);
-  spray(g, 'NO STRAORDINARI', 290, 12, PAL.cyan, 0.04, 11);
-
-  // Oggetti sparsi: coni, barili, scatoloni, gomme, rifiuti
-  const props = [];
-  for (let i = 0; i < many(70); i++) {
-    const x = Math.round(R(all.x, all.x + all.w)), y = Math.round(R(30, WORLD.h + 30));
-    if (inYard(x, y, 18) || onRoad(x, y)) continue;
-    props.push({ x, y, k: rnd() });
-  }
-  props.sort((a, b) => a.y - b.y);
-  for (const p of props) {
-    if (p.k < 0.16) cone(g, p.x, p.y);
-    else if (p.k < 0.28) barrel(g, p.x, p.y, rnd() < 0.5 ? PAL.rust : '#2f4f6f');
-    else if (p.k < 0.42) box(g, p.x, p.y);
-    else if (p.k < 0.50) tire(g, p.x, p.y);
-    else trash(g, p.x, p.y, rnd);
-  }
-  dumpster(g, 16, 200);
-  wreck(g, 286, 214);
-  dumpster(g, 300, 470);
-  // ai lati, visibili solo sugli schermi larghi
-  wreck(g, -150, 300);
-  dumpster(g, -260, 460);
-  wreck(g, 470, 380);
-  dumpster(g, 560, 240);
-  return c;
-}
-
-function seeded(seed) {
-  return () => {
-    seed = (seed * 16807) % 2147483647;
-    return (seed - 1) / 2147483646;
-  };
-}
-
-// ─── Oggetti dello sfondo ───────────────────────────────────────
-
-function hazardStripes(g, x, y, w, h) {
-  g.save();
-  g.beginPath();
-  g.rect(x, y, w, h);
-  g.clip();
-  g.fillStyle = PAL.hazard;
-  g.fillRect(x, y, w, h);
-  g.fillStyle = PAL.black;
-  for (let k = -h; k < w; k += 10) {
-    g.beginPath();
-    g.moveTo(x + k, y + h);
-    g.lineTo(x + k + 5, y + h);
-    g.lineTo(x + k + 5 + h, y);
-    g.lineTo(x + k + h, y);
-    g.fill();
-  }
-  g.restore();
-}
-
-function weeds(g, x, y) {
-  g.fillStyle = PAL.weed;
-  g.fillRect(x, y - 2, 1, 3);
-  g.fillRect(x - 2, y - 1, 1, 2);
-  g.fillRect(x + 2, y - 1, 1, 2);
-  g.fillStyle = PAL.toxic;
-  g.fillRect(x, y - 3, 1, 1);
-}
-
-function manhole(g, x, y) {
-  g.fillStyle = PAL.black;
-  g.beginPath();
-  g.arc(x, y, 7, 0, Math.PI * 2);
-  g.fill();
-  g.fillStyle = '#3a3a40';
-  g.beginPath();
-  g.arc(x, y, 6, 0, Math.PI * 2);
-  g.fill();
-  g.fillStyle = PAL.black;
-  for (let i = -4; i <= 4; i += 3) g.fillRect(x - 5, y + i, 10, 1);
-}
-
-function sandbag(g, x, y) {
-  g.fillStyle = PAL.black;
-  g.fillRect(x - 1, y, 13, 7);
-  g.fillRect(x, y - 1, 11, 9);
-  g.fillStyle = PAL.sand;
-  g.fillRect(x, y, 11, 7);
-  g.fillStyle = PAL.sandHi;
-  g.fillRect(x + 1, y + 1, 8, 2);
-  g.fillStyle = '#7a6640';
-  g.fillRect(x + 5, y + 2, 1, 4);
-}
-
-function barrier(g, x, y) {
-  g.fillStyle = PAL.black;
-  g.fillRect(x - 1, y - 1, 22, 12);
-  g.fillStyle = PAL.concreteHi;
-  g.fillRect(x, y, 20, 10);
-  hazardStripes(g, x, y + 3, 20, 4);
-  g.fillStyle = 'rgba(0,0,0,0.35)';
-  g.fillRect(x, y + 7, 20, 3);
-}
-
-function brickWall(g, x, y, w, h, rnd) {
-  g.fillStyle = PAL.black;
-  g.fillRect(x, y, w, h + 2);
-  for (let row = 0; row * 6 < h; row++) {
-    const off = row % 2 ? 6 : 0;
-    for (let bx = x - off; bx < x + w; bx += 12) {
-      g.fillStyle = rnd() < 0.15 ? PAL.rust : rnd() < 0.5 ? PAL.brick : PAL.brickHi;
-      g.fillRect(Math.max(x, bx + 1), y + row * 6 + 1, Math.min(10, x + w - bx - 1), 5);
-    }
-  }
-  // macchie di umido
-  for (let i = 0; i < 10; i++) {
-    g.fillStyle = 'rgba(0,0,0,0.25)';
-    g.fillRect(Math.floor(x + rnd() * w), y + h - 14 + Math.floor(rnd() * 8), 2, 10);
-  }
-  g.fillStyle = PAL.concreteDk;
-  g.fillRect(x, y + h - 2, w, 3);
-}
-
-function spray(g, text, x, y, color, angle, size) {
-  g.save();
-  g.translate(x, y);
-  g.rotate(angle);
-  g.font = `${size}px ${SPRAY}`;
-  g.textAlign = 'center';
-  g.fillStyle = PAL.black;
-  g.fillText(text, 1, 1);
-  g.fillStyle = color;
-  g.fillText(text, 0, 0);
-  // colature di vernice
-  g.fillRect(-size * 1.6, 2, 1, 4);
-  g.fillRect(size * 0.4, 3, 1, 6);
-  g.fillRect(size * 1.8, 2, 1, 3);
-  g.restore();
-}
-
-function cone(g, x, y) {
-  g.fillStyle = 'rgba(0,0,0,0.35)';
-  g.fillRect(x - 4, y + 1, 10, 2);
-  g.fillStyle = PAL.black;
-  g.fillRect(x - 4, y - 1, 9, 3);
-  g.fillRect(x - 2, y - 9, 5, 9);
-  g.fillStyle = '#e8641b';
-  g.fillRect(x - 3, y - 1, 7, 2);
-  g.fillRect(x - 1, y - 8, 3, 8);
-  g.fillStyle = PAL.white;
-  g.fillRect(x - 1, y - 5, 3, 2);
-}
-
-function barrel(g, x, y, color) {
-  g.fillStyle = 'rgba(0,0,0,0.35)';
-  g.fillRect(x - 3, y + 1, 12, 2);
-  g.fillStyle = PAL.black;
-  g.fillRect(x - 5, y - 13, 11, 15);
-  g.fillStyle = color;
-  g.fillRect(x - 4, y - 12, 9, 13);
-  g.fillStyle = 'rgba(255,255,255,0.18)';
-  g.fillRect(x - 3, y - 12, 2, 13);
-  g.fillStyle = PAL.black;
-  g.fillRect(x - 4, y - 8, 9, 1);
-  g.fillRect(x - 4, y - 3, 9, 1);
-  g.fillStyle = PAL.hazard;
-  g.fillRect(x - 1, y - 7, 3, 3);
-}
-
-function box(g, x, y) {
-  g.fillStyle = PAL.black;
-  g.fillRect(x - 6, y - 9, 13, 11);
-  g.fillStyle = '#8b6a3e';
-  g.fillRect(x - 5, y - 8, 11, 9);
-  g.fillStyle = '#a5824f';
-  g.fillRect(x - 5, y - 8, 11, 2);
-  g.fillStyle = '#c9b48a';
-  g.fillRect(x, y - 8, 1, 9);
-}
-
-function tire(g, x, y) {
-  g.fillStyle = PAL.black;
-  g.beginPath();
-  g.ellipse(x, y, 7, 4, 0, 0, Math.PI * 2);
-  g.fill();
-  g.fillStyle = PAL.asphalt;
-  g.beginPath();
-  g.ellipse(x, y, 3, 1.5, 0, 0, Math.PI * 2);
-  g.fill();
-}
-
-function trash(g, x, y, rnd) {
-  const n = 2 + Math.floor(rnd() * 3);
-  for (let i = 0; i < n; i++) {
-    const tx = x + Math.floor(rnd() * 10 - 5), ty = y + Math.floor(rnd() * 6 - 3);
-    const r = rnd();
-    g.fillStyle = r < 0.4 ? PAL.white : r < 0.7 ? PAL.red : PAL.grey;
-    g.fillRect(tx, ty, r < 0.4 ? 3 : 2, 2);
-  }
-}
-
-function dumpster(g, x, y) {
-  g.fillStyle = 'rgba(0,0,0,0.4)';
-  g.fillRect(x + 2, y + 18, 36, 4);
-  g.fillStyle = PAL.black;
-  g.fillRect(x - 1, y - 1, 38, 21);
-  g.fillStyle = '#2e5b3a';
-  g.fillRect(x, y, 36, 19);
-  g.fillStyle = '#3f7a4e';
-  g.fillRect(x, y, 36, 4);
-  g.fillStyle = PAL.black;
-  for (let i = 6; i < 36; i += 8) g.fillRect(x + i, y + 6, 1, 12);
-  g.fillStyle = PAL.white;
-  g.fillRect(x + 30, y - 3, 3, 3);
-  g.fillRect(x + 4, y - 2, 4, 2);
-  spray(g, 'X', x + 18, y + 15, PAL.pink, 0.2, 9);
-}
-
-function wreck(g, x, y) {
-  g.fillStyle = 'rgba(0,0,0,0.4)';
-  g.fillRect(x - 2, y + 14, 40, 5);
-  g.fillStyle = PAL.black;
-  g.fillRect(x - 1, y - 1, 38, 17);
-  g.fillRect(x + 3, y + 13, 7, 5);
-  g.fillRect(x + 26, y + 13, 7, 5);
-  g.fillStyle = PAL.rust;
-  g.fillRect(x, y, 36, 15);
-  g.fillStyle = PAL.rustHi;
-  g.fillRect(x + 2, y + 1, 30, 3);
-  g.fillStyle = PAL.glass;
-  g.fillRect(x + 9, y + 4, 18, 6);
-  g.fillStyle = PAL.black;
-  g.fillRect(x + 12, y + 5, 3, 4);
-  g.fillRect(x + 20, y + 6, 4, 3);
-}
-
 // ─── Atmosfera ──────────────────────────────────────────────────
 
-const LIGHTS = [{ x: 140, y: 170 }, { x: 222, y: 170 }];
-
-// Lampioni sulla strada: uno dei due sfarfalla.
-function drawStreetLights(ctx, time) {
-  LIGHTS.forEach((l, i) => {
-    const on = i === 0 || Math.sin(time * 13) > -0.6 || Math.sin(time * 2.1) > 0.4;
-    if (on) {
-      ctx.fillStyle = 'rgba(242,183,5,0.10)';
-      ctx.beginPath();
-      ctx.ellipse(l.x, l.y + 6, 26, 12, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.fillStyle = PAL.black;
-    ctx.fillRect(l.x - 1, l.y - 26, 3, 30);
-    ctx.fillRect(l.x - 4, l.y + 2, 9, 3);
-    ctx.fillRect(l.x - 4, l.y - 30, 9, 5);
-    ctx.fillStyle = on ? PAL.fluo : PAL.steel;
-    ctx.fillRect(l.x - 3, l.y - 29, 7, 3);
-  });
-}
-
-function drawDust(ctx, dust, dt) {
-  ctx.fillStyle = 'rgba(232,226,208,0.22)';
+function drawDust(ctx, dust, dt, canvas) {
+  ctx.fillStyle = 'rgba(232,226,208,0.25)';
+  const s = Math.max(1, Math.round(canvas.height / 400));
   for (const d of dust) {
     d.x += d.v * dt;
-    d.y += Math.sin(d.a += dt) * 3 * dt;
-    if (d.x > WORLD.w + 4) { d.x = -4; d.y = Math.random() * WORLD.h; }
-    ctx.fillRect(Math.round(d.x), Math.round(d.y), 1, 1);
+    d.a += dt;
+    if (d.x > 1) { d.x = 0; d.y = Math.random(); }
+    ctx.fillRect(Math.round(d.x * canvas.width), Math.round((d.y + Math.sin(d.a) * 0.01) * canvas.height), s, s);
   }
 }
 
-let gradeCache = null;
-// Bordo scuro e una leggera luce calda da lampione su tutta la scena.
-function drawGrade(ctx) {
-  if (!gradeCache) {
-    const g = ctx.createRadialGradient(TOWER.x, WORLD.h * 0.6, WORLD.h * 0.3, TOWER.x, WORLD.h * 0.6, WORLD.h * 1.1);
-    g.addColorStop(0, 'rgba(13,13,15,0)');
-    g.addColorStop(1, 'rgba(13,13,15,0.7)');
-    gradeCache = g;
-  }
-  ctx.fillStyle = 'rgba(255,140,40,0.05)';
-  ctx.fillRect(-MX, -MY, WORLD.w + MX * 2, WORLD.h + MY * 2);
-  ctx.fillStyle = gradeCache;
-  ctx.fillRect(-MX, -MY, WORLD.w + MX * 2, WORLD.h + MY * 2);
+function drawGrade(ctx, canvas) {
+  const w = canvas.width, h = canvas.height;
+  const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.32, w / 2, h / 2, Math.max(w, h) * 0.72);
+  g.addColorStop(0, 'rgba(13,13,15,0)');
+  g.addColorStop(1, 'rgba(13,13,15,0.75)');
+  ctx.fillStyle = 'rgba(255,140,40,0.04)';
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
 }
 
 function drawRange(ctx, range, time) {
@@ -531,10 +161,76 @@ function drawRange(ctx, range, time) {
   ctx.restore();
 }
 
+// Angolo "da geometria" (0 = destra, 90 = su) → angolo del canvas (y verso il basso).
+const rad = deg => -deg * Math.PI / 180;
+
+// Spicchi difesi dai colleghi: un arco colorato a terra.
+function drawSectors(ctx, run, time) {
+  for (const ally of run.allies) {
+    const color = ALLY_COLOR[ally.id];
+    if (!color) continue; // i maghi non hanno spicchio
+    const width = allyArc(ally.level), center = ALLY_SLOTS[ally.slot];
+    const r = 104 + ally.slot * 3;
+    ctx.save();
+    ctx.globalAlpha = run.phase === 'wave' ? 0.35 : 0.6 + Math.sin(time * 4) * 0.2;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    if (width >= 360) ctx.arc(TOWER.x, TOWER.y, r, 0, Math.PI * 2);
+    else ctx.arc(TOWER.x, TOWER.y, r, rad(center + width / 2), rad(center - width / 2));
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// Recinto elettrico: pali e fili sui quarti di cerchio costruiti.
+// back=true disegna la metà dietro al palazzo, back=false quella davanti.
+function drawFence(ctx, run, time, back) {
+  if (!run || !run.stats.fence) return;
+  const q = run.stats.fence, r = FENCE.outer - 4;
+  for (let deg = 0; deg < q * 90; deg += 12) {
+    const a = rad(deg + 6);
+    const x = TOWER.x + Math.cos(a) * r, y = TOWER.y + Math.sin(a) * r * 0.8;
+    if ((y < TOWER.y) !== back) continue;
+    ctx.fillStyle = PAL.black;
+    ctx.fillRect(Math.round(x) - 1, Math.round(y) - 12, 3, 13);
+    ctx.fillStyle = PAL.steel;
+    ctx.fillRect(Math.round(x), Math.round(y) - 11, 1, 11);
+    ctx.fillStyle = PAL.hazard;
+    ctx.fillRect(Math.round(x) - 1, Math.round(y) - 13, 3, 2);
+  }
+  ctx.save();
+  ctx.strokeStyle = 'rgba(45,226,230,0.75)';
+  ctx.lineWidth = 1;
+  for (const h of [-10, -5]) {
+    ctx.beginPath();
+    for (let deg = 0; deg <= q * 90; deg += 3) {
+      const a = rad(deg);
+      const y = TOWER.y + Math.sin(a) * r * 0.8;
+      if ((y < TOWER.y) !== back) { ctx.moveTo(TOWER.x + Math.cos(a) * r, y + h); continue; }
+      const jitter = Math.random() < 0.08 ? (Math.random() - 0.5) * 3 : 0;
+      ctx.lineTo(TOWER.x + Math.cos(a) * r, y + h + jitter);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function hiddenByTower(e) {
+  return Math.abs(e.x - TOWER.x) < B.w / 2 + 8 && e.y > B.top && e.y < B.base;
+}
+
+function drawGhost(ctx, assets, e) {
+  ctx.globalAlpha = 0.4;
+  drawPersonAt(ctx, assets.person(e.look, 0, e.scale || 1, true), e.x, e.y);
+  ctx.globalAlpha = 1;
+}
+
 // ─── Palazzo (la torre) ─────────────────────────────────────────
 
-// Stato di ogni finestra (3 colonne × 5 piani): L accesa, D spenta, X rotta, B sbarrata con assi.
-const WINDOWS = 'LDL' + 'XLL' + 'LBD' + 'DLX' + 'LLB';
+// Stato di ogni finestra (3 colonne × 4 piani): L accesa, D spenta, X rotta, B sbarrata con assi.
+const WINDOWS = 'LDL' + 'XLL' + 'LBD' + 'DLX';
 const STAINS = [[6, 22, 12], [21, 40, 9], [36, 18, 16], [10, 70, 8], [33, 60, 14]];
 // Crepe che compaiono quando il palazzo è danneggiato.
 const CRACKS = [
@@ -571,7 +267,7 @@ function drawTower(ctx, assets, run, time) {
   }
 
   // Piani e finestre
-  for (let r = 0; r < 5; r++) {
+  for (let r = 0; r < 4; r++) {
     const wy = top + 10 + r * 15;
     ctx.fillStyle = 'rgba(13,13,15,0.45)';
     ctx.fillRect(x0 + 2, wy + 12, w - 12, 1);
@@ -756,8 +452,7 @@ function drawSmoke(ctx, smoke) {
 
 function drawAlly(ctx, assets, ally, time) {
   const def = allyDef(ally.id);
-  const slot = ALLY_SLOTS[ally.slot];
-  const x = TOWER.x + slot.x, y = TOWER.y + slot.y;
+  const { x, y } = allyPos(ally);
   const drop = Math.round((1 - ally.spawn) * -40); // arriva "paracadutato" dall'alto
 
   // postazione di sacchi di sabbia
@@ -1017,38 +712,55 @@ function drawFx(ctx, run) {
   ctx.globalAlpha = 1;
 }
 
-function drawBanner(ctx, run) {
+
+// ─── Scritte sopra al mondo (coordinate dello schermo) ──────────
+
+function drawSceneTitle(ctx, name, W, H, fade) {
+  ctx.globalAlpha = Math.min(1, (fade - 0.2) * 3);
+  ctx.textAlign = 'center';
+  ctx.font = `9px ${FONT}`;
+  ctx.fillStyle = PAL.white;
+  ctx.fillText('NUOVO SCENARIO', W / 2, H * 0.72);
+  ctx.font = `20px ${SPRAY}`;
+  ctx.fillStyle = PAL.black;
+  ctx.fillText(name, W / 2 + 2, H * 0.72 + 26);
+  ctx.fillStyle = PAL.hazard;
+  ctx.fillText(name, W / 2, H * 0.72 + 24);
+  ctx.globalAlpha = 1;
+}
+
+function drawBanner(ctx, run, W, H) {
   const b = run.fx.banner;
   if (!b) return;
   const k = b.life / b.max;
   // entra da sinistra, resta fermo, poi svanisce
-  const slide = k > 0.85 ? (k - 0.85) / 0.15 * -WORLD.w : 0;
+  const slide = k > 0.85 ? (k - 0.85) / 0.15 * -W : 0;
   ctx.globalAlpha = Math.min(1, k * 5);
-  const h = b.sub ? 58 : 40;
+  const h = b.sub ? 58 : 40, y = Math.round(H * 0.24);
   ctx.fillStyle = 'rgba(13,13,15,0.85)';
-  ctx.fillRect(0, 150, WORLD.w, h);
-  hazardStripes(ctx, 0, 150, WORLD.w, 4);
-  hazardStripes(ctx, 0, 150 + h - 4, WORLD.w, 4);
+  ctx.fillRect(0, y, W, h);
+  hazardStripes(ctx, 0, y, W, 4);
+  hazardStripes(ctx, 0, y + h - 4, W, 4);
   ctx.textAlign = 'center';
   ctx.font = `22px ${SPRAY}`;
   ctx.fillStyle = PAL.black;
-  ctx.fillText(b.title, WORLD.w / 2 + slide + 2, 182);
+  ctx.fillText(b.title, W / 2 + slide + 2, y + 32);
   ctx.fillStyle = b.color;
-  ctx.fillText(b.title, WORLD.w / 2 + slide, 180);
+  ctx.fillText(b.title, W / 2 + slide, y + 30);
   if (b.sub) {
     ctx.font = `7px ${FONT}`;
     ctx.fillStyle = PAL.white;
-    ctx.fillText(b.sub, WORLD.w / 2 + slide, 198);
+    ctx.fillText(b.sub, W / 2 + slide, y + 48);
   }
   ctx.globalAlpha = 1;
 }
 
-function drawBossBar(ctx, run) {
+function drawBossBar(ctx, run, W) {
   if (!run.boss) return;
   const list = run.boss.list;
   const hp = list.reduce((a, e) => a + Math.max(0, e.hp), 0);
   const max = list.reduce((a, e) => a + e.maxHp, 0);
-  const x = 20, y = 30, w = WORLD.w - 40;
+  const w = Math.min(W - 40, 420), x = (W - w) / 2, y = 14;
   ctx.fillStyle = PAL.black;
   ctx.fillRect(x - 3, y - 3, w + 6, 14);
   ctx.fillStyle = PAL.blood;
@@ -1061,7 +773,7 @@ function drawBossBar(ctx, run) {
   ctx.textAlign = 'center';
   ctx.strokeStyle = PAL.black;
   ctx.lineWidth = 4;
-  ctx.strokeText(run.boss.name, WORLD.w / 2, y + 24);
+  ctx.strokeText(run.boss.name, W / 2, y + 24);
   ctx.fillStyle = PAL.white;
-  ctx.fillText(run.boss.name, WORLD.w / 2, y + 24);
+  ctx.fillText(run.boss.name, W / 2, y + 24);
 }
