@@ -6,7 +6,7 @@ import { makeEnemy } from './waves.js';
 import { ENEMIES } from '../data/enemies.js';
 
 // Punto da cui partono i colpi: il personaggio sul tetto della torre.
-const MUZZLE = { x: TOWER.x + 1, y: TOWER.y - 77 };
+const MUZZLE = { x: TOWER.x + 7, y: TOWER.y - 75 };
 
 // ─── Nemici ─────────────────────────────────────────────────────
 

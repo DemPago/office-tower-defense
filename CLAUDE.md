@@ -60,7 +60,8 @@ Rinforzi: `run.allies` contiene unità indipendenti (si possono avere due colleg
 ### Grafica
 
 **Nessuna immagine**: tutto è disegnato via codice.
-- `render/people.js`: personaggi in pixel art. Ogni `LOOKS[id]` descrive un vestito su una griglia 16×34 (6 righe in alto per i cappelli). `render/assets.js` li genera con contorno nero, li scala (×2 per i boss) e li mette in cache; un look nuovo va aggiunto lì e referenziato con `look:` nei dati.
+- `render/people.js`: personaggi in **pixel art HD**. Ogni `LOOKS[id]` descrive un vestito su una griglia 32×68 (12 righe in alto per cappelli), camminata a 4 fotogrammi. Un pixel della griglia vale `WORLD_PER_PX` = 0.5 pixel del mondo, quindi i personaggi hanno il doppio del dettaglio dello sfondo. `render/assets.js#person(look, frame, scale, white)` restituisce `{ img, w, h, k }` con la misura nel mondo (scale 2 per i boss); un look nuovo va aggiunto in `LOOKS` e referenziato con `look:` nei dati.
+- Il palazzo in `render/world.js` è disegnato anch'esso a risoluzione doppia (`ctx.scale(0.5)`), con la facciata statica in cache.
 - `render/scenery.js`: 6 scenari (uno per reparto, cambiano ogni 10 ondate con una dissolvenza) disegnati una volta su un canvas con random a seed fisso, più un'animazione leggera opzionale (`ambient`). Gli oggetti di scena riusabili sono in `render/props.js`.
 - `render/world.js`: camera, palazzo, nemici (quelli nascosti dietro al palazzo si vedono in trasparenza), rinforzi, recinto, colpi, effetti.
 - `render/palette.js`: palette `PAL`, la stessa delle variabili CSS in `style.css`, da mantenere allineate. Font: Press Start 2P (testi) e Permanent Marker (titoli/graffiti), caricati prima di generare gli sfondi.

@@ -5,7 +5,7 @@ import { TOWER } from '../state.js';
 import { allyDef, allyPos } from '../systems/allies.js';
 import { ALLY_SLOTS, allyArc } from '../data/allies.js';
 import { FENCE } from '../systems/combat.js';
-import { LOOKS } from './people.js';
+import { LOOKS, EYES, FRAMES } from './people.js';
 import { PAL, FONT, SPRAY } from './palette.js';
 import { hazardStripes, sandbag } from './props.js';
 import { buildScene, sceneIndexForWave, MARGIN } from './scenery.js';
@@ -229,186 +229,188 @@ function drawGhost(ctx, assets, e) {
 
 // ─── Palazzo (la torre) ─────────────────────────────────────────
 
+// Il palazzo è disegnato a risoluzione doppia (1 pixel = mezzo pixel del mondo),
+// come i personaggi. Coordinate interne: facciata 120×168, origine in alto a sinistra.
+const TW = B.w * 2, TH = B.h * 2;
 // Stato di ogni finestra (3 colonne × 4 piani): L accesa, D spenta, X rotta, B sbarrata con assi.
 const WINDOWS = 'LDL' + 'XLL' + 'LBD' + 'DLX';
-const STAINS = [[6, 22, 12], [21, 40, 9], [36, 18, 16], [10, 70, 8], [33, 60, 14]];
-// Crepe che compaiono quando il palazzo è danneggiato.
+// Crepe che compaiono quando il palazzo è danneggiato (coordinate interne).
 const CRACKS = [
-  [[8, 30], [12, 36], [10, 42], [15, 48]],
-  [[44, 20], [40, 27], [43, 33]],
-  [[30, 60], [26, 66], [29, 72], [25, 78]],
+  [[16, 60], [24, 72], [20, 84], [30, 96], [26, 104]],
+  [[88, 40], [80, 54], [86, 66], [82, 74]],
+  [[60, 120], [52, 132], [58, 144], [50, 156]],
 ];
+let facadeCache = null;
+
+// Facciata "statica" (cemento, macchie, colature): disegnata una sola volta.
+function facade() {
+  if (facadeCache) return facadeCache;
+  const c = document.createElement('canvas');
+  c.width = TW;
+  c.height = TH;
+  const g = c.getContext('2d');
+  const p = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+  let seed = 5;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+  p(0, 0, TW, TH, PAL.concrete);
+  for (let i = 0; i < 1400; i++) p(Math.floor(rnd() * TW), Math.floor(rnd() * TH), 1, 1, rnd() < 0.5 ? PAL.concreteHi : PAL.concreteDk);
+  for (let x = 20; x < TW - 20; x += 20) p(x, 0, 1, TH, 'rgba(13,13,15,0.18)');         // giunti dei pannelli
+  for (let y = 46; y < TH; y += 30) { p(0, y, TW, 2, PAL.concreteDk); p(0, y + 2, TW, 1, PAL.concreteHi); } // marcapiani
+  p(0, 0, 3, TH, PAL.concreteHi);                                                         // spigolo illuminato
+  p(TW - 20, 0, 20, TH, PAL.concreteDk);                                                  // lato in ombra
+  p(TW - 20, 0, 2, TH, PAL.black);
+  for (let i = 0; i < 18; i++) {                                                          // colature di sporco
+    const x = Math.floor(rnd() * (TW - 24)), y = Math.floor(rnd() * TH * 0.8), len = 8 + Math.floor(rnd() * 24);
+    p(x, y, 1, len, 'rgba(13,13,15,0.3)');
+    p(x + 1, y, 1, Math.floor(len * 0.6), 'rgba(13,13,15,0.2)');
+  }
+  for (let i = 0; i < 4; i++) {                                                           // ruggine
+    const x = Math.floor(rnd() * (TW - 30)), y = Math.floor(rnd() * 40);
+    p(x, y, 2, 20 + Math.floor(rnd() * 20), 'rgba(138,59,30,0.45)');
+  }
+  // graffito
+  g.font = `16px ${SPRAY}`;
+  g.fillStyle = PAL.black;
+  g.fillText('OTD', 8, TH - 12);
+  g.fillStyle = PAL.pink;
+  g.fillText('OTD', 6, TH - 14);
+  facadeCache = c;
+  return c;
+}
+
+function drawWindow(p, x, y, kind, flick, i) {
+  p(x - 1, y - 1, 26, 22, PAL.black);
+  p(x, y + 20, 24, 2, PAL.concreteHi); // davanzale
+  if (kind === 'L') {
+    p(x, y, 24, 20, flick ? '#9aa05a' : PAL.fluo);
+    for (let r = 2; r < 9; r += 2) p(x, y + r, 24, 1, 'rgba(120,110,40,0.35)'); // tapparelle a metà
+    // sagome di impiegati dietro al vetro
+    const sx = x + 4 + (i * 7) % 12;
+    p(sx, y + 11, 6, 9, 'rgba(13,13,15,0.55)');
+    p(sx + 1, y + 8, 4, 4, 'rgba(13,13,15,0.55)');
+    p(x + 2, y + 2, 3, 6, 'rgba(255,255,255,0.4)');
+  } else if (kind === 'D') {
+    p(x, y, 24, 20, PAL.glass);
+    for (let k = 0; k < 6; k++) p(x + 3 + k, y + 2 + k, 1, 1, '#4b6075');        // riflesso in diagonale
+    for (let k = 0; k < 4; k++) p(x + 12 + k, y + 9 + k, 1, 1, '#34465a');
+  } else if (kind === 'X') {
+    p(x, y, 24, 20, '#060607');
+    p(x, y, 7, 2, PAL.grey); p(x, y, 2, 6, PAL.grey); p(x + 5, y + 2, 2, 2, PAL.grey); // schegge di vetro
+    p(x + 18, y + 16, 6, 2, PAL.grey); p(x + 22, y + 11, 2, 6, PAL.grey);
+    p(x + 9, y + 8, 3, 1, 'rgba(192,196,204,0.5)');
+  } else {
+    p(x, y, 24, 20, PAL.glass);
+    for (const [py, tilt] of [[3, 0], [9, 1], [15, 0]]) {
+      p(x - 3, y + py + tilt, 30, 4, PAL.wood);
+      p(x - 3, y + py + tilt, 30, 1, PAL.woodHi);
+      p(x - 1, y + py + 1 + tilt, 1, 1, PAL.black); p(x + 24, y + py + 1 + tilt, 1, 1, PAL.black); // chiodi
+    }
+  }
+}
 
 function drawTower(ctx, assets, run, time) {
-  const { w, h, x0, base, top } = B;
   const hpRatio = run ? run.tower.hp / run.stats.maxHp : 1;
   const dead = run && run.phase === 'over';
 
-  // Ombra a terra
+  // Ombra a terra (in coordinate del mondo)
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
-  ctx.fillRect(x0 + 6, base - 2, w + 14, 7);
+  ctx.fillRect(B.x0 + 6, B.base - 2, B.w + 14, 7);
 
-  // Facciata di cemento sporco
-  ctx.fillStyle = PAL.black;
-  ctx.fillRect(x0 - 2, top - 2, w + 4, h + 4);
-  ctx.fillStyle = PAL.concrete;
-  ctx.fillRect(x0, top, w, h);
-  ctx.fillStyle = PAL.concreteHi;
-  ctx.fillRect(x0, top, 2, h);
-  ctx.fillStyle = PAL.concreteDk;
-  ctx.fillRect(x0 + w - 10, top, 10, h);
-  ctx.fillStyle = PAL.black;
-  ctx.fillRect(x0 + w - 10, top, 1, h);
-  // colature di sporco
-  for (const [sx, sy, len] of STAINS) {
-    ctx.fillStyle = 'rgba(13,13,15,0.35)';
-    ctx.fillRect(x0 + sx, top + sy, 1, len);
-    ctx.fillRect(x0 + sx + 1, top + sy, 1, len - 4);
-  }
+  ctx.save();
+  ctx.translate(B.x0, B.top);
+  ctx.scale(0.5, 0.5);
+  const p = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
 
-  // Piani e finestre
+  p(-3, -3, TW + 6, TH + 6, PAL.black);
+  ctx.drawImage(facade(), 0, 0);
+
+  // Finestre: 3 colonne × 4 piani
   for (let r = 0; r < 4; r++) {
-    const wy = top + 10 + r * 15;
-    ctx.fillStyle = 'rgba(13,13,15,0.45)';
-    ctx.fillRect(x0 + 2, wy + 12, w - 12, 1);
     for (let col = 0; col < 3; col++) {
       const i = r * 3 + col;
-      const wx = x0 + 5 + col * 15;
       let kind = WINDOWS[i];
       if (dead && kind === 'L') kind = 'D';
       if (hpRatio < 0.3 && kind === 'L' && i % 2) kind = 'X';
-      // le luci al neon ogni tanto sfarfallano
       const flick = kind === 'L' && Math.sin(time * 9 + i * 3.1) > 0.92;
-      ctx.fillStyle = PAL.black;
-      ctx.fillRect(wx, wy, 12, 10);
-      if (kind === 'L') {
-        ctx.fillStyle = flick ? '#9aa05a' : PAL.fluo;
-        ctx.fillRect(wx + 1, wy + 1, 10, 8);
-        ctx.fillStyle = 'rgba(13,13,15,0.4)';
-        ctx.fillRect(wx + 1, wy + 6, 10, 3);  // sagome dietro il vetro
-      } else if (kind === 'D') {
-        ctx.fillStyle = PAL.glass;
-        ctx.fillRect(wx + 1, wy + 1, 10, 8);
-        ctx.fillStyle = '#34465a';
-        ctx.fillRect(wx + 2, wy + 2, 2, 2);
-      } else if (kind === 'X') {
-        ctx.fillStyle = PAL.black;
-        ctx.fillRect(wx + 1, wy + 1, 10, 8);
-        ctx.fillStyle = PAL.grey;
-        ctx.fillRect(wx + 1, wy + 1, 3, 1);
-        ctx.fillRect(wx + 1, wy + 2, 1, 2);
-        ctx.fillRect(wx + 8, wy + 7, 3, 1);
-        ctx.fillRect(wx + 10, wy + 5, 1, 2);
-      } else {
-        ctx.fillStyle = PAL.glass;
-        ctx.fillRect(wx + 1, wy + 1, 10, 8);
-        ctx.fillStyle = PAL.wood;
-        ctx.fillRect(wx - 1, wy + 2, 14, 2);
-        ctx.fillRect(wx - 1, wy + 6, 14, 2);
-        ctx.fillStyle = PAL.black;
-        ctx.fillRect(wx + 2, wy + 2, 1, 1);
-        ctx.fillRect(wx + 9, wy + 6, 1, 1);
-      }
+      drawWindow(p, 8 + col * 32, 18 + r * 30, kind, flick, i);
     }
   }
 
-  // Graffito sulla facciata
-  ctx.save();
-  ctx.font = `9px ${SPRAY}`;
-  ctx.textAlign = 'left';
-  ctx.fillStyle = PAL.black;
-  ctx.fillText('OTD', x0 + 4, base - 7);
-  ctx.fillStyle = PAL.pink;
-  ctx.fillText('OTD', x0 + 3, base - 8);
-  ctx.restore();
+  // Ingresso: saracinesca mezza alzata con architrave a strisce
+  const dx = TW / 2 - 20;
+  hazardStripes(ctx, dx - 6, TH - 44, 52, 8);
+  p(dx - 2, TH - 36, 44, 36, PAL.black);
+  p(dx, TH - 34, 40, 20, PAL.steel);
+  for (let i = 0; i < 10; i++) p(dx, TH - 33 + i * 2, 40, 1, i % 2 ? '#4a4d54' : '#6b6f77');
+  p(dx, TH - 14, 40, 14, '#060607');
+  p(dx + 4, TH - 10, 6, 10, 'rgba(242,183,5,0.12)'); // luce dall'interno
 
-  // Ingresso: saracinesca mezza alzata, con architrave a strisce
-  const dx = TOWER.x - 9;
-  hazardStripes(ctx, dx - 3, base - 22, 24, 4);
-  ctx.fillStyle = PAL.black;
-  ctx.fillRect(dx - 1, base - 18, 20, 18);
-  ctx.fillStyle = PAL.steel;
-  ctx.fillRect(dx, base - 17, 18, 10);
-  ctx.fillStyle = PAL.black;
-  for (let i = 0; i < 5; i++) ctx.fillRect(dx, base - 15 + i * 2, 18, 1);
-  ctx.fillStyle = '#060607';
-  ctx.fillRect(dx, base - 7, 18, 7);
-  // sacchi di sabbia davanti all'ingresso
-  sandbag(ctx, dx - 16, base - 6);
-  sandbag(ctx, dx + 23, base - 6);
-
-  // Tetto: cornicione, filo spinato, condizionatore arrugginito, parabola
-  ctx.fillStyle = PAL.black;
-  ctx.fillRect(x0 - 4, top - 4, w + 8, 6);
-  ctx.fillStyle = PAL.concreteDk;
-  ctx.fillRect(x0 - 3, top - 3, w + 6, 4);
-  ctx.fillStyle = PAL.black;
-  ctx.fillRect(x0 + 2, top - 14, 15, 11);
-  ctx.fillStyle = PAL.rust;
-  ctx.fillRect(x0 + 3, top - 13, 13, 9);
-  ctx.fillStyle = PAL.rustHi;
-  ctx.fillRect(x0 + 3, top - 13, 13, 2);
-  ctx.fillStyle = PAL.black;
-  for (let i = 0; i < 3; i++) ctx.fillRect(x0 + 5 + i * 4, top - 10, 2, 5);
-  ctx.fillStyle = 'rgba(138,59,30,0.5)';
-  ctx.fillRect(x0 + 8, top + 1, 1, 12);       // colatura di ruggine sulla facciata
-  ctx.fillStyle = PAL.black;
-  ctx.fillRect(x0 + w - 14, top - 15, 11, 9);
-  ctx.fillStyle = PAL.grey;
-  ctx.fillRect(x0 + w - 13, top - 14, 9, 6);
-  ctx.fillStyle = PAL.black;
-  ctx.fillRect(x0 + w - 9, top - 9, 1, 6);
+  // Tetto: cornicione, filo spinato, condizionatore arrugginito, parabola, antenna
+  p(-8, -8, TW + 16, 12, PAL.black);
+  p(-6, -6, TW + 12, 8, PAL.concreteDk);
+  p(-6, -6, TW + 12, 2, PAL.concreteHi);
+  p(4, -28, 30, 22, PAL.black);
+  p(6, -26, 26, 18, PAL.rust);
+  p(6, -26, 26, 3, PAL.rustHi);
+  for (let i = 0; i < 6; i++) p(9 + i * 4, -21, 2, 10, PAL.black);          // griglia della ventola
+  p(TW - 28, -30, 22, 18, PAL.black);
+  p(TW - 26, -28, 18, 12, PAL.grey);
+  p(TW - 26, -28, 18, 3, PAL.silver);
+  p(TW - 18, -18, 2, 12, PAL.black);
+  p(TW - 12, -60, 3, 52, PAL.black);                                        // antenna
+  p(TW - 18, -44, 15, 2, PAL.black);
+  p(TW - 16, -52, 11, 2, PAL.black);
+  p(TW - 14, -66, 7, 7, Math.sin(time * 4) > 0 ? PAL.red : PAL.blood);
   ctx.strokeStyle = PAL.grey;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  for (let i = 0; i <= w + 6; i += 3) ctx.lineTo(x0 - 3 + i + 0.5, top - 6 + (i / 3 % 2 ? 0 : 2) + 0.5);
+  for (let i = 0; i <= TW + 12; i += 4) ctx.lineTo(-6 + i + 0.5, -12 + ((i / 4) % 2 ? 0 : 3) + 0.5);
   ctx.stroke();
 
   // Insegna al neon con una lettera che fa i capricci
-  ctx.fillStyle = PAL.black;
-  ctx.fillRect(x0 + 4, top + 1, w - 18, 8);
-  ctx.save();
-  ctx.font = `5px ${FONT}`;
+  p(8, 2, TW - 36, 14, PAL.black);
+  p(8, 2, TW - 36, 1, PAL.steel);
+  ctx.font = `8px ${FONT}`;
   ctx.textAlign = 'left';
   ctx.shadowColor = PAL.pink;
-  ctx.shadowBlur = dead ? 0 : 6;
-  const letters = 'UFFICIO';
+  ctx.shadowBlur = dead ? 0 : 8;
   const broken = Math.sin(time * 17) > 0.2 || Math.sin(time * 1.3) > 0.7;
-  for (let i = 0; i < letters.length; i++) {
-    const off = dead || (i === 4 && broken);
-    ctx.fillStyle = off ? '#4a1830' : PAL.pink;
-    ctx.fillText(letters[i], x0 + 6 + i * 5.6, top + 7.5);
-  }
-  ctx.restore();
+  'UFFICIO'.split('').forEach((ch, i) => {
+    ctx.fillStyle = dead || (i === 4 && broken) ? '#4a1830' : PAL.pink;
+    ctx.fillText(ch, 12 + i * 11, 13);
+  });
+  ctx.shadowBlur = 0;
 
   // Crepe quando la vita scende
   if (hpRatio < 0.6) {
     ctx.strokeStyle = PAL.black;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     const n = hpRatio < 0.3 ? CRACKS.length : 1;
     for (let k = 0; k < n; k++) {
       ctx.beginPath();
-      CRACKS[k].forEach(([cx, cy], j) => (j ? ctx.lineTo : ctx.moveTo).call(ctx, x0 + cx + 0.5, top + cy + 0.5));
+      CRACKS[k].forEach(([cx, cy], j) => (j ? ctx.lineTo : ctx.moveTo).call(ctx, cx, cy));
       ctx.stroke();
     }
   }
 
   // Lampo rosso quando viene colpito
-  if (run && run.tower.hitFlash > 0) {
-    ctx.fillStyle = 'rgba(215,38,61,0.35)';
-    ctx.fillRect(x0 - 2, top - 2, w + 4, h + 4);
-  }
+  if (run && run.tower.hitFlash > 0) p(-3, -3, TW + 6, TH + 6, 'rgba(215,38,61,0.35)');
+  ctx.restore();
+
+  // Sacchi di sabbia davanti all'ingresso (in coordinate del mondo)
+  sandbag(ctx, TOWER.x - 26, B.base - 6);
+  sandbag(ctx, TOWER.x + 15, B.base - 6);
 
   if (dead) return;
 
   // Il protagonista sul tetto: elmetto e giubbotto catarifrangente
   const recoil = run && run.tower.recoil > 0 ? 1 : 0;
   const bob = Math.round(Math.sin(time * 2.2) * 0.6);
-  const feet = top - 2 + recoil + bob;
-  drawPersonAt(ctx, assets.person('player', 0, 1), TOWER.x, feet);
+  const feet = B.top - 3 + recoil + bob;
+  drawPersonAt(ctx, assets.person('player', 0, 1), TOWER.x + 4, feet);
   // Lampo allo sparo
   if (recoil) {
-    const fx = TOWER.x + 1, fy = feet - 15;
+    const fx = TOWER.x + 5, fy = feet - 15;
     ctx.fillStyle = PAL.white;
     ctx.fillRect(fx - 2, fy - 2, 5, 5);
     ctx.fillStyle = PAL.hazard;
@@ -417,9 +419,9 @@ function drawTower(ctx, assets, run, time) {
   }
 }
 
-// Disegna uno sprite di personaggio con i piedi nel punto (x, feetY).
-function drawPersonAt(ctx, img, x, feetY) {
-  ctx.drawImage(img, Math.round(x - img.width / 2), Math.round(feetY - img.height + 2));
+// Disegna uno sprite di personaggio (da assets.person) con i piedi nel punto (x, feetY).
+function drawPersonAt(ctx, sp, x, feetY) {
+  ctx.drawImage(sp.img, x - sp.w / 2, feetY - sp.h + sp.k * 2, sp.w, sp.h);
 }
 
 function updateSmoke(smoke, run, dt) {
@@ -514,7 +516,7 @@ function drawShadow(ctx, e) {
 
 function drawEnemy(ctx, assets, e) {
   const s = e.size, k = e.scale || 1;
-  const frame = e.moving ? Math.floor(e.anim * 2) % 2 : 0;
+  const frame = e.moving ? Math.floor(e.anim * 2.5) % FRAMES : 1;
   let x = e.x, feet = e.y;
   if (e.moving) feet -= Math.abs(Math.sin(e.anim * Math.PI)) * k; // saltello mentre cammina
   if (e.lunge > 0) {
@@ -535,13 +537,13 @@ function drawEnemy(ctx, assets, e) {
   drawPersonAt(ctx, assets.person(e.look, frame, k), x, feet);
   if (e.elite) {
     // ÉLITE: occhi rossi che brillano
-    const img = assets.person(e.look, frame, k);
-    const left = Math.round(x - img.width / 2), top = Math.round(feet - img.height + 2);
+    const sp = assets.person(e.look, frame, k);
+    const left = x - sp.w / 2, top = feet - sp.h + sp.k * 2;
+    const ey = top + (EYES.y + 1) * sp.k;
     ctx.fillStyle = 'rgba(215,38,61,0.45)';
-    ctx.fillRect(left + 6 * k, top + 12 * k, 5 * k, 3 * k);
+    ctx.fillRect(left + (EYES.xs[0]) * sp.k, ey - sp.k, 10 * sp.k, 4 * sp.k);
     ctx.fillStyle = '#ff2a3d';
-    ctx.fillRect(left + 7 * k, top + 13 * k, k, k);
-    ctx.fillRect(left + 10 * k, top + 13 * k, k, k);
+    for (const ex of EYES.xs) ctx.fillRect(left + (ex + 1) * sp.k, ey, 2 * sp.k, 2 * sp.k);
   }
   if (e.hitFlash > 0) {
     ctx.globalAlpha = 0.6;

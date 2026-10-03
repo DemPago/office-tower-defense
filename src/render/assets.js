@@ -1,7 +1,7 @@
 // Sprite dei personaggi: generati via codice da render/people.js e messi in cache.
 // Ogni sprite ha un contorno nero di 1 pixel ed esiste in versione normale e
 // tutta bianca (per il lampo quando un personaggio viene colpito).
-import { LOOKS, GRID, drawPerson } from './people.js';
+import { LOOKS, GRID, WORLD_PER_PX, drawPerson } from './people.js';
 
 function silhouette(src, color) {
   const c = document.createElement('canvas');
@@ -15,15 +15,15 @@ function silhouette(src, color) {
   return c;
 }
 
-function build(lookId, frame, scale) {
-  // 1) personaggio alla risoluzione base, con 1 pixel di margine per il contorno
+function build(lookId, frame) {
+  // 1) personaggio alla risoluzione della griglia, con 1 pixel di margine per il contorno
   const base = document.createElement('canvas');
   base.width = GRID.w + 2;
   base.height = GRID.h + 2;
   const bg = base.getContext('2d');
   bg.translate(1, 1);
   drawPerson(bg, LOOKS[lookId], frame);
-  // 2) contorno nero
+  // 2) contorno scuro tutto intorno
   const out = document.createElement('canvas');
   out.width = base.width;
   out.height = base.height;
@@ -31,28 +31,22 @@ function build(lookId, frame, scale) {
   const black = silhouette(base, '#0d0d0f');
   for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) og.drawImage(black, dx, dy);
   og.drawImage(base, 0, 0);
-  if (scale === 1) return out;
-  // 3) ingrandimento a pixel netti (per i boss)
-  const big = document.createElement('canvas');
-  big.width = out.width * scale;
-  big.height = out.height * scale;
-  const bg2 = big.getContext('2d');
-  bg2.imageSmoothingEnabled = false;
-  bg2.drawImage(out, 0, 0, big.width, big.height);
-  return big;
+  return out;
 }
 
 export async function loadAssets() {
   const cache = new Map();
-  // Restituisce lo sprite pronto: i piedi sono sul bordo in basso, al centro.
+  // Restituisce { img, w, h }: l'immagine e la sua misura nel mondo di gioco
+  // (scale 2 per i boss). I piedi sono sul bordo in basso, al centro.
   function person(lookId, frame = 0, scale = 1, white = false) {
-    const key = `${lookId}|${frame}|${scale}|${white}`;
-    let s = cache.get(key);
-    if (!s) {
-      s = white ? silhouette(person(lookId, frame, scale), '#ffffff') : build(lookId, frame, scale);
-      cache.set(key, s);
+    const key = `${lookId}|${frame}|${white}`;
+    let img = cache.get(key);
+    if (!img) {
+      img = white ? silhouette(person(lookId, frame).img, '#ffffff') : build(lookId, frame);
+      cache.set(key, img);
     }
-    return s;
+    const k = WORLD_PER_PX * scale;
+    return { img, w: img.width * k, h: img.height * k, k };
   }
   return { person };
 }
