@@ -98,6 +98,16 @@ function drawQuad({ px, ell, blob }, A, frame) {
     ell(cx + L * 0.3, cy, BH * 0.35, BH * 0.4, belly);              // petto chiaro
   }
   if (A.kind === 'dragon') for (let i = 0; i < L * 0.8; i += 5) px(cx - L * 0.4 + i, cy - BH * 0.5 - 2, 3, 3, A.belly); // cresta
+  if (A.hackles) {
+    // pelo ritto lungo la schiena, a punte irregolari
+    for (let i = 0; i < L * 0.9; i += 3) {
+      const h = 4 + ((i * 7) % 5) + (i > L * 0.55 ? 3 : 0);
+      for (let r = 0; r < h; r++) px(cx - L * 0.42 + i + r * 0.3, cy - BH * 0.5 - r + 1, Math.max(1, 3 - r * 0.4), 1, r > h - 2 ? shade(fur, 1.5) : shade(fur, 0.8));
+    }
+  }
+  if (A.scars) {
+    for (const [ox, oy] of [[-0.15, -0.2], [0.05, 0.05]]) for (let k = 0; k < 7; k++) px(cx + L * ox + k, cy + BH * oy - k * 0.6, 1, 1, '#a04848');
+  }
 
   // Zampe vicine (il gorilla ha braccia lunghe con i pugni)
   leg(cx - L * 0.3 + 3, LEG, swing, false);
@@ -127,7 +137,22 @@ function drawQuad({ px, ell, blob }, A, frame) {
   blob(hx, hy, hw, hh, fur);
   if (ape) { ell(hx + 2, hy + 2, hw * 0.7, hh * 0.65, A.face); px(hx - hw * 0.4, hy - hh * 0.35, hw * 1.3, 2, shade(fur, 0.5)); } // faccia e arcata
   // Muso con mascella e denti
-  if (H.snout) {
+  if (H.snout && A.snarl) {
+    // fauci spalancate: mascella in giù, gengive rosse, zanne lunghe sopra e sotto, bava
+    const sx = hx + hw * 0.7, sy = hy + hh * 0.1, sw = H.snout * 1.5 + 3;
+    blob(sx + sw * 0.55, sy - 1, sw, hh * 0.38, fur);                               // muso superiore
+    for (let k = 0; k < 6; k++) px(sx + 2 + k * sw * 0.2, sy - hh * 0.32, 2, 1, shade(fur, 0.6)); // muso arricciato
+    const jy = sy + hh * 0.75;
+    blob(sx + sw * 0.4, jy, sw * 0.85, hh * 0.25, shade(fur, 0.9));                 // mascella aperta
+    ell(sx + sw * 0.5, sy + hh * 0.38, sw * 0.95, hh * 0.3, '#3a0a10');              // gola
+    px(sx, sy + hh * 0.12, sw * 1.5, 1.5, '#b02a3a');                               // gengiva sopra
+    px(sx + 1, jy - hh * 0.2, sw * 1.2, 1.5, '#b02a3a');                            // gengiva sotto
+    for (let k = 0; k < 5; k++) { const fx = sx + 2 + k * sw * 0.28; px(fx, sy + hh * 0.12 + 1, 1.5, k % 2 ? 3 : 5, WHITE); } // zanne sopra
+    for (let k = 0; k < 4; k++) { const fx = sx + 4 + k * sw * 0.28; px(fx, jy - hh * 0.2 - (k % 2 ? 2 : 4), 1.5, k % 2 ? 2 : 4, WHITE); } // zanne sotto
+    px(sx + sw * 0.6, jy, 1, 4, 'rgba(220,230,240,0.8)');                           // bava
+    px(sx + sw * 0.9, jy + 1, 1, 3, 'rgba(220,230,240,0.7)');
+    ell(sx + sw * 1.45, sy - 2, 3, 2.2, INK);                                       // naso
+  } else if (H.snout) {
     const sx = hx + hw * 0.75, sy = hy + hh * 0.3, sw = H.snout * 1.4 + 3;
     blob(sx + sw * 0.5, sy, sw, hh * 0.45, fur);
     px(sx, sy + hh * 0.3, sw * 1.4, 1.5, INK);                              // bocca
@@ -140,6 +165,7 @@ function drawQuad({ px, ell, blob }, A, frame) {
   }
   // Occhio rosso cattivo, con sopracciglio aggrottato
   const ex = hx + hw * 0.35, ey = hy - hh * 0.15;
+  if (A.snarl) ell(ex, ey, 5, 4, 'rgba(255,42,61,0.35)'); // bagliore
   ell(ex, ey, 2.6, 2, EYE);
   px(ex, ey - 1, 1, 1, '#ffd0d6');
   px(ex - 3, ey - 3.5, 7, 1.5, INK);

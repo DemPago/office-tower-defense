@@ -31,7 +31,12 @@ export function build(g, rnd, data) {
     for (let x = AREA.x + 6; x < AREA.x + AREA.w - 60; x += 62) {
       if (!free(x, ry, 6) || !free(x + 56, ry + 26, 6) || !free(x + 56, ry, 6) || !free(x, ry + 26, 6)) continue;
       const r = rnd();
-      if (r < 0.15) continue; // posto vuoto
+      if (r < 0.15) { // posto vuoto con un paio di Ape e una Panda da lavoro
+        P.italianCar(g, x + 6, ry + 2, 'ape', '#4a8a9a');
+        P.italianCar(g, x + 24, ry + 2, 'ape', '#e8e2d0');
+        P.italianCar(g, x + 40, ry + 2, 'panda', '#e8e2d0', rnd() < 0.5, rnd);
+        continue;
+      }
       if (r < 0.25) { for (let k = 0; k < 4; k++) P.barrel(g, x + 10 + k * 12, ry + 24, cols[Math.floor(rnd() * cols.length)]); continue; }
       P.container(g, x, ry, cols[Math.floor(rnd() * cols.length)]);
       if (rnd() < 0.4) P.container(g, x + 3, ry - 16, cols[Math.floor(rnd() * cols.length)], 50, 22);

@@ -56,8 +56,12 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 
 Dopo l'ondata 60 si ricomincia con le versioni ÉLITE (occhi rossi).
 
+🧟 **Notte degli zombie**: alla settima ondata di ogni reparto (7, 17, 27…) tutti i nemici diventano zombie (più lenti ma più resistenti) e lo scenario si tinge di verde, tra sangue, nebbia e pozze tossiche.
+
 ## 🌆 Scenari
 Dopo ogni boss cambia lo scenario: parcheggio aziendale → archivio → data center → centro commerciale → zona industriale → tetto del grattacielo, poi si ricomincia.
+
+Negli scenari di strada trovi anche **nasoni romani**, il **kebabbaro** e parcheggi pieni di **500, Panda, Alfa e Ape**.
 
 ## 🔊 Suoni
 Tutti i suoni sono generati dal browser (Web Audio API), senza file. All'arrivo di un boss parte una breve marcia originale con ottoni, timpani e rullante.

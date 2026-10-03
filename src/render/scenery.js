@@ -5,6 +5,7 @@
 // Per aggiungere uno scenario: crea il file, importalo qui e aggiungilo a SCENES.
 import { AREA, MARGIN, SCENE_RES, seeded } from './scenes/common.js';
 import { drawYard } from './scenes/yard.js';
+import { placeItalian, animateItalian } from './scenes/italian.js';
 import * as parking from './scenes/parking.js';
 import * as archive from './scenes/archive.js';
 import * as datacenter from './scenes/datacenter.js';
@@ -15,11 +16,12 @@ import * as rooftop from './scenes/rooftop.js';
 export { MARGIN, AREA, SCENE_RES };
 
 export const SCENES = [
-  { name: 'Parcheggio aziendale', ...parking },
-  { name: "Archivio dell'Amministrazione", ...archive },
+  // italian = quanti nasoni romani e kebabbari aggiungere (scenes/italian.js)
+  { name: 'Parcheggio aziendale', ...parking, italian: { nasoni: 5, kebab: 1 } },
+  { name: "Archivio dell'Amministrazione", ...archive, italian: { nasoni: 3 } },
   { name: 'Data center', ...datacenter },
-  { name: 'Centro commerciale', ...mall },
-  { name: 'Zona industriale', ...industrial },
+  { name: 'Centro commerciale', ...mall, italian: { nasoni: 3, kebab: 2 } },
+  { name: 'Zona industriale', ...industrial, italian: { nasoni: 2, kebab: 1 } },
   { name: 'Tetto del grattacielo', ...rooftop },
 ];
 
@@ -39,6 +41,11 @@ export function buildScene(index) {
   const rnd = seeded(101 + index * 7);
   const data = { leds: [], neons: [], lights: [] };
   const yardStyle = scene.build(g, rnd, data) || {};
+  if (scene.italian) placeItalian(g, rnd, data, scene.italian);
   drawYard(g, rnd, yardStyle);
-  return { canvas: c, name: scene.name, ambient: scene.ambient ? (ctx, t) => scene.ambient(ctx, t, data) : null };
+  const ambient = (ctx, t) => {
+    if (scene.ambient) scene.ambient(ctx, t, data);
+    animateItalian(ctx, t, data);
+  };
+  return { canvas: c, name: scene.name, ambient, data };
 }

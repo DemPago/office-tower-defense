@@ -26,7 +26,15 @@ export function drawEnemy(ctx, assets, e) {
 
   ctx.globalAlpha = Math.min(1, (e.age || 0) / 0.4); // compare in dissolvenza
   if (e.boss) drawBossAura(ctx, e, x, feet, s);
+  if (e.zombie) {
+    // barcolla: lo sprite oscilla attorno ai piedi
+    ctx.save();
+    ctx.translate(x, feet);
+    ctx.rotate(Math.sin(e.anim * 2.2) * 0.09);
+    ctx.translate(-x, -feet);
+  }
   drawPersonAt(ctx, enemySprite(assets, e, frame), x, feet, facesLeft(e));
+  if (e.zombie) ctx.restore();
   if (e.enraged) {
     // infuriato: pulsa di rosso
     ctx.globalAlpha = 0.25 + 0.15 * Math.sin(performance.now() / 120);

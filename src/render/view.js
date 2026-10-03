@@ -33,7 +33,8 @@ export function drawPersonAt(ctx, sp, x, feetY, flip = false) {
 
 // Sprite di un nemico: persona oppure animale (scorta dei boss e boss trasformati).
 export function enemySprite(assets, e, frame, tint = false) {
-  return e.animal ? assets.animal(e.animal, frame, e.scale || 1, tint) : assets.person(e.look, frame, e.scale || 1, tint);
+  if (e.animal) return assets.animal(e.animal, frame, e.scale || 1, tint);
+  return assets.person(e.zombie ? 'z:' + e.look : e.look, frame, e.scale || 1, tint);
 }
 
 export const facesLeft = e => !!e.animal && e.x > TOWER.x;

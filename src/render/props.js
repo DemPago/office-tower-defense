@@ -501,3 +501,111 @@ export function acUnit(g, x, y) {
   for (let i = 0; i < 4; i++) rect(g, x + 1.5, y - 11 + i * 2.5, 3, H, PAL.black); // feritoie
   rect(g, x + 2, y - 2, 4, 3, 'rgba(138,59,30,0.6)');
 }
+
+// ─── Dettagli italiani ──────────────────────────────────────────
+
+// Auto italiane viste dall'alto (verticali, muso in alto). kind: '500' | 'panda' | 'ape' | 'alfa'
+export function italianCar(g, x, y, kind, color, broken = false, rnd = Math.random) {
+  if (kind === 'ape') return apeCar(g, x, y, color);
+  const w = kind === 'alfa' ? 16 : kind === 'panda' ? 15 : 13;
+  const h = kind === 'alfa' ? 28 : kind === 'panda' ? 23 : 20;
+  x += (16 - w) / 2;
+  shadow(g, x + 2, y + h - 1, w, 4);
+  for (const [wx, wy] of [[-1, 3], [w - 1, 3], [-1, h - 7], [w - 1, h - 7]]) rect(g, x + wx, y + wy, 2, 4, '#0b0b0d');
+  if (kind === '500') {
+    // 500: tutta tonda
+    stain(g, x + w / 2, y + h / 2, w / 2 + 0.5, h / 2 + 0.5, PAL.black);
+    stain(g, x + w / 2, y + h / 2, w / 2, h / 2, color);
+    stain(g, x + w / 2 - 1.5, y + h / 2 - 2, w / 2 - 3, h / 2 - 4, shade(color, 1.18));
+    stain(g, x + w / 2, y + 6, w / 2 - 2, 2.5, broken ? '#060607' : PAL.glass);       // parabrezza
+    rect(g, x + w / 2 - 3, y + 5, 2, H, '#6f8597');
+    rect(g, x + 3, y + 9, w - 6, 6, PAL.white);                                         // tetto in tela
+    for (let i = 10; i < 15; i += 1.5) rect(g, x + 3, y + i, w - 6, H, '#cfc8b4');
+    stain(g, x + w / 2, y + h - 4, w / 2 - 2.5, 1.8, broken ? '#060607' : PAL.glass);  // lunotto
+    stain(g, x + 2.5, y + 1.5, 1.2, 1, PAL.fluo);                                       // fari tondi
+    stain(g, x + w - 2.5, y + 1.5, 1.2, 1, PAL.fluo);
+  } else {
+    // Panda (squadrata) e Alfa (lunga e affusolata)
+    rect(g, x - H, y + 1, w + 1, h - 1.5, PAL.black);
+    rect(g, x + 1, y - H, w - 2, h + 1, PAL.black);
+    rect(g, x, y + 1, w, h - 2, color);
+    rect(g, x + 1, y, w - 2, h, color);
+    rect(g, x, y + 2, 1.5, h - 4, shade(color, 1.3));
+    rect(g, x + w - 1.5, y + 2, 1.5, h - 4, shade(color, 0.7));
+    if (kind === 'panda') {
+      rect(g, x, y + 2, w, 1.5, '#3a3c42');                                              // paraurti grigio
+      rect(g, x + 1.5, y + 5, w - 3, 4, broken ? '#060607' : PAL.glass);
+      rect(g, x + 1.5, y + 10, w - 3, 8, shade(color, 0.88));
+      rect(g, x + 2, y + 11, w - 4, H, '#3a3c42');                                       // barre portapacchi
+      rect(g, x + 2, y + 16, w - 4, H, '#3a3c42');
+      rect(g, x + 1.5, y + 19, w - 3, 2.5, broken ? '#060607' : PAL.glass);
+    } else {
+      rect(g, x + 2, y + 1, w - 4, 4, shade(color, 1.15));                               // cofano lungo
+      rect(g, x + w / 2 - 1.5, y, 3, 2.5, PAL.silver);                                   // scudetto Alfa
+      rect(g, x + w / 2 - 1, y + H, 2, 1.5, PAL.black);
+      rect(g, x + 2, y + 7, w - 4, 5, broken ? '#060607' : PAL.glass);
+      rect(g, x + 2, y + 13, w - 4, 8, shade(color, 0.85));
+      rect(g, x + 2, y + 22, w - 4, 3, broken ? '#060607' : PAL.glass);
+    }
+    rect(g, x + 2.5, y + 6, 3, H, '#6f8597');
+    rect(g, x + 1.5, y + H, 2.5, 1, PAL.fluo);
+    rect(g, x + w - 4, y + H, 2.5, 1, PAL.fluo);
+    rect(g, x + 1.5, y + h - 1.5, 2.5, 1, PAL.red);
+    rect(g, x + w - 4, y + h - 1.5, 2.5, 1, PAL.red);
+  }
+  if (broken) for (let i = 0; i < 6; i++) rect(g, x + rnd() * (w - 2), y + rnd() * (h - 2), 1.5, 1, i % 2 ? PAL.rust : PAL.rustHi);
+}
+
+// Ape Piaggio: tre ruote, cabina piccola e cassone dietro
+function apeCar(g, x, y, color) {
+  shadow(g, x + 3, y + 25, 12, 3);
+  rect(g, x + 7, y - H, 3, 2.5, '#0b0b0d');                 // ruota davanti
+  rect(g, x + 1, y + 18, 2, 4, '#0b0b0d');
+  rect(g, x + 13, y + 18, 2, 4, '#0b0b0d');
+  stain(g, x + 8.5, y + 5, 6, 5.5, PAL.black);
+  stain(g, x + 8.5, y + 5, 5.5, 5, color);                   // cabina tonda
+  stain(g, x + 8.5, y + 3.5, 4, 2, PAL.glass);
+  rect(g, x + 7, y + 6, 3, 2, PAL.white);
+  rect(g, x + 1.5, y + 10.5, 14, 14, PAL.black);
+  rect(g, x + 2, y + 11, 13, 13, shade(color, 0.85));         // cassone
+  rect(g, x + 2, y + 11, 13, 1, shade(color, 1.2));
+  for (let i = 0; i < 3; i++) box(g, x + 5 + i * 3.5, y + 21 - (i % 2) * 4, 5, 4); // cassette
+}
+
+// Nasone romano: fontanella di ghisa con l'acqua che scorre (l'acqua è animata a parte).
+export function nasone(g, x, y) {
+  shadow(g, x - 4, y + 1, 12, 2);
+  stain(g, x + 1, y + 1, 6, 2, '#3d4a57');                   // pozzetto bagnato
+  rect(g, x - 1, y - 2, 6, 2, PAL.black);                    // griglia di scolo
+  for (let i = 0; i < 6; i += 1.5) rect(g, x - 1 + i, y - 2, H, 2, PAL.steel);
+  rect(g, x - 3.5, y - 17, 7, 17, PAL.black);                // colonna di ghisa
+  rect(g, x - 3, y - 16.5, 6, 16, '#2f3a33');
+  rect(g, x - 3, y - 16.5, 1.5, 16, '#4a5a4f');
+  rect(g, x + 1.5, y - 16.5, 1.5, 16, '#1f2622');
+  rect(g, x - 3.5, y - 18, 7, 2, '#2f3a33');                 // cappello
+  rect(g, x - 2.5, y - 19, 5, 1, '#3a4a40');
+  rect(g, x - 2, y - 9, 4, 3, '#4a5a4f');                    // stemma SPQR
+  rect(g, x - 1.5, y - 8.5, 3, 2, '#7a6a3a');
+  rect(g, x + 3, y - 11, 4, 1.5, PAL.black);                 // il "naso"
+  rect(g, x + 3, y - 10.5, 3.5, 1, '#3a4a40');
+  return { x: x + 6.5, y: y - 10, ground: y - 1 };           // dove cade l'acqua
+}
+
+// Kebabbaro: chiosco con lo spiedo (che gira nell'animazione), insegna e sgabelli.
+export function kebab(g, x, y) {
+  shadow(g, x + 2, y + 1, 44, 4);
+  rect(g, x - H, y - 30.5, 45, 31, PAL.black);
+  rect(g, x, y - 30, 44, 30, '#6d2e1f');
+  rect(g, x, y - 30, 44, 2, '#86402a');
+  for (let i = 0; i < 44; i += 4) rect(g, x + i, y - 28, 4, 5, (i / 4) % 2 ? PAL.white : PAL.red); // tendina
+  rect(g, x, y - 23, 44, H, PAL.black);
+  rect(g, x + 2, y - 21, 40, 13, '#1c2430');                 // vetrina
+  rect(g, x + 3, y - 20.5, 10, H, '#6f8597');
+  rect(g, x + 25, y - 21, 6, 13, '#2a2a2e');                 // vano dello spiedo
+  rect(g, x + 2, y - 8, 40, 3, PAL.steel);                   // bancone
+  rect(g, x + 2, y - 8, 40, 1, PAL.silver);
+  for (let i = 0; i < 3; i++) { rect(g, x + 5 + i * 5, y - 10, 3, 2, i % 2 ? PAL.toxic : PAL.red); } // salse
+  rect(g, x + 2, y - 5, 40, 5, '#4a2418');
+  for (const sx of [x + 6, x + 18, x + 36]) { rect(g, sx, y + 2, 4, 1.5, PAL.red); rect(g, sx + 1.5, y + 3.5, 1, 3, PAL.steel); } // sgabelli
+  return { x: x + 28, y: y - 19, sign: { x: x + 22, y: y - 33 } };
+}

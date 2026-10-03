@@ -1,7 +1,7 @@
 // Sprite dei personaggi: generati via codice da render/people.js e messi in cache.
 // Ogni sprite ha un contorno nero di 1 pixel ed esiste in versione normale e
 // tutta bianca (per il lampo quando un personaggio viene colpito).
-import { LOOKS, GRID, WORLD_PER_PX, drawPerson } from './people.js';
+import { LOOKS, GRID, WORLD_PER_PX, drawPerson, zombify } from './people.js';
 import { AGRID, drawAnimal } from './animals.js';
 import { ANIMALS } from '../data/animals.js';
 
@@ -46,7 +46,9 @@ function build(lookId, frame) {
   base.height = GRID.h + 2;
   const bg = base.getContext('2d');
   bg.translate(1, 1);
-  drawPerson(bg, LOOKS[lookId], frame);
+  // 'z:impiegato' = versione zombie dell'impiegato
+  const look = lookId.startsWith('z:') ? zombify(LOOKS[lookId.slice(2)]) : LOOKS[lookId];
+  drawPerson(bg, look, frame);
   // 2) contorno scuro tutto intorno
   const out = document.createElement('canvas');
   out.width = base.width;

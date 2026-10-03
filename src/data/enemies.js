@@ -67,6 +67,13 @@ export const DECADES = [
   { name: 'PIANI ALTI',      enemies: { tank: 'vicedirettore', sniper: 'segretaria', charger: 'assistente', special: 'portavoce' } },
 ];
 
+// Ondate zombie: la settima di ogni reparto (7, 17, 27…). I nemici diventano zombie:
+// più resistenti ma più lenti, e lo scenario si fa verde e nebbioso.
+export const ZOMBIE = { every: 10, at: 7, hp: 1.15, speed: 0.8 };
+export function isZombieWave(wave) {
+  return wave % ZOMBIE.every === ZOMBIE.at;
+}
+
 export function decadeFor(wave) {
   const i = Math.floor((wave - 1) / 10);
   return { ...DECADES[i % DECADES.length], index: i, elite: i >= DECADES.length };

@@ -26,13 +26,14 @@ export function build(g, rnd) {
     P.rect(g, t, TOWER.y - 1, 10, 2, 'rgba(242,183,5,0.55)');
   }
   // File di posti auto, con auto parcheggiate (alcune distrutte)
-  const colors = ['#7a1f2b', '#2f4f6f', '#c0c4cc', '#3e6b2a', '#141416', '#a67c00', '#5d275d', '#8a3b1e'];
+  const colors = ['#b02030', '#2f4f6f', '#c0c4cc', '#3e6b2a', '#141416', '#d9c040', '#e8e2d0', '#8a3b1e', '#4a8a9a'];
+  const kinds = ['500', '500', 'panda', 'panda', 'alfa', 'ape']; // auto italiane
   for (let ry = AREA.y + 20; ry < AREA.y + AREA.h - 30; ry += 76) {
     for (let sx = AREA.x + 10; sx < AREA.x + AREA.w - 20; sx += 22) {
       if (!free(sx + 10, ry + 16, 4) || !free(sx + 10, ry, 4) || !free(sx + 10, ry + 32, 4)) continue;
       P.rect(g, sx, ry, 1, 34, 'rgba(232,226,208,0.45)');
       P.rect(g, sx, ry + 34, 22, 1, 'rgba(232,226,208,0.3)');
-      if (rnd() < 0.62) P.car(g, sx + 3, ry + 3, colors[Math.floor(rnd() * colors.length)], rnd() < 0.2, rnd);
+      if (rnd() < 0.7) P.italianCar(g, sx + 3, ry + 3, kinds[Math.floor(rnd() * kinds.length)], colors[Math.floor(rnd() * colors.length)], rnd() < 0.15, rnd);
       else if (rnd() < 0.3) P.trash(g, sx + 10, ry + 20, rnd);
     }
   }

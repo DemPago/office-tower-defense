@@ -1,5 +1,5 @@
 // Ondate: quanti nemici, quali, quanto sono forti e da dove arrivano.
-import { ENEMIES, ROLE_WEIGHTS, decadeFor } from '../data/enemies.js';
+import { ENEMIES, ROLE_WEIGHTS, decadeFor, isZombieWave, ZOMBIE } from '../data/enemies.js';
 import { ANIMALS } from '../data/animals.js';
 import { bossForWave } from '../data/bosses.js';
 import { TOWER, SPAWN_RADIUS } from '../state.js';
@@ -35,8 +35,9 @@ export function makeEnemy(def, w, extra = {}) {
   const p = extra.at || spawnPoint();
   const decade = decadeFor(w);
   const elite = decade.elite;
-  // i reparti più avanzati sono un po' più robusti
-  const hp = def.hp * hpScale(w) * (1 + 0.12 * Math.min(decade.index, 5));
+  const zombie = isZombieWave(w);
+  // i reparti più avanzati sono un po' più robusti (e gli zombie ancora di più)
+  const hp = def.hp * hpScale(w) * (1 + 0.12 * Math.min(decade.index, 5)) * (zombie ? ZOMBIE.hp : 1);
   return {
     id: Math.random(),
     def,
@@ -45,8 +46,9 @@ export function makeEnemy(def, w, extra = {}) {
     scale: 1,
     x: p.x, y: p.y,
     hp, maxHp: hp,
-    speed: def.speed * (0.9 + Math.random() * 0.2) * (elite ? 1.15 : 1),
+    speed: def.speed * (0.9 + Math.random() * 0.2) * (elite ? 1.15 : 1) * (zombie ? ZOMBIE.speed : 1),
     elite,
+    zombie,
     role: def.role,
     taunt: !!def.taunt,
     charge: def.charge || null,
@@ -124,7 +126,10 @@ export function startWave(run) {
   const decade = decadeFor(w);
   sfx(run, boss ? 'boss' : 'wave');
   if (boss) banner(run, boss.name, boss.sub, '#d7263d');
-  else if ((w - 1) % 10 === 0) {
+  else if (isZombieWave(w)) {
+    banner(run, 'NOTTE DEGLI ZOMBIE', 'I colleghi non sono più loro… più lenti ma più duri a morire', '#7bd332');
+    sfx(run, 'zombie');
+  } else if ((w - 1) % 10 === 0) {
     // primo turno di un nuovo reparto: si presentano i nemici nuovi
     const names = Object.values(decade.enemies).map(id => ENEMIES[id].name).join(', ');
     banner(run, decade.name + (decade.elite ? ' ÉLITE' : ''), `Arrivano: ${names}`, '#ff3e8a');

@@ -9,6 +9,7 @@ import { META_UPGRADES, levelCost } from '../data/upgrades.js';
 import * as screens from '../ui/screens.js';
 import { getTop } from '../leaderboard.js';
 import { play } from '../audio.js';
+import { renderShare } from '../ui/share.js';
 
 const $ = id => document.getElementById(id);
 
@@ -102,6 +103,12 @@ export function createFlow(app) {
       app.initials.render();
     }, 1200);
   }
+
+  // Condivisione: dal menu un invito generico, a fine partita il proprio risultato.
+  renderShare($('share-menu'), () => 'Difendi la tua scrivania dalla gerarchia aziendale! 🏢 Prova Office Tower Defense');
+  renderShare($('share-over'), () => app.run
+    ? `Sono stato licenziato all'ondata ${app.run.wave} di Office Tower Defense 🏢💥 Riesci a fare meglio?`
+    : 'Prova Office Tower Defense 🏢');
 
   $('btn-play').addEventListener('click', newRun);
   $('btn-shop').addEventListener('click', openShop);

@@ -16,6 +16,8 @@ import { drawTower, updateSmoke, drawSmoke, hiddenByTower } from './tower.js';
 import { drawSectors, drawFence, drawAlly } from './allies.js';
 import { drawShadow, drawEnemy, drawGhost, updateTrails, drawTrails, drawCorpse, drawYardAlarm } from './enemies.js';
 import { drawDust, drawGrade, drawRange, drawShots, drawFx } from './effects.js';
+import { drawZombieWorld, drawZombieGrade } from './zombie.js';
+import { isZombieWave } from '../data/enemies.js';
 import { drawSceneTitle, drawBanner, drawBossBar, drawIntruderWarning, drawBossPointer } from './overlay.js';
 
 export function createRenderer(canvas, assets) {
@@ -28,6 +30,7 @@ export function createRenderer(canvas, assets) {
   const trails = [];
   const dust = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), v: 0.01 + Math.random() * 0.02, a: Math.random() * 6 }));
   let lastTime = performance.now() / 1000;
+  let zombieK = 0; // intensità dell'atmosfera zombie (sale e scende piano)
 
   function scene(i) {
     if (!scenes.has(i)) {
@@ -77,6 +80,9 @@ export function createRenderer(canvas, assets) {
     const cur = scene(sceneIdx);
     ctx.drawImage(cur.canvas, -MARGIN, -MARGIN, AREA.w, AREA.h);
     if (cur.ambient) cur.ambient(ctx, time);
+    const zombieWanted = run && isZombieWave(run.wave) ? 1 : 0;
+    zombieK += Math.max(-dt / 2, Math.min(dt / 2, zombieWanted - zombieK));
+    if (zombieK > 0) drawZombieWorld(ctx, time, zombieK);
     if (fade > 0 && prevIdx !== null) {
       ctx.globalAlpha = fade;
       ctx.drawImage(scene(prevIdx).canvas, -MARGIN, -MARGIN, AREA.w, AREA.h);
@@ -122,6 +128,7 @@ export function createRenderer(canvas, assets) {
     }
     drawDust(ctx, dust, dt, canvas);
     drawGrade(ctx, canvas);
+    if (zombieK > 0) drawZombieGrade(ctx, canvas, time, zombieK);
     ctx.setTransform(view.ui, 0, 0, view.ui, 0, 0);
     const W = canvas.width / view.ui, H = canvas.height / view.ui;
     if (fade > 0.2) drawSceneTitle(ctx, cur.name, W, H, fade);

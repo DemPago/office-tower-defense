@@ -112,6 +112,7 @@ const SOUNDS = {
   charge:  { gap: 0.3,  play: () => tone({ type: 'sawtooth', f1: 200, f2: 700, dur: 0.25, vol: 0.06, filter: 1500 }) },
   transform: { gap: 1, play: () => { noise({ dur: 1.2, vol: 0.35, type: 'lowpass', freq: 700 }); tone({ type: 'sawtooth', f1: 60, f2: 220, dur: 0.5, vol: 0.2, filter: 900 }); tone({ type: 'sawtooth', f1: 220, f2: 50, dur: 1.1, vol: 0.2, filter: 700, at: 0.45 }); } },
   enrage:  { gap: 1,    play: () => { tone({ type: 'sawtooth', f1: 90, f2: 60, dur: 0.6, vol: 0.18, filter: 600 }); tone({ type: 'sawtooth', f1: 95, f2: 62, dur: 0.6, vol: 0.12, filter: 600 }); noise({ dur: 0.4, vol: 0.15, type: 'lowpass', freq: 400 }); } },
+  zombie:  { gap: 3, play: () => { tone({ type: 'sawtooth', f1: 110, f2: 70, dur: 1.4, vol: 0.12, filter: 500 }); tone({ type: 'sawtooth', f1: 116, f2: 72, dur: 1.4, vol: 0.1, filter: 450, at: 0.1 }); noise({ dur: 1.2, vol: 0.08, type: 'lowpass', freq: 300 }); } },
   boom:    { gap: 0.1,  play: () => { noise({ dur: 0.45, vol: 0.3, type: 'lowpass', freq: 800 }); tone({ type: 'sine', f1: 120, f2: 40, dur: 0.4, vol: 0.25 }); } },
 };
 

@@ -85,6 +85,11 @@ export const LOOKS = {
   scrum:      { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'short', facial: 'longbeard', hat: 'wizard', hatColor: '#7a1f2b', top: '#7a1f2b', shirt: '#7a1f2b', pants: '#7a1f2b', item: 'clipboard' },
 };
 
+// Versione zombie di un look: pelle verde malata, vestiti strappati, sangue, occhi vuoti.
+export function zombify(L) {
+  return { ...L, skin: '#8aa070', angry: true, zombie: true };
+}
+
 // ─── Disegno ────────────────────────────────────────────────────
 
 function shade(hex, k) {
@@ -368,9 +373,28 @@ export function drawPerson(g, L, frame) {
   }
 
   drawItem(px, L, tx + tw, 34 - swing, tw, tx);
+  if (L.zombie) drawZombieDetails(px, L, tx, tw);
 }
 
 // Oggetto in mano (lato destro). hx, hy = posizione della mano.
+// Dettagli da zombie sopra al personaggio già disegnato.
+function drawZombieDetails(px, L, tx, tw) {
+  const BLOOD = '#7a0f1c', DRIP = '#a01828', ROT = '#5a7048';
+  px(12, 10, 2, 2, '#e8f0d0'); px(18, 10, 2, 2, '#e8f0d0');        // occhi vuoti, senza pupilla
+  px(12, 12, 2, 1, ROT); px(18, 12, 2, 1, ROT);                     // occhiaie
+  px(13, 14, 6, 2, '#2a0a0a'); px(14, 14, 1, 1, '#e8e2d0'); px(17, 14, 1, 1, '#e8e2d0'); // bocca aperta coi denti
+  px(19, 6, 2, 3, ROT); px(11, 13, 1, 2, ROT);                      // pelle marcia
+  px(15, 16, 1, 3, DRIP);                                           // sangue dalla bocca
+  // vestiti strappati: buchi e brandelli
+  for (const [x, y, w, h] of [[tx + 2, 27, 3, 2], [tx + tw - 5, 22, 2, 3], [tx + 4, 34, 2, 2]]) {
+    px(x, y, w, h, '#1a1a14');
+    px(x, y + h, w, 1, ROT);
+  }
+  px(tx + 1, 39, 2, 2, '#1a1a14');
+  // schizzi di sangue
+  for (const [x, y] of [[tx + 3, 24], [tx + tw - 4, 30], [tx + 6, 36], [tx + tw - 3, 40]]) { px(x, y, 2, 1, BLOOD); px(x + 1, y + 1, 1, 2, DRIP); }
+}
+
 function drawItem(px, L, hx, hy, tw, tx) {
   switch (L.item) {
     case 'briefcase': {
