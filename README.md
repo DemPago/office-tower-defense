@@ -66,7 +66,7 @@ Tutti i suoni sono generati dal browser (Web Audio API), senza file. All'arrivo 
 Quando perdi lasci le tue **3 iniziali** come nei cabinati. La classifica è online (Supabase) se `src/config.js` è compilato, altrimenti resta nel browser. Per crearla: incolla `supabase/schema.sql` nel SQL Editor di Supabase e metti URL e chiave pubblica in `src/config.js`.
 
 ## 🧑 Personaggi
-Nel menu scegli chi sta sul tetto del palazzo: all'inizio **Peppe** (calvo con gli occhiali) e **Dem** (il tipico italiano). Ogni volta che completi tutti i livelli (ondata 60) ne sblocchi uno nuovo: **Nando**, **Tony**, **Vanessa**, **Clara** e l'**Uomo Pesce**.
+Nel menu scegli chi sta sul tetto del palazzo: all'inizio **Peppe** (esperto AI sciupato dal running) e **Dem** (al servizio dei poveri e italiano vero). Ogni volta che completi tutti i livelli (ondata 60) ne sblocchi uno nuovo: **Nando**, **Tony**, **Vanessa**, **Clara** e l'**Uomo Pesce**.
 
 ## 👾 Boss (ogni 10 ondate)
 I boss sono enormi (fino a 3,5 volte un nemico normale), con aura colorata, occhi rossi, passi che fanno tremare il terreno e scie di fumo, scintille o stelle. Entrano dal bordo come gli altri, scortati dal loro animale: una freccia **⚠ BOSS** indica da dove arrivano. A metà vita diventano rossi e più veloci (**INFURIATO!**). Quando finisci la loro vita lo schermo si illumina e **tornano come il loro animale GIGANTE** (pitbull, toro, lupo, gorilla, orso, corvi, serpente, leone, ratto, drago): è il momento del **💥 MITRA**.

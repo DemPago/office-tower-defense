@@ -2,8 +2,8 @@
 // All'inizio ci sono Peppe e Dem; gli altri si sbloccano uno alla volta, nell'ordine,
 // ogni volta che completi tutti i livelli (UNLOCK_WAVE: i 6 reparti, fino all'ondata 60).
 export const HEROES = [
-  { id: 'peppe',   name: 'Peppe',      desc: 'Calvo con gli occhiali' },
-  { id: 'dem',     name: 'Dem',        desc: 'Il tipico italiano: moro, catenina e camicia aperta' },
+  { id: 'peppe',   name: 'Peppe',      desc: 'Esperto AI sciupato dal running' },
+  { id: 'dem',     name: 'Dem',        desc: 'Al servizio dei poveri e italiano vero' },
   { id: 'nando',   name: 'Nando',      desc: 'Capelli ricci e occhiali' },
   { id: 'tony',    name: 'Tony',       desc: 'Completo bianco, sigaro e cicatrice: il boss di Miami' },
   { id: 'vanessa', name: 'Vanessa',    desc: 'Bionda, decisa, inarrestabile' },
