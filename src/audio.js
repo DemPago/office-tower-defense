@@ -92,6 +92,7 @@ function noise({ dur = 0.1, vol = 0.1, at = 0, type = 'bandpass', freq = 1000, q
 // ─── Effetti ────────────────────────────────────────────────────
 
 const SOUNDS = {
+  siren:   { gap: 3, play: () => { for (let i = 0; i < 4; i++) { tone({ type: 'square', f1: 660, dur: 0.22, vol: 0.06, at: i * 0.45, filter: 2000 }); tone({ type: 'square', f1: 880, dur: 0.22, vol: 0.06, at: i * 0.45 + 0.22, filter: 2000 }); } } },
   mitra:   { gap: 0.04, play: () => { noise({ dur: 0.04, vol: 0.12, freq: 2200, q: 0.6 }); tone({ type: 'square', f1: 160, f2: 90, dur: 0.04, vol: 0.05 }); } },
   shoot:   { gap: 0.06, play: () => tone({ f1: 900, f2: 380, dur: 0.06, vol: 0.035 }) },
   ally:    { gap: 0.08, play: () => tone({ type: 'triangle', f1: 700, f2: 300, dur: 0.07, vol: 0.05 }) },

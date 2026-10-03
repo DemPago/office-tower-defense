@@ -1,7 +1,7 @@
 // Combattimento: movimento dei nemici, spari della torre, danni, morti.
 import { TOWER } from '../state.js';
 import { dist, fmt, angleOf } from '../util.js';
-import { floatText, burst, ring, shake, sfx } from './fx.js';
+import { floatText, burst, ring, shake, sfx, banner } from './fx.js';
 import { MITRA } from './abilities.js';
 import { makeEnemy } from './waves.js';
 import { ENEMIES } from '../data/enemies.js';
@@ -293,7 +293,10 @@ function transformBoss(run, e) {
   burst(run, e.x, e.y - e.size * 0.4, '#ffffff', 30, 160);
   ring(run, e.x, e.y - e.size * 0.3, e.size, '#ffffff');
   floatText(run, e.x, e.y - e.size - 12, 'FORMA BESTIALE!', '#ff3e8a', 11);
-  floatText(run, TOWER.x, TOWER.y - 110, 'USA IL MITRA! (tasto 5)', '#f2b705', 9);
+  // il power-up: si annuncia in grande, con la sirena
+  banner(run, "È INIZIATA LA REPERIBILITÀ!", 'Il mitra è pronto: premi 💥 MITRA o il tasto 5', '#f2b705');
+  run.fx.banner.life = run.fx.banner.max = 4;
+  sfx(run, 'siren');
   run.mitraReady = true;
   sfx(run, 'transform');
 }
