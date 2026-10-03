@@ -126,3 +126,6 @@ Tutta la grafica è disegnata via codice, senza immagini: personaggi in `src/ren
 
 ---
 *"La tua posizione è stata eliminata per motivi strutturali."*
+
+## 💛 Supporta il progetto
+Se ti diverte: [☕ Offrimi un caffè](https://ko-fi.com/dem420156). Il pulsante è anche nel menu del gioco, insieme a quelli per condividerlo sui social.
