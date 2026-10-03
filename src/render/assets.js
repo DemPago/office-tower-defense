@@ -46,8 +46,9 @@ function build(lookId, frame) {
   base.height = GRID.h + 2;
   const bg = base.getContext('2d');
   bg.translate(1, 1);
-  // 'z:impiegato' = versione zombie dell'impiegato
-  const look = lookId.startsWith('z:') ? zombify(LOOKS[lookId.slice(2)]) : LOOKS[lookId];
+  // 'z2:impiegato' = impiegato zombie, malridotto allo stadio 2
+  const isZombie = lookId[0] === 'z' && lookId[2] === ':';
+  const look = isZombie ? zombify(LOOKS[lookId.slice(3)], Number(lookId[1])) : LOOKS[lookId];
   drawPerson(bg, look, frame);
   // 2) contorno scuro tutto intorno
   const out = document.createElement('canvas');

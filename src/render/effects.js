@@ -47,6 +47,33 @@ function shotDir(s) {
 
 export function drawShots(ctx, run, time) {
   ctx.lineCap = 'square';
+  // Onda energetica: anello che si allarga dal palazzo
+  for (const w of run.fx.waves) {
+    const k = w.life / 0.45;
+    ctx.save();
+    ctx.globalAlpha = k;
+    ctx.strokeStyle = PAL.cyan;
+    ctx.lineWidth = 4 * k + 1;
+    ctx.beginPath();
+    ctx.arc(TOWER.x, TOWER.y - 10, w.r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = '#e0ffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = `rgba(45,226,230,${0.12 * k})`;
+    ctx.fill();
+    ctx.restore();
+  }
+  // Laser della torre: raggio istantaneo con bagliore
+  for (const b of run.fx.beams) {
+    ctx.globalAlpha = Math.min(1, b.life / 0.07 + 0.3);
+    line(ctx, b.x1, b.y1, b.x2, b.y2, b.crit ? 'rgba(255,123,28,0.5)' : 'rgba(215,38,61,0.5)', 4);
+    line(ctx, b.x1, b.y1, b.x2, b.y2, b.crit ? PAL.orange : PAL.red, 2);
+    line(ctx, b.x1, b.y1, b.x2, b.y2, '#ffe0e4', 0.5);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(b.x2 - 1.5, b.y2 - 1.5, 3, 3);
+    ctx.globalAlpha = 1;
+  }
   for (const s of run.shots) {
     const { dx, dy } = shotDir(s);
     const x = Math.round(s.x), y = Math.round(s.y);
@@ -57,6 +84,12 @@ export function drawShots(ctx, run, time) {
       ctx.globalAlpha = 1;
       line(ctx, x - dx * 18, y - dy * 18, x, y, PAL.red, 3);
       line(ctx, x - dx * 16, y - dy * 16, x, y, '#ffd0d6', 1);
+    } else if (s.kind === 'xbow') {
+      // dardo della balestra: lungo, con la punta d'acciaio e le alette
+      line(ctx, x - dx * 20, y - dy * 20, x, y, PAL.black, 4);
+      line(ctx, x - dx * 19, y - dy * 19, x, y, PAL.woodHi, 2);
+      line(ctx, x - dx * 20, y - dy * 20, x - dx * 15, y - dy * 15, PAL.red, 3);
+      line(ctx, x - dx * 2, y - dy * 2, x + dx * 2, y + dy * 2, PAL.silver, 3);
     } else if (s.kind === 'bolt') {
       line(ctx, x - dx * 14, y - dy * 14, x, y, PAL.black, 4);
       line(ctx, x - dx * 13, y - dy * 13, x, y, PAL.white, 2);

@@ -37,6 +37,10 @@ export function updateFx(run, dt) {
   fx.texts = fx.texts.filter(t => t.life > 0);
   for (const p of fx.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; }
   fx.parts = fx.parts.filter(p => p.life > 0);
+  for (const b of fx.beams) b.life -= dt;
+  fx.beams = fx.beams.filter(b => b.life > 0);
+  for (const w of fx.waves) { w.life -= dt; w.r += (w.max - w.r) * Math.min(1, dt * 12); }
+  fx.waves = fx.waves.filter(w => w.life > 0);
   for (const c of fx.corpses) c.life -= dt;
   fx.corpses = fx.corpses.filter(c => c.life > 0);
   for (const r of fx.rings) r.life -= dt;

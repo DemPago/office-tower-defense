@@ -86,8 +86,9 @@ export const LOOKS = {
 };
 
 // Versione zombie di un look: pelle verde malata, vestiti strappati, sangue, occhi vuoti.
-export function zombify(L) {
-  return { ...L, skin: '#8aa070', angry: true, zombie: true };
+// stage 0-3: quanto è malridotto (cresce man mano che lo colpisci).
+export function zombify(L, stage = 0) {
+  return { ...L, skin: '#8aa070', angry: true, zombie: true, stage };
 }
 
 // ─── Disegno ────────────────────────────────────────────────────
@@ -103,6 +104,7 @@ const INK = '#141416', MOUTH = '#5a1e1e', WHITE = '#e8e2d0';
 // frame 0-3: ciclo della camminata (gambe e braccia alternate)
 export function drawPerson(g, L, frame) {
   const oy = GRID.top;
+  const clear = (x, y, w, h) => g.clearRect(x + OX, y + oy, w, h);
   const px = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x + OX, y + oy, w, h); };
 
   // corporatura: huge = boss con spalle larghe
@@ -374,6 +376,7 @@ export function drawPerson(g, L, frame) {
 
   drawItem(px, L, tx + tw, 34 - swing, tw, tx);
   if (L.zombie) drawZombieDetails(px, L, tx, tw);
+  if (L.zombie && L.stage) drawZombieDamage(px, clear, L, tx, tw, [2, 0, -2, 0][frame]);
 }
 
 // Oggetto in mano (lato destro). hx, hy = posizione della mano.
@@ -393,6 +396,37 @@ function drawZombieDetails(px, L, tx, tw) {
   px(tx + 1, 39, 2, 2, '#1a1a14');
   // schizzi di sangue
   for (const [x, y] of [[tx + 3, 24], [tx + tw - 4, 30], [tx + 6, 36], [tx + tw - 3, 40]]) { px(x, y, 2, 1, BLOOD); px(x + 1, y + 1, 1, 2, DRIP); }
+}
+
+// Zombie che si sfascia: 1 = perde il braccio sinistro, 2 = anche un pezzo di testa,
+// 3 = anche il braccio destro e le costole in vista.
+function drawZombieDamage(px, clear, L, tx, tw, swing) {
+  const BLOOD = '#7a0f1c', BONE = '#d9d4c7', MEAT = '#a0303a';
+  // braccio sinistro strappato: resta un moncherino
+  clear(tx - 4, 18 + swing, 4, 22);
+  px(tx - 3, 20 + swing, 3, 3, L.top);
+  px(tx - 3, 23 + swing, 3, 1, MEAT);
+  px(tx - 2, 23 + swing, 1, 1, BONE);
+  px(tx - 3, 24 + swing, 1, 3, BLOOD);
+  if (L.stage >= 2) {
+    // pezzo di cranio mancante, cervello in vista
+    clear(16, 1, 7, 5);
+    clear(19, 5, 3, 2);
+    px(16, 4, 6, 2, '#c87a8a');
+    px(17, 3, 2, 1, '#e0a0aa');
+    px(15, 5, 1, 1, BONE); px(21, 6, 1, 1, BONE);
+    px(19, 8, 1, 4, BLOOD);
+  }
+  if (L.stage >= 3) {
+    // anche il braccio destro, e uno squarcio nel petto con le costole
+    clear(tx + tw, 18 - swing, 4, 22);
+    px(tx + tw, 20 - swing, 3, 3, L.top);
+    px(tx + tw, 23 - swing, 3, 1, MEAT);
+    px(tx + tw + 1, 24 - swing, 1, 3, BLOOD);
+    px(tx + 3, 26, tw - 6, 9, '#2a0a0a');
+    for (let y = 27; y < 35; y += 2) px(tx + 4, y, tw - 8, 1, BONE);
+    px(15, 26, 2, 9, BONE); // sterno
+  }
 }
 
 function drawItem(px, L, hx, hy, tw, tx) {

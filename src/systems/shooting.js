@@ -4,6 +4,7 @@ import { dist } from '../util.js';
 import { burst, ring, sfx } from './fx.js';
 import { MITRA } from './abilities.js';
 import { dealDamage } from './damage.js';
+import { weaponDef } from '../data/weapons.js';
 
 // Punto da cui partono i colpi: il personaggio sul tetto della torre.
 const MUZZLE = { x: TOWER.x + 7, y: TOWER.y - 75 };
@@ -24,11 +25,35 @@ export function updateTower(run, dt) {
   t.recoil = 0.08;
   sfx(run, mitra ? 'mitra' : 'shoot');
   const effects = { slow: s.slow, dot: s.dot, aoeRadius: s.aoeRadius, aoeDmg: s.aoeDmg };
-  for (const target of targets) {
-    fire(run, MUZZLE.x, MUZZLE.y, target, {
-      dmg: s.dmg, bounces: s.bounce, hitIds: new Set(), speed: s.shotSpeed, effects, kind: 'tower',
-    });
+  const W = weaponDef(run.weapon);
+
+  if (W.kind === 'wave') {
+    // Onda energetica: colpisce tutti i nemici nella gittata in un colpo solo.
+    // I colpi multipli (carta Laser del PM) la rendono più forte invece di sdoppiarla.
+    const dmg = s.dmg * (1 + 0.25 * (s.multishot - 1));
+    run.fx.waves.push({ r: 18, max: s.range, life: 0.45 });
+    for (const e of run.enemies.filter(e => !e.dead && dist(e, TOWER) <= s.range)) {
+      onShotHit(run, makeShot(run, e, { dmg, bounces: 0, hitIds: new Set(), effects, kind: 'wave' }), e);
+    }
+    return;
   }
+  for (const target of targets) {
+    const opts = { dmg: s.dmg, bounces: s.bounce, hitIds: new Set(), speed: s.shotSpeed, effects, kind: W.kind, pierce: W.pierce || 0 };
+    if (W.kind === 'laser') {
+      // Laser: colpo istantaneo, si vede solo il raggio
+      const shot = makeShot(run, target, opts);
+      run.fx.beams.push({ x1: MUZZLE.x, y1: MUZZLE.y, x2: target.x, y2: target.y - target.size * 0.35, life: 0.07, crit: shot.crit });
+      onShotHit(run, shot, target);
+    } else {
+      fire(run, MUZZLE.x, MUZZLE.y, target, { ...opts, speed: W.kind === 'xbow' ? s.shotSpeed * 1.3 : s.shotSpeed });
+    }
+  }
+}
+
+// Un colpo "già arrivato" (laser, onda): stessi dati di fire() ma senza volo.
+function makeShot(run, target, opts) {
+  const crit = Math.random() < run.stats.crit;
+  return { ...opts, x: target.x, y: target.y - target.size * 0.35, target, baseDmg: opts.dmg, dmg: crit ? opts.dmg * run.stats.critMult : opts.dmg, crit };
 }
 
 // Sceglie i bersagli: prima i tank (attirano i colpi), poi i più vicini.
@@ -74,9 +99,10 @@ export function updateShots(run, dt) {
 function onShotHit(run, shot, e) {
   const fx = shot.effects;
   shot.hitIds.add(e.id);
-  burst(run, shot.x, shot.y, '#ffd23f', 3, 50); // scintille d'impatto
+  if (shot.kind !== 'wave') burst(run, shot.x, shot.y, '#ffd23f', 3, 50); // scintille d'impatto
   // i numeri dei colleghi sono azzurri, quelli del palazzo chiari
-  dealDamage(run, e, shot.dmg, { crit: shot.crit, color: shot.kind === 'tower' ? null : '#2de2e6' });
+  const fromTower = ['tower', 'xbow', 'laser', 'wave'].includes(shot.kind);
+  dealDamage(run, e, shot.dmg, { crit: shot.crit, color: fromTower ? null : '#2de2e6' });
   if (fx.slow > 0) { e.slowT = 1.5; e.slowF = fx.slow * (e.boss ? 0.5 : 1); }
   if (fx.dot > 0) { e.dotT = 3; e.dotDps = shot.baseDmg * fx.dot / 3; }
 
@@ -86,6 +112,11 @@ function onShotHit(run, shot, e) {
     for (const o of run.enemies) {
       if (o !== e && !o.dead && dist(o, e) <= fx.aoeRadius) dealDamage(run, o, shot.dmg * fx.aoeDmg, { silent: true });
     }
+  }
+  if (shot.pierce > 0) {
+    // Balestra: il dardo prosegue sul nemico successivo, più lontano dal palazzo, a danno pieno
+    const next = nearest(run, e, o => o !== e && !shot.hitIds.has(o.id) && dist(o, TOWER) >= dist(e, TOWER) - 10, 90);
+    if (next) fire(run, e.x, e.y - e.size * 0.35, next, { ...shot, dmg: shot.baseDmg, pierce: shot.pierce - 1, bounces: 0, done: false });
   }
   if (shot.bounces > 0) {
     const next = nearest(run, e, o => o !== e && !shot.hitIds.has(o.id), 140);

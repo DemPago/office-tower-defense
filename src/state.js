@@ -4,6 +4,7 @@ import { ABILITIES, MANA } from './data/abilities.js';
 import { UPGRADES } from './data/upgrades.js';
 import { computeStats, metaBonuses } from './systems/stats.js';
 import { unlockedHeroes } from './data/heroes.js';
+import { weaponDef } from './data/weapons.js';
 
 // Mondo di gioco in pixel logici: un quadrato con la torre al centro,
 // attaccabile da tutte le direzioni (360°).
@@ -20,6 +21,7 @@ export function createRun(meta) {
   const run = {
     meta,                    // progressi permanenti (servono per ricalcolare le statistiche)
     hero: unlockedHeroes(meta).includes(meta.hero) ? meta.hero : 'peppe', // personaggio sul tetto
+    weapon: weaponDef(meta.weapon).id, // arma della torre (data/weapons.js)
     phase: 'break',          // 'break' (pausa fra ondate) | 'wave' | 'ally' | 'cards' | 'over'
     breakTimer: 2,           // secondi prima della prossima ondata
     wave: 0,
@@ -44,7 +46,7 @@ export function createRun(meta) {
     enemyShots: [],          // colpi dei nemici a distanza
     spawnQueue: [],
     boss: null,              // il boss vivo (per la barra in alto)
-    fx: { texts: [], parts: [], rings: [], corpses: [], sounds: [], shake: 0, banner: null },
+    fx: { texts: [], parts: [], rings: [], corpses: [], sounds: [], beams: [], waves: [], shake: 0, banner: null },
     healFull: false,
   };
   run.stats = computeStats(run, meta);

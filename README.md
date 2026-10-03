@@ -56,7 +56,7 @@ Difendi il tuo ufficio dalla gerarchia aziendale, dallo Stagista fino al leggend
 
 Dopo l'ondata 60 si ricomincia con le versioni ÉLITE (occhi rossi).
 
-🧟 **Notte degli zombie**: alla settima ondata di ogni reparto (7, 17, 27…) tutti i nemici diventano zombie (più lenti ma più resistenti) e lo scenario si tinge di verde, tra sangue, nebbia e pozze tossiche.
+🧟 **Notte degli zombie**: alla settima ondata di ogni reparto (7, 17, 27…) tutti i nemici diventano zombie (più lenti ma più resistenti, e si sfasciano colpo dopo colpo: perdono braccia e pezzi di testa) e lo scenario si tinge di verde, tra sangue, nebbia e pozze tossiche.
 
 ## 🌆 Scenari
 Dopo ogni boss cambia lo scenario: parcheggio aziendale → archivio → data center → centro commerciale → zona industriale → tetto del grattacielo, poi si ricomincia.
@@ -68,6 +68,16 @@ Tutti i suoni sono generati dal browser (Web Audio API), senza file. All'arrivo 
 
 ## 🏆 Classifica
 Quando perdi lasci le tue **3 iniziali** come nei cabinati. La classifica è online (Supabase) se `src/config.js` è compilato, altrimenti resta nel browser. Per crearla: incolla `supabase/schema.sql` nel SQL Editor di Supabase e metti URL e chiave pubblica in `src/config.js`.
+
+## 🔫 Armi della torre
+Nel menu scegli come spara il palazzo:
+
+| Arma | Come funziona |
+|---|---|
+| 🔫 **Pistola** | Equilibrata: colpi rapidi a un bersaglio alla volta |
+| 🏹 **Balestra** | Lenta ma potente: il dardo trapassa fino a 3 nemici in fila |
+| 🔴 **Laser** | Raggio istantaneo velocissimo, ogni colpo è debole |
+| 🌀 **Onda energetica** | Colpisce tutti i nemici nella gittata, ma lentamente |
 
 ## 🧑 Personaggi
 Nel menu scegli chi sta sul tetto del palazzo: all'inizio **Peppe** (esperto AI sciupato dal running) e **Dem** (al servizio dei poveri e italiano vero). Ogni volta che completi tutti i livelli (ondata 60) ne sblocchi uno nuovo: **Nando**, **Tony**, **Vanessa**, **Clara** e l'**Uomo Pesce**.

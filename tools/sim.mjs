@@ -12,6 +12,7 @@ const { useAbility } = await import(R + 'systems/abilities.js');
 const { defaultMeta } = await import(R + 'save.js');
 
 function play(strategy, meta = defaultMeta(), cap = 80) {
+  if (strategy.weapon) meta = { ...meta, weapon: strategy.weapon };
   const run = createRun(meta);
   const dt = 1 / 30;
   let t = 0;
@@ -44,6 +45,11 @@ function report(label, strategy, meta, cap, n = 15) {
   console.log(label.padEnd(10), 'min', r[0], 'med', r[n >> 1], 'max', r[n - 1]);
 }
 
+const only = process.argv[2]; // node tools/sim.mjs armi  → confronta solo le armi
+if (only === 'armi') {
+  for (const weapon of ['pistol', 'crossbow', 'laser', 'wave']) report(weapon, { buy: 1, cards: 1, abil: 1, weapon }, undefined, 80, 21);
+  process.exit(0);
+}
 report('niente', {});
 report('solo oro', { buy: 1 });
 report('solo carte', { cards: 1 });

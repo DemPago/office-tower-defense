@@ -7,6 +7,7 @@ import { ABILITIES } from '../data/abilities.js';
 import { upgradeCost } from '../systems/economy.js';
 import { canUse, manaCost } from '../systems/abilities.js';
 import { maxMana } from '../data/abilities.js';
+import { weaponDef } from '../data/weapons.js';
 import { fmt } from '../util.js';
 
 const $ = id => document.getElementById(id);
@@ -111,7 +112,7 @@ export function createHud({ onBuy, onAbility }) {
     setText($('mp-text'), `${Math.floor(run.mana)}/${mm} 💧`);
     // riga con le statistiche della torre
     const s = run.stats;
-    setText($('stats-line'), `⚔️ Danno ${fmt(s.dmg)} a colpo · ⚡ ${s.rate.toFixed(1)} colpi/s · 📡 Gittata ${Math.round(s.range)} · 💧 +${s.manaRegen.toFixed(1)} mana/s`);
+    setText($('stats-line'), `${weaponDef(run.weapon).icon} ⚔️ Danno ${fmt(s.dmg)} a colpo · ⚡ ${s.rate.toFixed(1)} colpi/s · 📡 Gittata ${Math.round(s.range)} · 💧 +${s.manaRegen.toFixed(1)} mana/s`);
 
     for (const def of UPGRADES) {
       const el = upgradeEls[def.id];

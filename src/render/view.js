@@ -32,9 +32,14 @@ export function drawPersonAt(ctx, sp, x, feetY, flip = false) {
 }
 
 // Sprite di un nemico: persona oppure animale (scorta dei boss e boss trasformati).
+// Stadio di "sfacelo" di uno zombie (0-3) in base alla vita persa.
+export function zombieStage(e) {
+  return Math.max(0, Math.min(3, Math.floor((1 - e.hp / e.maxHp) * 4)));
+}
+
 export function enemySprite(assets, e, frame, tint = false) {
   if (e.animal) return assets.animal(e.animal, frame, e.scale || 1, tint);
-  return assets.person(e.zombie ? 'z:' + e.look : e.look, frame, e.scale || 1, tint);
+  return assets.person(e.zombie ? `z${zombieStage(e)}:${e.look}` : e.look, frame, e.scale || 1, tint);
 }
 
 export const facesLeft = e => !!e.animal && e.x > TOWER.x;

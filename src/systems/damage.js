@@ -9,12 +9,27 @@ import { ANIMALS } from '../data/animals.js';
 export function dealDamage(run, e, amount, { crit = false, silent = false, color = null } = {}) {
   if (e.dead) return;
   const dmg = amount * (1 - e.armor);
+  const before = e.hp;
   e.hp -= dmg;
+  if (e.zombie && !silent) zombieGore(run, e, before);
   if (!silent) {
     e.hitFlash = 0.08;
     floatText(run, e.x + (Math.random() * 10 - 5), e.y - e.size * 0.8, fmt(Math.max(1, dmg)) + (crit ? '!' : ''), crit ? '#d7263d' : color || '#e8e2d0', crit ? 10 : 7);
   }
   if (e.hp <= 0) killEnemy(run, e);
+}
+
+// Zombie colpito: schizzi verdi e rossi; quando perde un pezzo (braccio, testa…) ne vola via uno grosso.
+function zombieGore(run, e, hpBefore) {
+  const stage = hp => Math.floor((1 - Math.max(0, hp) / e.maxHp) * 4);
+  burst(run, e.x, e.y - e.size * 0.5, '#8aa070', 3, 60);
+  burst(run, e.x, e.y - e.size * 0.5, '#7a0f1c', 2, 50);
+  if (e.hp > 0 && stage(e.hp) > stage(hpBefore)) {
+    burst(run, e.x, e.y - e.size * 0.55, '#8aa070', 10, 110);
+    burst(run, e.x, e.y - e.size * 0.55, '#d9d4c7', 4, 90);
+    burst(run, e.x, e.y - e.size * 0.55, '#a01828', 8, 100);
+    floatText(run, e.x, e.y - e.size - 8, ['SPLAT!', 'CRACK!', 'SQUISH!'][stage(e.hp) - 1] || 'SPLAT!', '#7bd332', 8);
+  }
 }
 
 // Il boss a vita finita non muore: lampo bianco e torna come il suo animale GIGANTE.

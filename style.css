@@ -380,3 +380,17 @@ h2 {
 .share.linkedin { background: #1a6aa8; font-size: 9px; }
 .share.copy { background: var(--steel-hi); }
 .share:hover { filter: brightness(1.2); }
+
+/* Scelta dell'arma nel menu */
+#weapon-pick { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+#weapon-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.weapon {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  width: 88px; padding: 6px 4px;
+  background: var(--asphalt); border: 2px solid var(--ink);
+  font-size: 7px; color: var(--white);
+}
+.weapon .ico { font-size: 22px; line-height: 1.1; }
+.weapon:hover { background: var(--steel); }
+.weapon.sel { border-color: var(--hazard); background: #3a3420; color: var(--hazard); }
+#weapon-desc { color: var(--grey); font-size: 7px; min-height: 12px; max-width: 380px; }

@@ -4,6 +4,7 @@ import { CARDS } from '../data/cards.js';
 import { UPGRADES, META_UPGRADES } from '../data/upgrades.js';
 import { ALLIES } from '../data/allies.js';
 import { MANA } from '../data/abilities.js';
+import { weaponDef } from '../data/weapons.js';
 
 // La torre senza nessun bonus.
 export const BASE = {
@@ -54,11 +55,13 @@ export function computeStats(run, meta) {
     if (def.aura === 'dmg') auraDmg += def.auraPer * ally.level;
   }
 
+  const W = weaponDef(run.weapon);
+
   return {
-    dmg: BASE.dmg * (1 + u.dmg) * (1 + c.dmg) * (1 + m.dmg) * (1 + auraDmg),
-    rate: Math.min(12, BASE.rate * (1 + u.rate + c.rate + m.rate + auraRate)),
+    dmg: W.dmg * BASE.dmg * (1 + u.dmg) * (1 + c.dmg) * (1 + m.dmg) * (1 + auraDmg),
+    rate: Math.min(12 * W.rate, W.rate * BASE.rate * (1 + u.rate + c.rate + m.rate + auraRate)),
     allyRateMult: 1 + auraRate,
-    range: Math.min(260, BASE.range * (1 + u.range + c.range)),
+    range: Math.min(260, W.range * BASE.range * (1 + u.range + c.range)),
     maxHp: (BASE.hp + u.hpFlat + c.hpFlat) * (1 + c.hp + m.hp),
     regen: BASE.regen + u.regen + c.regen,
     armor: Math.min(0.7, c.armor),
