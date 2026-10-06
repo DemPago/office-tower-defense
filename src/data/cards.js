@@ -7,8 +7,10 @@
 //   desc(m)  testo della carta con la potenza m
 //   mod(c,m) modifica i bonus delle carte (vedi systems/stats.js), una volta per copia
 //   onPick   effetto immediato, solo nel momento della scelta
+// Ogni carta vale di più se la prendi tardi: +4% per ondata.
+// Ondata 1 → 1.0×  |  Ondata 10 → 1.36×  |  Ondata 20 → 1.76×
 export function cardPower(wave) {
-  return 1; // le carte valgono uguale a ogni ondata (si può far crescere, es. 1 + 0.03 * (wave - 1))
+  return 1 + 0.04 * (wave - 1);
 }
 const pct = (v, m) => Math.round(v * m * 100);
 const num = (v, m) => Math.round(v * m * 10) / 10;
@@ -40,6 +42,31 @@ export const CARDS = [
   { id: 'selfrepair',icon: '🔧', name: 'Muro autoriparante',  rarity: 'rare',   max: 3,  linear: true, desc: m => `Il muro si ripara del ${num(2, m)}% al secondo durante l'ondata`, mod: (c, m) => { c.wallRegen += 0.02 * m; } },
   { id: 'scrum',     icon: '📋', name: 'Scrum Master',        rarity: 'epic',   max: 3,  linear: true, desc: m => `+${pct(0.6, m)}% danno e +${pct(0.15, m)}% velocità`, mod: (c, m) => { c.dmg += 0.6 * m; c.rate += 0.15 * m; } },
 ];
+
+// Carte malus: compaiono quando vinci troppo facilmente (vita > 80%).
+// Penalità fissa, mai in pool normale — compenso in oro che scala con l'ondata.
+export const MALUS_CARDS = [
+  { id: 'riunione',  icon: '😴', name: 'Riunione infinita',     malus: true, max: 1,
+    desc: () => '-15% velocità di fuoco',
+    reward: wave => `+${30 + wave * 2}💰 in compenso`,
+    mod: c => { c.rate -= 0.15; },
+    onPick: run => { run.gold += 30 + run.wave * 2; } },
+  { id: 'bug_prod',  icon: '🐛', name: 'Bug in produzione',     malus: true, max: 1,
+    desc: () => '-20% danno',
+    reward: wave => `+${40 + wave * 2}💰 in compenso`,
+    mod: c => { c.dmg -= 0.20; },
+    onPick: run => { run.gold += 40 + run.wave * 2; } },
+  { id: 'reorg',     icon: '📉', name: 'Ristrutturazione',      malus: true, max: 1,
+    desc: () => '-0.8 vita/s rigenera',
+    reward: wave => `+${25 + wave * 2}💰 in compenso`,
+    mod: c => { c.regen -= 0.8; },
+    onPick: run => { run.gold += 25 + run.wave * 2; } },
+];
+
+// Lookup unificato (usato da computeStats per trovare il mod di ogni carta presa).
+export function findCard(id) {
+  return CARDS.find(c => c.id === id) || MALUS_CARDS.find(c => c.id === id);
+}
 
 export const RARITY = {
   common: { weight: 60, label: 'Comune', color: '#8a8d93' },

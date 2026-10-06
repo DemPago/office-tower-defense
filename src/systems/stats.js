@@ -1,6 +1,6 @@
 // Calcola le statistiche finali della torre combinando tre fonti di bonus:
 // potenziamenti con l'oro (u), carte (c) e progressi permanenti (m).
-import { CARDS } from '../data/cards.js';
+import { findCard } from '../data/cards.js';
 import { UPGRADES, META_UPGRADES } from '../data/upgrades.js';
 import { ALLIES } from '../data/allies.js';
 import { MANA } from '../data/abilities.js';
@@ -46,7 +46,7 @@ export function computeStats(run, meta) {
   }
   const c = emptyBonus();
   // ogni carta presa conta con la potenza dell'ondata in cui è stata scelta
-  for (const pick of run.cardPicks) CARDS.find(card => card.id === pick.id).mod(c, pick.m);
+  for (const pick of run.cardPicks) findCard(pick.id)?.mod(c, pick.m);
   const m = metaBonuses(meta);
 
   // Bonus dei maghi (rinforzi con aura): valgono per torre e colleghi.

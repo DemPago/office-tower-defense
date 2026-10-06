@@ -31,8 +31,15 @@ export function wallMaxHp(run) {
   return WALL.hp * atkScale(Math.max(1, run.wave)) * (1 + run.stats.wallHp);
 }
 
-// Ripara tutto il muro (inizio partita e fine di ogni ondata).
+// Ripara solo i tratti ancora in piedi (fine ondata normale).
+// I tratti distrutti (hp=0) restano rotti fino al prossimo macro-stage.
 export function repairWall(run) {
+  const max = wallMaxHp(run);
+  for (const s of run.wall) { s.maxHp = max; if (s.hp > 0) s.hp = max; }
+}
+
+// Ripara tutto il muro, comprese le brecce (inizio partita e ogni 10 ondate).
+export function fullRepairWall(run) {
   const max = wallMaxHp(run);
   for (const s of run.wall) { s.maxHp = max; s.hp = max; }
 }

@@ -2,7 +2,7 @@
 // e decide quando un'ondata finisce, quando scegliere le carte e quando si perde.
 import { updateSpawns, startWave } from './waves.js';
 import { updateEnemies, updateEnemyShots, updateTower, updateShots, updateFence } from './combat.js';
-import { updateWall, repairWall } from './wall.js';
+import { updateWall, repairWall, fullRepairWall } from './wall.js';
 import { updateAbilities } from './abilities.js';
 import { offerCards } from './cards.js';
 import { offerAllies, updateAllies, animateAllies, updateYard, restAllies } from './allies.js';
@@ -46,7 +46,13 @@ export function update(run, dt) {
     run.shots = [];
     run.intruders = 0;
     restAllies(run);
-    repairWall(run);
+    // Ogni 10 ondate (nuovo macro-stage) il muro torna integro, anche le brecce.
+    if (run.wave % 10 === 0) {
+      fullRepairWall(run);
+      banner(run, `SETTORE ${run.wave / 10 + 1}`, 'Muro ripristinato — ma i nemici sono più forti', '#2de2e6');
+    } else {
+      repairWall(run); // solo i tratti ancora in piedi si riparano
+    }
     // Completati tutti i livelli (i 6 reparti): si sblocca un nuovo personaggio.
     if (run.wave % UNLOCK_WAVE === 0) {
       const hero = unlockNextHero(run.meta);

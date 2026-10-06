@@ -6,6 +6,7 @@ import { upgradeCost } from '../systems/economy.js';
 // ─── Carte ───────────────────────────────────────────────────────
 
 function scoreCard(run, card) {
+  if (card.malus) return -80; // quasi mai consigliata, salvo le altre siano peggio
   const owned = run.cards[card.id] || 0;
   if (owned >= card.max) return -Infinity;
 
@@ -48,6 +49,7 @@ function scoreCard(run, card) {
 }
 
 function cardReason(run, card) {
+  if (card.malus) return `Carta malus: ${card.desc()} — l'oro non vale il malus permanente.`;
   const hpPct = run.tower.hp / run.stats.maxHp;
   const wallBroken = run.wall.some(seg => seg.hp <= 0);
 

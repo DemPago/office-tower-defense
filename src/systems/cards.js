@@ -1,5 +1,5 @@
 // Scelta delle carte fra un'ondata e l'altra.
-import { CARDS, RARITY, cardPower } from '../data/cards.js';
+import { CARDS, MALUS_CARDS, RARITY, cardPower, findCard } from '../data/cards.js';
 import { refreshStats } from './economy.js';
 
 // Estrae una carta dal mazzo, pesata per rarità.
@@ -15,7 +15,7 @@ function draw(pool) {
 //  3) se possibile, mai le stesse dell'offerta precedente.
 export function rollChoices(run, n = 3) {
   const last = new Set(run.lastOffer || []);
-  const available = CARDS.filter(c => (run.cards[c.id] || 0) < c.max);
+  const available = CARDS.filter(c => !c.malus && (run.cards[c.id] || 0) < c.max);
   const fresh = available.filter(c => !run.cards[c.id]);
   const owned = available.filter(c => run.cards[c.id]);
   const picked = [];
@@ -35,7 +35,17 @@ export function rollChoices(run, n = 3) {
 
 export function offerCards(run) {
   run.phase = 'cards';
-  run.cardChoices = rollChoices(run);
+  const choices = rollChoices(run);
+  // Se hai vinto troppo facilmente (vita > 80%), una delle 3 carte è un malus.
+  const hpPct = run.tower.hp / run.stats.maxHp;
+  if (run.wave > 2 && hpPct > 0.80) {
+    const pool = MALUS_CARDS.filter(c => (run.cards[c.id] || 0) < c.max);
+    if (pool.length) {
+      const malus = pool[Math.floor(Math.random() * pool.length)];
+      choices[Math.floor(Math.random() * choices.length)] = malus;
+    }
+  }
+  run.cardChoices = choices;
 }
 
 export function reroll(run) {
@@ -49,7 +59,8 @@ export function pickCard(run, meta, index) {
   const card = run.cardChoices?.[index];
   if (run.phase !== 'cards' || !card) return false;
   run.cards[card.id] = (run.cards[card.id] || 0) + 1;
-  run.cardPicks.push({ id: card.id, m: cardPower(run.wave) });
+  // Le carte malus non scalano con cardPower: il malus rimane fisso.
+  run.cardPicks.push({ id: card.id, m: card.malus ? 1 : cardPower(run.wave) });
   if (card.onPick) card.onPick(run);
   refreshStats(run, meta);
   run.fx.sounds.push('pick');

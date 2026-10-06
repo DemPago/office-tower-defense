@@ -244,7 +244,9 @@ h2 {
 .card small { color: #c9c4b6; font-size: 8px; line-height: 1.7; flex: 1; }
 .card .own { color: var(--toxic); font-size: 8px; }
 .card.epic { box-shadow: 0 0 0 2px var(--pink), inset -2px -2px 0 rgba(0,0,0,.35); }
-.card.ally { --rar: var(--hazard); border-image: var(--stripes) 3; border-width: 3px; }
+.card.ally  { --rar: var(--hazard); border-image: var(--stripes) 3; border-width: 3px; }
+.card.malus { --rar: var(--red); box-shadow: 0 0 0 2px var(--red), inset -2px -2px 0 rgba(0,0,0,.35); background: #1a0a0c; }
+.card.malus .own { color: var(--hazard); }
 .card.recommended { border-color: var(--cyan) !important; box-shadow: 0 0 0 2px var(--cyan), inset -2px -2px 0 rgba(0,0,0,.35) !important; }
 .card.recommended::before, .card.recommended::after { background: rgba(45,226,230,.45); }
 

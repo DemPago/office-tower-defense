@@ -83,19 +83,21 @@ export function showCards(run, onPick, onReroll) {
   box.innerHTML = '';
   const advice = domAdvice(run);
   run.cardChoices.forEach((card, i) => {
-    const r = RARITY[card.rarity];
+    const isMalus = !!card.malus;
+    const r = isMalus ? { label: 'MALUS', color: 'var(--red)' } : RARITY[card.rarity];
     const owned = run.cards[card.id] || 0;
     const m = cardPower(run.wave);
     const total = owned && card.linear ? `<br>Totale: ${card.desc(m * (owned + 1))}` : '';
     const el = document.createElement('button');
-    el.className = `card ${card.rarity}` + (owned ? ' upgrade' : '') + (advice && advice.index === i ? ' recommended' : '');
+    el.className = `card ${isMalus ? 'malus' : card.rarity}` + (owned ? ' upgrade' : '') + (advice && advice.index === i ? ' recommended' : '');
     el.style.setProperty('--rar', r.color);
+    const ownLabel = isMalus ? (card.reward ? card.reward(run.wave) : 'oro in compenso') : (owned ? "Ce l'hai già: l'effetto si somma" : 'Nuova!');
     el.innerHTML = `
-      <span class="rar">${owned ? `POTENZIA · Livello ${owned} → ${owned + 1}` : r.label}</span>
+      <span class="rar">${isMalus ? 'MALUS' : (owned ? `POTENZIA · Livello ${owned} → ${owned + 1}` : r.label)}</span>
       <span class="ico">${card.icon}</span>
       <b>${card.name}</b>
       <small>${card.desc(m)}${total}</small>
-      <span class="own">${owned ? "Ce l'hai già: l'effetto si somma" : 'Nuova!'}</span>`;
+      <span class="own">${ownLabel}</span>`;
     el.addEventListener('click', () => onPick(i));
     box.appendChild(el);
   });
