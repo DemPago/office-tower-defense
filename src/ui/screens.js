@@ -114,7 +114,6 @@ export function showCards(run, onPick, onReroll) {
       $('dom-text').textContent = advice.reason;
       $('dom-card-name').textContent = advice.card.icon + ' ' + advice.card.name;
       domWizard.hidden = false;
-      domWizard.onclick = () => { domWizard.hidden = true; };
     } else {
       domWizard.hidden = true;
     }

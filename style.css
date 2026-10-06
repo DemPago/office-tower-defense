@@ -250,39 +250,40 @@ h2 {
 .card.recommended { border-color: var(--cyan) !important; box-shadow: 0 0 0 2px var(--cyan), inset -2px -2px 0 rgba(0,0,0,.35) !important; }
 .card.recommended::before, .card.recommended::after { background: rgba(45,226,230,.45); }
 
-/* ─── DOM Wizard ─────────────────────────────────────────────── */
+/* ─── DOM Wizard (lato sinistro, non blocca i click) ─────────── */
 #dom-wizard {
-  position: absolute; inset: 0; z-index: 15;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
-  background: rgba(13,13,15,.80);
-  cursor: pointer;
-  animation: dom-appear .25s ease-out;
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  z-index: 12; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  width: 148px; pointer-events: none;
+  animation: dom-appear .3s ease-out;
 }
 #dom-cloud {
   background: var(--char);
   border: 2px solid var(--cyan);
-  box-shadow: 4px 4px 0 rgba(0,0,0,.6), inset -2px -2px 0 rgba(0,0,0,.4), inset 2px 2px 0 rgba(255,255,255,.08);
-  padding: 14px 20px; max-width: 320px; width: 88%;
-  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.6), inset 2px 2px 0 rgba(255,255,255,.06);
+  padding: 10px 12px; width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
   text-align: center; position: relative;
 }
-/* coda della nuvoletta, punta verso il basso (verso DOM) */
+/* coda del fumetto → punta giù verso il mago */
 #dom-cloud::after {
-  content: ''; position: absolute; bottom: -13px; left: 50%;
-  transform: translateX(-50%);
-  border: 13px solid transparent; border-top-color: var(--cyan);
+  content: ''; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
+  border: 7px solid transparent; border-top-color: var(--cyan);
 }
 #dom-cloud::before {
-  content: ''; position: absolute; bottom: -10px; left: 50%;
-  transform: translateX(-50%); z-index: 1;
-  border: 10px solid transparent; border-top-color: var(--char);
+  content: ''; position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%); z-index: 1;
+  border: 5px solid transparent; border-top-color: var(--char);
 }
-#dom-cloud b { color: var(--cyan); font-weight: normal; font-size: 10px; }
-#dom-cloud span { color: var(--white); font-size: 8px; line-height: 1.7; }
-#dom-cloud #dom-text { color: var(--grey); font-size: 7px; }
-.dom-figure { font-size: 56px; line-height: 1; margin-top: 14px; filter: drop-shadow(2px 4px 0 rgba(0,0,0,.8)); }
-.dom-hint { color: var(--grey); font-size: 7px; margin-top: 10px; opacity: .7; }
-@keyframes dom-appear { from { opacity: 0; } to { opacity: 1; } }
+#dom-cloud b   { color: var(--cyan); font-weight: normal; font-size: 9px; }
+#dom-cloud span { color: var(--white); font-size: 7px; line-height: 1.7; }
+#dom-cloud #dom-text { color: var(--grey); font-size: 6px; }
+.dom-figure { font-size: 48px; line-height: 1; filter: drop-shadow(2px 4px 0 rgba(0,0,0,.8)); }
+/* Su schermi stretti non c'è spazio laterale */
+@media (max-width: 640px) { #dom-wizard { display: none !important; } }
+@keyframes dom-appear {
+  from { opacity: 0; transform: translateY(-50%) translateX(-8px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
 
 /* Negozio permanente */
 #shop-list { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 460px; max-height: 55%; overflow-y: auto; }
