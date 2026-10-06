@@ -127,6 +127,8 @@ button:disabled { cursor: default; }
 .upg:not(.off):hover { background: var(--steel-hi); }
 .upg:not(.off):active { transform: translateY(1px); }
 .upg.off { opacity: .45; cursor: help; }
+.upg.dom-rec:not(.off) { box-shadow: 0 0 0 2px var(--cyan), inset -2px -2px 0 rgba(0,0,0,.45), inset 2px 2px 0 rgba(255,255,255,.12); }
+.upg.dom-rec:not(.off) .nm::after { content: ' 🧙'; }
 
 .abl {
   position: relative;
@@ -243,6 +245,23 @@ h2 {
 .card .own { color: var(--toxic); font-size: 8px; }
 .card.epic { box-shadow: 0 0 0 2px var(--pink), inset -2px -2px 0 rgba(0,0,0,.35); }
 .card.ally { --rar: var(--hazard); border-image: var(--stripes) 3; border-width: 3px; }
+.card.recommended { border-color: var(--cyan) !important; box-shadow: 0 0 0 2px var(--cyan), inset -2px -2px 0 rgba(0,0,0,.35) !important; }
+.card.recommended::before, .card.recommended::after { background: rgba(45,226,230,.45); }
+
+/* ─── DOM Wizard ─────────────────────────────────────────────── */
+#dom-bubble {
+  display: flex; align-items: flex-start; gap: 10px;
+  width: 100%; max-width: 640px;
+  padding: 8px 12px;
+  background: var(--char);
+  border: 2px solid var(--cyan);
+  box-shadow: inset -2px -2px 0 rgba(0,0,0,.4), inset 2px 2px 0 rgba(255,255,255,.07);
+  font-size: 8px;
+}
+.dom-avatar { font-size: 28px; line-height: 1; flex-shrink: 0; padding-top: 2px; }
+.dom-speech { display: flex; flex-direction: column; gap: 4px; }
+.dom-speech b { color: var(--cyan); font-weight: normal; font-size: 9px; }
+.dom-speech span { color: var(--grey); line-height: 1.7; font-size: 7px; }
 
 /* Negozio permanente */
 #shop-list { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 460px; max-height: 55%; overflow-y: auto; }

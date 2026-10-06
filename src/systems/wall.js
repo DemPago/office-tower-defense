@@ -54,9 +54,15 @@ export function segmentToward(run, p) {
   return run.wall.find(s => s.side === side && along >= s.a && along <= s.b) || null;
 }
 
-// Il nemico sta per entrare nel cortile passando da un tratto ancora in piedi?
+// Confine esterno del muro (i tratti siedono fuori dal YARD di 3 px).
+function insideWallPerimeter(p) {
+  return p.x > YARD.x - 3 && p.x < YARD.x + YARD.w + 3 &&
+         p.y > YARD.y - 3 && p.y < YARD.y + YARD.h + 2;
+}
+
+// Il nemico sta per attraversare il muro di cinta ancora in piedi?
 export function blockingSegment(run, e, nx, ny) {
-  if (insideYard(e) || !insideYard({ x: nx, y: ny })) return null;
+  if (insideYard(e) || !insideWallPerimeter({ x: nx, y: ny })) return null;
   const seg = segmentToward(run, e);
   return seg && seg.hp > 0 ? seg : null;
 }

@@ -9,6 +9,7 @@ import { canUse, manaCost } from '../systems/abilities.js';
 import { maxMana } from '../data/abilities.js';
 import { weaponDef } from '../data/weapons.js';
 import { fmt } from '../util.js';
+import { domUpgradeAdvice } from './dom.js';
 
 const $ = id => document.getElementById(id);
 
@@ -114,6 +115,7 @@ export function createHud({ onBuy, onAbility }) {
     const s = run.stats;
     setText($('stats-line'), `${weaponDef(run.weapon).icon} ⚔️ Danno ${fmt(s.dmg)} a colpo · ⚡ ${s.rate.toFixed(1)} colpi/s · 📡 Gittata ${Math.round(s.range)} · 💧 +${s.manaRegen.toFixed(1)} mana/s`);
 
+    const recUpgrade = run.phase !== 'over' ? domUpgradeAdvice(run) : null;
     for (const def of UPGRADES) {
       const el = upgradeEls[def.id];
       const cost = upgradeCost(run, def.id);
@@ -121,6 +123,7 @@ export function createHud({ onBuy, onAbility }) {
       setText(el.cost, cost === null ? 'MAX' : `${fmt(cost)}💰`);
       // non "disabled": così il suggerimento compare anche quando non hai abbastanza oro
       el.btn.classList.toggle('off', cost === null || run.gold < cost || run.phase === 'over');
+      el.btn.classList.toggle('dom-rec', def.id === recUpgrade);
     }
     for (const def of ABILITIES) {
       const el = abilityEls[def.id];

@@ -7,6 +7,7 @@ import { HEROES, UNLOCK_WAVE, unlockedHeroes, heroStatsText } from '../data/hero
 import { weaponDef } from '../data/weapons.js';
 import { slotName } from '../systems/allies.js';
 import { fmt } from '../util.js';
+import { domAdvice } from './dom.js';
 
 const $ = id => document.getElementById(id);
 const SCREENS = ['scr-menu', 'scr-shop', 'scr-cards', 'scr-pause', 'scr-over', 'scr-board'];
@@ -80,14 +81,14 @@ export function showShop(meta, onBuy) {
 export function showCards(run, onPick, onReroll) {
   const box = $('cards-list');
   box.innerHTML = '';
+  const advice = domAdvice(run);
   run.cardChoices.forEach((card, i) => {
     const r = RARITY[card.rarity];
     const owned = run.cards[card.id] || 0;
     const m = cardPower(run.wave);
-    // carta già presa: si somma, e si mostra il totale dopo questa scelta
     const total = owned && card.linear ? `<br>Totale: ${card.desc(m * (owned + 1))}` : '';
     const el = document.createElement('button');
-    el.className = `card ${card.rarity}` + (owned ? ' upgrade' : '');
+    el.className = `card ${card.rarity}` + (owned ? ' upgrade' : '') + (advice && advice.index === i ? ' recommended' : '');
     el.style.setProperty('--rar', r.color);
     el.innerHTML = `
       <span class="rar">${owned ? `POTENZIA · Livello ${owned} → ${owned + 1}` : r.label}</span>
@@ -105,12 +106,21 @@ export function showCards(run, onPick, onReroll) {
   rr.hidden = false;
   $('cards-title').textContent = `Ondata ${run.wave} superata!`;
   $('cards-sub').textContent = 'Scegli un potenziamento';
+  const domBubble = $('dom-bubble');
+  if (advice) {
+    $('dom-text').textContent = advice.reason;
+    $('dom-card-name').textContent = advice.card.icon + ' ' + advice.card.name;
+    domBubble.hidden = false;
+  } else {
+    domBubble.hidden = true;
+  }
   show('scr-cards');
 }
 
 // Scelta del rinforzo: usa la stessa schermata delle carte.
 // Ogni carta è "ASSUMI" (collega nuovo in una postazione libera) o "PROMUOVI" (uno già in campo).
 export function showAllies(run, onPick) {
+  $('dom-bubble').hidden = true;
   const box = $('cards-list');
   box.innerHTML = '';
   run.allyChoices.forEach((choice, i) => {
