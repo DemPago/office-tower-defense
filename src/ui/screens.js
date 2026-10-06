@@ -107,12 +107,14 @@ export function showCards(run, onPick, onReroll) {
   $('cards-title').textContent = `Ondata ${run.wave} superata!`;
   $('cards-sub').textContent = 'Scegli un potenziamento';
   const domBubble = $('dom-bubble');
-  if (advice) {
-    $('dom-text').textContent = advice.reason;
-    $('dom-card-name').textContent = advice.card.icon + ' ' + advice.card.name;
-    domBubble.hidden = false;
-  } else {
-    domBubble.hidden = true;
+  if (domBubble) {
+    if (advice) {
+      $('dom-text').textContent = advice.reason;
+      $('dom-card-name').textContent = advice.card.icon + ' ' + advice.card.name;
+      domBubble.hidden = false;
+    } else {
+      domBubble.hidden = true;
+    }
   }
   show('scr-cards');
 }
@@ -120,7 +122,8 @@ export function showCards(run, onPick, onReroll) {
 // Scelta del rinforzo: usa la stessa schermata delle carte.
 // Ogni carta è "ASSUMI" (collega nuovo in una postazione libera) o "PROMUOVI" (uno già in campo).
 export function showAllies(run, onPick) {
-  $('dom-bubble').hidden = true;
+  const domBubble2 = $('dom-bubble');
+  if (domBubble2) domBubble2.hidden = true;
   const box = $('cards-list');
   box.innerHTML = '';
   run.allyChoices.forEach((choice, i) => {

@@ -22,7 +22,7 @@ export function heroDef(id) {
 }
 
 export function unlockedHeroes(meta) {
-  return meta.heroes || START_HEROES;
+  return HEROES.map(h => h.id);
 }
 
 // Sblocca il prossimo personaggio (se ce n'è ancora uno). Restituisce quello nuovo o null.
