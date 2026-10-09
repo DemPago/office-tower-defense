@@ -13,10 +13,10 @@ export function maxMana(run) {
 export const ABILITIES = [
   { id: 'bomb',    key: '1', icon: '💣', short: 'Bomba',    name: 'Bomba di carta',   desc: 'Danno enorme a tutti i nemici', mana: 45, cd: 10,
     help: 'Colpisce TUTTI i nemici in campo con 12 volte il danno della torre. Ottima quando arriva un gruppo.' },
-  { id: 'coffee',  key: '2', icon: '☕', short: 'Caffè',    name: 'Caffè bollente',   desc: 'Rallenta tutti del 60% per 5 s', mana: 25, cd: 2,
+  { id: 'coffee',  key: '2', icon: '☕', short: 'Caffè',    name: 'Caffè bollente',   desc: 'Rallenta tutti del 60% per 5 s', mana: 25, cd: 15,
     help: 'Tutti i nemici rallentano del 60% per 5 secondi: utile contro i kamikaze in carica.' },
-  { id: 'meeting', key: '3', icon: '📅', short: 'Riunione', name: 'Riunione urgente', desc: 'Blocca tutti per 3 s', mana: 35, cd: 2,
+  { id: 'meeting', key: '3', icon: '📅', short: 'Riunione', name: 'Riunione urgente', desc: 'Blocca tutti per 3 s', mana: 35, cd: 12,
     help: 'Tutti i nemici si fermano per 3 secondi (i boss solo 1,2). Salva il cortile quando entrano gli intrusi.' },
-  { id: 'audit',   key: '4', icon: '🔍', short: 'Audit',    name: 'Audit fiscale',    desc: 'Dimezza la vita dei nemici', mana: 60, cd: 2,
+  { id: 'audit',   key: '4', icon: '🔍', short: 'Audit',    name: 'Audit fiscale',    desc: 'Dimezza la vita dei nemici', mana: 60, cd: 10,
     help: "Toglie metà della vita a tutti i nemici (ai boss il 15%), ignorando l'armatura. Perfetto contro i tank." },
 ];
