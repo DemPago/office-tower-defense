@@ -19,7 +19,4 @@ export const ABILITIES = [
     help: 'Tutti i nemici si fermano per 3 secondi (i boss solo 1,2). Salva il cortile quando entrano gli intrusi.' },
   { id: 'audit',   key: '4', icon: '🔍', short: 'Audit',    name: 'Audit fiscale',    desc: 'Dimezza la vita dei nemici', mana: 60, cd: 2,
     help: "Toglie metà della vita a tutti i nemici (ai boss il 15%), ignorando l'armatura. Perfetto contro i tank." },
-  // Potere speciale: compare solo quando un boss diventa bestia, è gratis e si usa una volta per bestia.
-  { id: 'mitra',   key: '5', icon: '💥', short: 'MITRA',    name: 'Mitragliatrice',   desc: 'La torre spara a raffica per 12 s', mana: 0, cd: 0, special: true,
-    help: 'Compare solo contro la FORMA BESTIALE del boss: per 12 secondi la torre spara a raffica, 4 volte più veloce. Gratis, una volta per bestia.' },
 ];

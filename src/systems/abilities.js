@@ -4,10 +4,6 @@ import { dealDamage } from './combat.js';
 import { banner, burst, shake, sfx } from './fx.js';
 
 const EFFECTS = {
-  mitra(run) {
-    run.mitraReady = false;
-    run.mitraT = MITRA.time;
-  },
   bomb(run) {
     for (const e of [...run.enemies]) {
       dealDamage(run, e, run.stats.dmg * 12);
@@ -33,10 +29,7 @@ export function manaCost(run, id) {
   return Math.round(ABILITIES.find(a => a.id === id).mana * run.stats.manaMult);
 }
 
-export const MITRA = { time: 12, rateMult: 4 };
-
 export function canUse(run, id) {
-  if (id === 'mitra') return run.phase === 'wave' && !!run.mitraReady;
   return run.phase === 'wave' && run.abilityCd[id] <= 0 && run.enemies.length > 0 && run.mana >= manaCost(run, id);
 }
 
@@ -55,8 +48,5 @@ export function useAbility(run, id) {
 // Ricarica del mana e della piccola pausa dopo l'uso.
 export function updateAbilities(run, dt) {
   run.mana = Math.min(maxMana(run), run.mana + run.stats.manaRegen * dt);
-  run.mitraT = Math.max(0, (run.mitraT || 0) - dt);
-  // se la bestia muore prima di usarlo, il mitra non serve più
-  if (run.mitraReady && !run.enemies.some(e => e.beast)) run.mitraReady = false;
   for (const id in run.abilityCd) run.abilityCd[id] = Math.max(0, run.abilityCd[id] - dt);
 }

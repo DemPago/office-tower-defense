@@ -37,9 +37,14 @@ function drawSegment(ctx, seg, look, thorns, time) {
   });
   if (thorns) barbedWire(ctx, seg, list, time);
   if (seg.hit > 0) {
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    const fi = seg.hit / 0.15;
     const [x0, y0] = list[0], [x1, y1] = list[list.length - 1];
-    ctx.fillRect(x0 - 1, y0 - 1, x1 - x0 + 13, y1 - y0 + 9);
+    const rw = x1 - x0 + 13, rh = y1 - y0 + 9;
+    ctx.fillStyle = `rgba(232,100,27,${(fi * 0.55).toFixed(2)})`;
+    ctx.fillRect(x0 - 1, y0 - 1, rw, rh);
+    ctx.strokeStyle = `rgba(215,38,61,${(fi * 0.8).toFixed(2)})`;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x0 - 1, y0 - 1, rw, rh);
   }
   // barra della vita del tratto, solo se danneggiato
   if (k < 1) {

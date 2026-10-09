@@ -177,8 +177,12 @@ export function drawTower(ctx, assets, run, time) {
     }
   }
 
-  // Lampo rosso quando viene colpito
-  if (run && run.tower.hitFlash > 0) p(-3, -3, TW + 6, TH + 6, 'rgba(215,38,61,0.35)');
+  // Lampo rosso quando viene colpito: intensità proporzionale al flash
+  if (run && run.tower.hitFlash > 0) {
+    const fi = run.tower.hitFlash / 0.22;
+    p(-3, -3, TW + 6, TH + 6, `rgba(215,38,61,${(0.2 + fi * 0.45).toFixed(2)})`);
+    if (fi > 0.6) p(-3, -3, TW + 6, 4, `rgba(255,255,255,${(fi * 0.5).toFixed(2)})`);
+  }
   ctx.restore();
 
   // Sacchi di sabbia davanti all'ingresso (in coordinate del mondo)
@@ -192,17 +196,8 @@ export function drawTower(ctx, assets, run, time) {
   const bob = Math.round(Math.sin(time * 2.2) * 0.6);
   const feet = B.top - 3 + recoil + bob;
   drawPersonAt(ctx, assets.person(run ? run.hero : 'peppe', 0, 1), TOWER.x + 4, feet);
-  // Lampo allo sparo (enorme col mitra)
-  if (run && run.mitraT > 0 && recoil) {
-    const fx = TOWER.x + 7, fy = feet - 15;
-    ctx.fillStyle = PAL.white;
-    ctx.fillRect(fx - 3, fy - 3, 7, 7);
-    ctx.fillStyle = PAL.orange;
-    ctx.fillRect(fx - 8, fy - 1, 17, 3);
-    ctx.fillRect(fx - 1, fy - 8, 3, 17);
-    ctx.fillStyle = PAL.hazard;
-    ctx.fillRect(fx - 5, fy - 5, 11, 11);
-  } else if (recoil) {
+  // Lampo allo sparo
+  if (recoil) {
     const fx = TOWER.x + 5, fy = feet - 15;
     ctx.fillStyle = PAL.white;
     ctx.fillRect(fx - 2, fy - 2, 5, 5);

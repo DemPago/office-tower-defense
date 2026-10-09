@@ -59,10 +59,9 @@ function transformBoss(run, e) {
   e.age = 0;
   e.moving = true;
   // il power-up: si annuncia in grande, con la sirena
-  banner(run, "È INIZIATA LA REPERIBILITÀ!", 'Il mitra è pronto: premi 💥 MITRA o il tasto 5', '#f2b705');
+  banner(run, "È INIZIATA LA REPERIBILITÀ!", 'Abbattila prima che sia troppo tardi!', '#f2b705');
   run.fx.banner.life = run.fx.banner.max = 4;
   sfx(run, 'siren');
-  run.mitraReady = true;
   sfx(run, 'transform');
 }
 
@@ -100,10 +99,33 @@ function killEnemy(run, e) {
 export function damageTower(run, amount) {
   if (run.phase === 'over') return;
   const t = run.tower;
+  const ratioBefore = t.hp / run.stats.maxHp;
   t.hp -= amount * (1 - run.stats.armor);
-  t.hitFlash = 0.15;
-  shake(run, 2);
+  t.hitFlash = 0.22;
+  shake(run, 3);
   sfx(run, 'hurt');
+  // Detriti di cemento a ogni colpo
+  const px = TOWER.x + (Math.random() - 0.5) * 24;
+  const py = TOWER.y - 20 - Math.random() * 30;
+  burst(run, px, py, '#6e6a64', 5, 80);
+  burst(run, px, py, '#8f8a80', 3, 55);
+  // Milestone 60%: prima crepa seria
+  const ratio = t.hp / run.stats.maxHp;
+  if (ratio < 0.6 && ratioBefore >= 0.6) {
+    shake(run, 8);
+    burst(run, TOWER.x, TOWER.y - 40, '#6e6a64', 18, 120);
+    ring(run, TOWER.x, TOWER.y - 20, 44, '#d7263d');
+    floatText(run, TOWER.x, TOWER.y - 90, 'PALAZZO DANNEGGIATO!', '#d7263d', 9);
+  }
+  // Milestone 30%: crollo parziale
+  if (ratio < 0.3 && ratioBefore >= 0.3) {
+    shake(run, 12);
+    burst(run, TOWER.x, TOWER.y - 40, '#8a3b1e', 22, 140);
+    burst(run, TOWER.x, TOWER.y - 40, '#e8641b', 12, 110);
+    ring(run, TOWER.x, TOWER.y - 20, 60, '#e8641b');
+    floatText(run, TOWER.x, TOWER.y - 90, 'EVACUARE!', '#e8641b', 12);
+    sfx(run, 'hurt');
+  }
   if (t.hp <= 0) {
     t.hp = 0;
     run.phase = 'over';

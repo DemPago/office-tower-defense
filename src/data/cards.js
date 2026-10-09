@@ -7,10 +7,11 @@
 //   desc(m)  testo della carta con la potenza m
 //   mod(c,m) modifica i bonus delle carte (vedi systems/stats.js), una volta per copia
 //   onPick   effetto immediato, solo nel momento della scelta
-// Ogni carta vale di più se la prendi tardi: +4% per ondata.
-// Ondata 1 → 1.0×  |  Ondata 10 → 1.36×  |  Ondata 20 → 1.76×
+// Ogni carta vale di più se la prendi tardi: +2% per ondata (era +4%, ridotto per bilanciamento).
+// Ondata 1 → 1.0×  |  Ondata 10 → 1.18×  |  Ondata 20 → 1.38×
+export const MAX_HAND = 5;
 export function cardPower(wave) {
-  return 1 + 0.04 * (wave - 1);
+  return 1 + 0.02 * (wave - 1);
 }
 const pct = (v, m) => Math.round(v * m * 100);
 const num = (v, m) => Math.round(v * m * 10) / 10;
@@ -39,8 +40,39 @@ export const CARDS = [
   { id: 'concrete',  icon: '🧱', name: 'Muro di cemento',     rarity: 'rare',   max: 3,  linear: true, desc: m => `Muro: +${pct(0.6, m)}% vita (blocchi di cemento)`, mod: (c, m) => { c.wallHp += 0.6 * m; } },
   { id: 'barbed',    icon: '➰', name: 'Filo spinato',        rarity: 'rare',   max: 3,  linear: true, desc: m => `Chi prende a colpi il muro si ferisce (${pct(0.5, m)}% del tuo danno)`, mod: (c, m) => { c.wallThorns += 0.5 * m; } },
   { id: 'steel',     icon: '🛡️', name: "Lastre d'acciaio",    rarity: 'epic',   max: 2,  linear: true, desc: m => `Muro: +${pct(0.4, m)}% vita e respinge il ${pct(0.35, m)}% dei colpi dei cecchini`, mod: (c, m) => { c.wallHp += 0.4 * m; c.wallReflect += 0.35 * m; } },
-  { id: 'selfrepair',icon: '🔧', name: 'Muro autoriparante',  rarity: 'rare',   max: 3,  linear: true, desc: m => `Il muro si ripara del ${num(2, m)}% al secondo durante l'ondata`, mod: (c, m) => { c.wallRegen += 0.02 * m; } },
+  { id: 'selfrepair',icon: '🔧', name: 'Muro autoriparante',  rarity: 'rare',   max: 3,  linear: true, desc: m => `Il muro si ripara: ${num(2, m)}% vita/s in combattimento`, mod: (c, m) => { c.wallRegen += 0.02 * m; } },
   { id: 'scrum',     icon: '📋', name: 'Scrum Master',        rarity: 'epic',   max: 3,  linear: true, desc: m => `+${pct(0.6, m)}% danno e +${pct(0.15, m)}% velocità`, mod: (c, m) => { c.dmg += 0.6 * m; c.rate += 0.15 * m; } },
+];
+
+// Malus pesanti: dopo ogni ondata zombie (7, 17, 27…) le 3 scelte sono TUTTE negative.
+// Scegli il male minore. Nessun compenso in oro, nessun reroll.
+export const HEAVY_MALUS_CARDS = [
+  { id: 'licenziamento', icon: '📋', name: 'Licenziamento',    malus: true, heavy: true,
+    desc: () => 'Rimuove l\'ultima carta che hai scelto',
+    mod: () => {},
+    onPick: run => {
+      // licenziamento è già in cardPicks come ultimo elemento; rimuoviamo il penultimo
+      if (run.cardPicks.length >= 2) {
+        const victim = run.cardPicks[run.cardPicks.length - 2];
+        run.cardPicks.splice(run.cardPicks.length - 2, 1);
+        if (run.cards[victim.id] > 0) run.cards[victim.id]--;
+      }
+    } },
+  { id: 'crisi',         icon: '📉', name: 'Crisi aziendale',  malus: true, heavy: true,
+    desc: () => '-30% danno e -30% velocità di fuoco',
+    mod: c => { c.dmg -= 0.30; c.rate -= 0.30; } },
+  { id: 'burnout',       icon: '🔥', name: 'Burnout del team', malus: true, heavy: true,
+    desc: () => '-2 vita al secondo (rigenera meno)',
+    mod: c => { c.regen -= 2; } },
+  { id: 'blackout',      icon: '🌑', name: 'Blackout sistemico', malus: true, heavy: true,
+    desc: () => '+50% costo mana per i poteri',
+    mod: c => { c.cdr -= 0.50; } },
+  { id: 'tagli',         icon: '✂️', name: 'Tagli al budget',  malus: true, heavy: true,
+    desc: () => '-35% oro dai nemici',
+    mod: c => { c.gold -= 0.35; } },
+  { id: 'downgrade',     icon: '⬇️', name: 'Downgrade forzato', malus: true, heavy: true,
+    desc: () => '-25% gittata',
+    mod: c => { c.range -= 0.25; } },
 ];
 
 // Carte malus: compaiono quando vinci troppo facilmente (vita > 80%).
@@ -65,7 +97,9 @@ export const MALUS_CARDS = [
 
 // Lookup unificato (usato da computeStats per trovare il mod di ogni carta presa).
 export function findCard(id) {
-  return CARDS.find(c => c.id === id) || MALUS_CARDS.find(c => c.id === id);
+  return CARDS.find(c => c.id === id)
+    || MALUS_CARDS.find(c => c.id === id)
+    || HEAVY_MALUS_CARDS.find(c => c.id === id);
 }
 
 export const RARITY = {

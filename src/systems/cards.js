@@ -1,5 +1,5 @@
 // Scelta delle carte fra un'ondata e l'altra.
-import { CARDS, MALUS_CARDS, RARITY, cardPower, findCard } from '../data/cards.js';
+import { CARDS, MALUS_CARDS, HEAVY_MALUS_CARDS, RARITY, cardPower, MAX_HAND } from '../data/cards.js';
 import { refreshStats } from './economy.js';
 
 // Estrae una carta dal mazzo, pesata per rarità.
@@ -48,24 +48,64 @@ export function offerCards(run) {
   run.cardChoices = choices;
 }
 
+// Dopo ogni ondata zombie: tutte e 3 le scelte sono malus pesanti, nessun reroll.
+export function offerHeavyMalus(run) {
+  run.phase = 'cards';
+  run.isHeavyMalus = true;
+  const pool = [...HEAVY_MALUS_CARDS];
+  const choices = [];
+  while (choices.length < 3 && pool.length) {
+    const i = Math.floor(Math.random() * pool.length);
+    choices.push(pool.splice(i, 1)[0]);
+  }
+  run.cardChoices = choices;
+}
+
 export function reroll(run) {
-  if (run.phase !== 'cards' || run.rerolls <= 0) return false;
+  if (run.phase !== 'cards' || run.rerolls <= 0 || run.isHeavyMalus) return false;
   run.rerolls--;
   run.cardChoices = rollChoices(run);
   return true;
 }
 
-export function pickCard(run, meta, index) {
-  const card = run.cardChoices?.[index];
-  if (run.phase !== 'cards' || !card) return false;
+function applyCard(run, meta, card) {
   run.cards[card.id] = (run.cards[card.id] || 0) + 1;
-  // Le carte malus non scalano con cardPower: il malus rimane fisso.
   run.cardPicks.push({ id: card.id, m: card.malus ? 1 : cardPower(run.wave) });
   if (card.onPick) card.onPick(run);
   refreshStats(run, meta);
   run.fx.sounds.push('pick');
   run.cardChoices = null;
+  run.isHeavyMalus = false;
   run.phase = 'break';
   run.breakTimer = 1.5;
+}
+
+export function pickCard(run, meta, index) {
+  // Modalità scarto: il giocatore ha scelto quale carta rimuovere.
+  if (run.discarding) {
+    if (index < 0 || index >= run.cardPicks.length) return false;
+    const victim = run.cardPicks[index];
+    run.cardPicks.splice(index, 1);
+    if (run.cards[victim.id] > 0) run.cards[victim.id]--;
+    run.discarding = false;
+    const { card } = run.pendingPick;
+    run.pendingPick = null;
+    applyCard(run, meta, card);
+    return true;
+  }
+
+  const card = run.cardChoices?.[index];
+  if (run.phase !== 'cards' || !card) return false;
+
+  // Mano piena: entra in modalità scarto prima di aggiungere la nuova carta.
+  if (run.cardPicks.length >= MAX_HAND) {
+    run.pendingPick = { card };
+    run.discarding = true;
+    run.cardChoices = null;
+    run.isHeavyMalus = false;
+    return 'discard';
+  }
+
+  applyCard(run, meta, card);
   return true;
 }

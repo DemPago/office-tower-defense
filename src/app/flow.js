@@ -80,7 +80,11 @@ export function createFlow(app) {
   function onCardsPhase() {
     const { run } = app;
     screens.showCards(run,
-      i => { if (pickCard(run, meta, i)) screens.hideAll(); },
+      i => {
+        const result = pickCard(run, meta, i);
+        if (result === true) screens.hideAll();
+        else if (result === 'discard') onCardsPhase(); // ri-mostra in modalità scarto
+      },
       () => { if (reroll(run)) onCardsPhase(); });
   }
 

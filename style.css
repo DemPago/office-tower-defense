@@ -99,6 +99,45 @@ button:disabled { cursor: default; }
 #stage { position: relative; flex: 1; min-height: 0; }
 #cv { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 
+/* ─── Mano delle carte ──────────────────────────────────────── */
+#hand {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  background: var(--char);
+  border-top: 2px solid var(--asphalt);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+#hand::-webkit-scrollbar { display: none; }
+#hand .hand-label {
+  font-size: 6px;
+  color: var(--grey);
+  white-space: nowrap;
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+.hc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--asphalt);
+  border: 1px solid var(--steel);
+  border-radius: 3px;
+  padding: 2px 3px;
+  min-width: 36px;
+  max-width: 52px;
+  flex-shrink: 0;
+  gap: 1px;
+  cursor: default;
+}
+.hc .ico { font-size: 14px; line-height: 1.1; }
+.hc .nm  { font-size: 5px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50px; }
+.hc.malus  { border-color: var(--red); }
+.hc.heavy  { border-color: var(--red); background: rgba(215,38,61,0.18); }
+
 /* ─── Pannello in basso ─────────────────────────────────────── */
 #panel {
   padding-inline: max(6px, calc((100vw - 560px) / 2)) !important;
@@ -247,6 +286,11 @@ h2 {
 .card.ally  { --rar: var(--hazard); border-image: var(--stripes) 3; border-width: 3px; }
 .card.malus { --rar: var(--red); box-shadow: 0 0 0 2px var(--red), inset -2px -2px 0 rgba(0,0,0,.35); background: #1a0a0c; }
 .card.malus .own { color: var(--hazard); }
+.card.heavy-malus { --rar: var(--red); box-shadow: 0 0 0 3px var(--red), 0 0 14px rgba(215,38,61,.5), inset -2px -2px 0 rgba(0,0,0,.45); background: #1a0408; animation: heavy-pulse 1.8s ease-in-out infinite; }
+.card.heavy-malus .own { color: var(--red); font-size: 7px; }
+.card.discard-choice { border-color: var(--hazard); }
+.card.discard-choice .own { color: var(--red); font-size: 7px; font-weight: bold; }
+@keyframes heavy-pulse { 0%,100% { box-shadow: 0 0 0 3px var(--red), 0 0 14px rgba(215,38,61,.5), inset -2px -2px 0 rgba(0,0,0,.45); } 50% { box-shadow: 0 0 0 3px var(--red), 0 0 28px rgba(215,38,61,.8), inset -2px -2px 0 rgba(0,0,0,.45); } }
 .card.recommended { border-color: var(--cyan) !important; box-shadow: 0 0 0 2px var(--cyan), inset -2px -2px 0 rgba(0,0,0,.35) !important; }
 .card.recommended::before, .card.recommended::after { background: rgba(45,226,230,.45); }
 

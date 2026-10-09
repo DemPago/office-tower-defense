@@ -1,6 +1,6 @@
 // Schermate sopra al gioco: menu, ufficio del personale (negozio permanente),
 // scelta delle carte, pausa e fine partita.
-import { RARITY, cardPower } from '../data/cards.js';
+import { RARITY, cardPower, findCard } from '../data/cards.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
 import { ALLY_LEVELS, allyArc } from '../data/allies.js';
 import { HEROES, UNLOCK_WAVE, unlockedHeroes, heroStatsText } from '../data/heroes.js';
@@ -81,6 +81,60 @@ export function showShop(meta, onBuy) {
 export function showCards(run, onPick, onReroll) {
   const box = $('cards-list');
   box.innerHTML = '';
+  const rr = $('btn-reroll');
+  const domWizard = $('dom-wizard');
+  if (domWizard) domWizard.hidden = true;
+
+  // ── Modalità scarto: mano piena, scegli quale carta rimuovere ──
+  if (run.discarding) {
+    $('cards-title').textContent = '🗂️ MANO PIENA!';
+    const { card: pending } = run.pendingPick;
+    $('cards-sub').textContent = `Vuoi aggiungere ${pending.icon} ${pending.name} — rimuovi una carta`;
+    rr.hidden = true;
+    run.cardPicks.forEach((pick, i) => {
+      const def = findCard(pick.id);
+      if (!def) return;
+      const isHeavy = !!def.heavy;
+      const isMalus = !!def.malus;
+      const el = document.createElement('button');
+      el.className = `card ${isMalus ? 'malus' : (def.rarity || 'common')} discard-choice`;
+      el.style.setProperty('--rar', isMalus ? 'var(--red)' : RARITY[def.rarity]?.color || 'var(--grey)');
+      el.innerHTML = `
+        <span class="rar">${isHeavy ? 'MALUS PESANTE' : isMalus ? 'MALUS' : RARITY[def.rarity]?.label || 'Comune'}</span>
+        <span class="ico">${def.icon}</span>
+        <b>${def.name}</b>
+        <small>${def.desc(pick.m)}</small>
+        <span class="own">RIMUOVI</span>`;
+      el.addEventListener('click', () => onPick(i));
+      box.appendChild(el);
+    });
+    show('scr-cards');
+    return;
+  }
+
+  // ── Modalità malus pesanti (dopo ondata zombie) ──
+  if (run.isHeavyMalus) {
+    $('cards-title').textContent = '☣️ ONDATA ZOMBIE SUPERATA!';
+    $('cards-sub').textContent = 'Tutto il team è a pezzi. Scegli il danno minore.';
+    rr.hidden = true;
+    run.cardChoices.forEach((card, i) => {
+      const el = document.createElement('button');
+      el.className = 'card malus heavy-malus';
+      el.style.setProperty('--rar', 'var(--red)');
+      el.innerHTML = `
+        <span class="rar">MALUS PESANTE</span>
+        <span class="ico">${card.icon}</span>
+        <b>${card.name}</b>
+        <small>${card.desc(1)}</small>
+        <span class="own">Devi scegliere</span>`;
+      el.addEventListener('click', () => onPick(i));
+      box.appendChild(el);
+    });
+    show('scr-cards');
+    return;
+  }
+
+  // ── Modalità normale ──
   const advice = domAdvice(run);
   run.cardChoices.forEach((card, i) => {
     const isMalus = !!card.malus;
@@ -101,21 +155,17 @@ export function showCards(run, onPick, onReroll) {
     el.addEventListener('click', () => onPick(i));
     box.appendChild(el);
   });
-  const rr = $('btn-reroll');
   rr.textContent = `🎲 Rilancia (${run.rerolls})`;
   rr.disabled = run.rerolls <= 0;
   rr.onclick = onReroll;
   rr.hidden = false;
   $('cards-title').textContent = `Ondata ${run.wave} superata!`;
   $('cards-sub').textContent = 'Scegli un potenziamento';
-  const domWizard = $('dom-wizard');
   if (domWizard) {
     if (advice) {
       $('dom-text').textContent = advice.reason;
       $('dom-card-name').textContent = advice.card.icon + ' ' + advice.card.name;
       domWizard.hidden = false;
-    } else {
-      domWizard.hidden = true;
     }
   }
   show('scr-cards');

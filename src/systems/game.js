@@ -4,7 +4,8 @@ import { updateSpawns, startWave } from './waves.js';
 import { updateEnemies, updateEnemyShots, updateTower, updateShots, updateFence } from './combat.js';
 import { updateWall, repairWall, fullRepairWall } from './wall.js';
 import { updateAbilities } from './abilities.js';
-import { offerCards } from './cards.js';
+import { offerCards, offerHeavyMalus } from './cards.js';
+import { isZombieWave } from '../data/enemies.js';
 import { offerAllies, updateAllies, animateAllies, updateYard, restAllies } from './allies.js';
 import { REINFORCE_EVERY } from '../data/allies.js';
 import { updateFx, floatText } from './fx.js';
@@ -61,8 +62,9 @@ export function update(run, dt) {
         banner(run, `NUOVO PERSONAGGIO: ${hero.name.toUpperCase()}!`, 'Lo trovi nel menu iniziale', '#ff3e8a');
       }
     }
-    // Ogni tot ondate arrivano i rinforzi, poi si sceglie comunque la carta.
+    // Ogni tot ondate arrivano i rinforzi; ondate zombie → 3 malus pesanti; altrimenti carta normale.
     if (run.wave % REINFORCE_EVERY === 0) offerAllies(run);
+    else if (isZombieWave(run.wave)) offerHeavyMalus(run);
     else offerCards(run);
   }
 }

@@ -78,7 +78,8 @@ export function damageWall(run, seg, amount, attacker = null) {
   if (seg.hp <= 0) return;
   seg.hp -= amount;
   seg.hit = 0.15;
-  if (Math.random() < 0.5) burst(run, seg.x, seg.y, '#bfa574', 3, 40); // sabbia/calcinacci
+  burst(run, seg.x, seg.y, '#bfa574', 4, 55); // sabbia/calcinacci sempre visibili
+  burst(run, seg.x, seg.y, '#6e6a64', 2, 40);
   // filo spinato: chi colpisce il muro si ferisce
   if (attacker && run.stats.wallThorns > 0 && attacker.range === 0) {
     dealDamage(run, attacker, run.stats.dmg * run.stats.wallThorns, { silent: true });

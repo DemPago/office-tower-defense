@@ -2,7 +2,6 @@
 import { TOWER } from '../state.js';
 import { dist } from '../util.js';
 import { burst, ring, sfx } from './fx.js';
-import { MITRA } from './abilities.js';
 import { dealDamage } from './damage.js';
 import { weaponDef } from '../data/weapons.js';
 
@@ -20,10 +19,9 @@ export function updateTower(run, dt) {
   const targets = pickTargets(run.enemies, TOWER, s.range, s.multishot);
   if (!targets.length) return;
 
-  const mitra = run.mitraT > 0;
-  t.cooldown = 1 / (s.rate * (mitra ? MITRA.rateMult : 1));
+  t.cooldown = 1 / s.rate;
   t.recoil = 0.08;
-  sfx(run, mitra ? 'mitra' : 'shoot');
+  sfx(run, 'shoot');
   const W = weaponDef(run.weapon);
   const effects = { slow: s.slow, dot: s.dot, aoeRadius: s.aoeRadius, aoeDmg: s.aoeDmg, charm: W.charm || 0 };
 

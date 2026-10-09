@@ -10,6 +10,7 @@ import { maxMana } from '../data/abilities.js';
 import { weaponDef } from '../data/weapons.js';
 import { fmt } from '../util.js';
 import { domUpgradeAdvice } from './dom.js';
+import { findCard } from '../data/cards.js';
 
 const $ = id => document.getElementById(id);
 
@@ -127,16 +128,6 @@ export function createHud({ onBuy, onAbility }) {
     }
     for (const def of ABILITIES) {
       const el = abilityEls[def.id];
-      if (def.special) {
-        // mitra: visibile solo quando è pronto o in uso; la parte scura mostra il tempo che resta
-        const active = run.mitraT > 0;
-        el.btn.hidden = !(run.mitraReady || active);
-        el.btn.classList.toggle('active', active);
-        el.cd.style.height = active ? (1 - run.mitraT / 12) * 100 + '%' : '0%';
-        setText(el.mana, active ? `${Math.ceil(run.mitraT)}s` : 'GRATIS');
-        el.btn.classList.toggle('off', !canUse(run, def.id) && !active);
-        continue;
-      }
       const cost = manaCost(run, def.id);
       // la parte scura si abbassa man mano che il mana si avvicina al costo
       el.cd.style.height = Math.max(0, 1 - run.mana / cost) * 100 + '%';
@@ -145,5 +136,38 @@ export function createHud({ onBuy, onAbility }) {
     }
   }
 
-  return { update, hideTip };
+  // ── Pannello mano ───────────────────────────────────────────────
+  const handEl = document.getElementById('hand');
+  let lastHandHash = '';
+
+  function updateHand(run) {
+    if (!run || run.phase === 'over') { handEl.hidden = true; return; }
+    const hash = run.cardPicks.map(p => p.id).join(',');
+    if (hash === lastHandHash) return;
+    lastHandHash = hash;
+    handEl.innerHTML = '';
+    if (!run.cardPicks.length) { handEl.hidden = true; return; }
+    handEl.hidden = false;
+    const lbl = document.createElement('span');
+    lbl.className = 'hand-label';
+    lbl.textContent = 'MANO:';
+    handEl.appendChild(lbl);
+    for (const pick of run.cardPicks) {
+      const def = findCard(pick.id);
+      if (!def) continue;
+      const el = document.createElement('div');
+      el.className = 'hc' + (def.heavy ? ' heavy' : def.malus ? ' malus' : '');
+      el.title = def.name + ': ' + def.desc(pick.m);
+      el.innerHTML = `<span class="ico">${def.icon}</span><span class="nm">${def.name}</span>`;
+      handEl.appendChild(el);
+    }
+  }
+
+  const _origUpdate = update;
+  function updateWithHand(run, speed) {
+    _origUpdate(run, speed);
+    updateHand(run);
+  }
+
+  return { update: updateWithHand, hideTip };
 }
