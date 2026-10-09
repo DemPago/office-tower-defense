@@ -128,10 +128,29 @@ export function damageTower(run, amount) {
     sfx(run, 'hurt');
   }
   if (t.hp <= 0) {
+    if (run.bonusStage) {
+      // Bonus stage: non si perde, la torre si salva con 1 HP e il bonus stage fallisce.
+      t.hp = 1;
+      failBonusStage(run);
+      return;
+    }
     t.hp = 0;
     run.phase = 'over';
     shake(run, 10);
     sfx(run, 'over');
     burst(run, TOWER.x, TOWER.y - 30, '#f97316', 40, 140);
   }
+}
+
+function failBonusStage(run) {
+  run.bonusStage = false;
+  run.bonusWaveIdx = 0;
+  run.enemies = [];
+  run.enemyShots = [];
+  run.shots = [];
+  run.spawnQueue = [];
+  banner(run, 'BONUS STAGE FALLITO', 'Nessun oro, nessuna carta — vai avanti', '#8a8d93');
+  sfx(run, 'hurt');
+  run.phase = 'break';
+  run.breakTimer = 2.5;
 }
