@@ -4,7 +4,7 @@
 import { TOWER, YARD } from '../state.js';
 import { WALL } from '../data/wall.js';
 import { atkScale } from './waves.js';
-import { burst, floatText, sfx } from './fx.js';
+import { burst, floatText, sfx, shake } from './fx.js';
 import { dealDamage } from './damage.js';
 
 // Crea i tratti lungo i 4 lati del cortile. Ogni tratto: { side, a, b, x, y, hp, maxHp }
@@ -86,9 +86,16 @@ export function damageWall(run, seg, amount, attacker = null) {
   }
   if (seg.hp <= 0) {
     seg.hp = 0;
-    burst(run, seg.x, seg.y, '#bfa574', 14, 90);
-    burst(run, seg.x, seg.y, '#6e6a64', 8, 70);
-    floatText(run, seg.x, seg.y - 10, 'BRECCIA!', '#ff7b1c', 8);
+    const isBoss = attacker && attacker.boss;
+    burst(run, seg.x, seg.y, '#bfa574', isBoss ? 28 : 14, isBoss ? 130 : 90);
+    burst(run, seg.x, seg.y, '#6e6a64', isBoss ? 16 : 8, isBoss ? 110 : 70);
+    if (isBoss) {
+      burst(run, seg.x, seg.y, '#d7263d', 10, 90);
+      shake(run, 8);
+      floatText(run, seg.x, seg.y - 18, 'SFONDATO!', '#d7263d', 11);
+    } else {
+      floatText(run, seg.x, seg.y - 10, 'BRECCIA!', '#ff7b1c', 8);
+    }
     sfx(run, 'breach');
   }
 }

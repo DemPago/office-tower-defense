@@ -95,6 +95,7 @@ function makeBoss(b, w) {
       atk: base.atk * atkScale(w) * b.atkFactor,
       gold: 30 * goldScale(w) / group,
       size: 28 * b.scale,
+      attackCd: 0, // sfonda il muro subito senza aspettare
     }));
   }
   const A = ANIMALS[b.animal];

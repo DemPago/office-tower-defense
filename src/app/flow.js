@@ -65,8 +65,20 @@ export function createFlow(app) {
     const { run } = app;
     if (!run || run.phase === 'over' || run.phase === 'cards' || run.phase === 'ally') return;
     app.paused = p;
-    if (p) screens.show('scr-pause');
-    else screens.hideAll();
+    if (p) {
+      // mostra "Arrenditi" solo tra un'ondata e l'altra (break o bonus-break)
+      const inBreak = run.phase === 'break' || run.phase === 'bonus-break';
+      $('btn-surrender').hidden = !inBreak;
+      screens.show('scr-pause');
+    } else screens.hideAll();
+  }
+
+  function surrender() {
+    const { run } = app;
+    if (!run || run.phase === 'over') return;
+    screens.hideAll();
+    run.phase = 'over';
+    run.tower.hp = 0;
   }
 
   function openShop() {
@@ -131,6 +143,7 @@ export function createFlow(app) {
   $('btn-board').addEventListener('click', async () => screens.showBoard(await getTop(10)));
   $('btn-board-back').addEventListener('click', showMenu);
   $('btn-resume').addEventListener('click', () => setPaused(false));
+  $('btn-surrender').addEventListener('click', surrender);
   $('btn-quit').addEventListener('click', toMenu);
   $('btn-retry').addEventListener('click', newRun);
   $('btn-over-menu').addEventListener('click', toMenu);
