@@ -12,6 +12,7 @@ import { updateFx, floatText } from './fx.js';
 import { TOWER } from '../state.js';
 import { UNLOCK_WAVE, unlockNextHero } from '../data/heroes.js';
 import { banner } from './fx.js';
+import { startBonusWave, endBonusWave } from './bonus.js';
 
 export function update(run, dt) {
   updateFx(run, dt);
@@ -27,7 +28,15 @@ export function update(run, dt) {
     return;
   }
 
-  // phase === 'wave'
+  if (run.phase === 'bonus-break') {
+    updateTower(run, dt);
+    updateAbilities(run, dt);
+    run.bonusBreakTimer -= dt;
+    if (run.bonusBreakTimer <= 0) startBonusWave(run);
+    return;
+  }
+
+  // phase === 'wave' | 'bonus-wave'
   updateSpawns(run, dt);
   updateEnemies(run, dt);
   updateEnemyShots(run, dt);
@@ -38,6 +47,10 @@ export function update(run, dt) {
   updateFence(run, dt);
   updateShots(run, dt);
   updateAbilities(run, dt);
+
+  if (run.phase === 'bonus-wave' && !run.spawnQueue.length && !run.enemies.length) {
+    endBonusWave(run);
+  }
 
   if (run.phase === 'wave' && !run.spawnQueue.length && !run.enemies.length) {
     const bonus = 5 + run.wave * 2;
@@ -61,6 +74,16 @@ export function update(run, dt) {
         run.newHero = hero.id;
         banner(run, `NUOVO PERSONAGGIO: ${hero.name.toUpperCase()}!`, 'Lo trovi nel menu iniziale', '#ff3e8a');
       }
+    }
+    // Bonus stage dopo ogni boss: parte prima delle carte.
+    if (run.bonusPending) {
+      delete run.bonusPending;
+      run.bonusStage = true;
+      run.bonusWaveIdx = 0;
+      run.phase = 'bonus-break';
+      run.bonusBreakTimer = 1.5;
+      banner(run, 'BONUS STAGE!', 'Un assalto sushi sta per iniziare...', '#ff9f1c');
+      return;
     }
     // Ogni tot ondate arrivano i rinforzi; ondate zombie → 3 malus pesanti; altrimenti carta normale.
     if (run.wave % REINFORCE_EVERY === 0) offerAllies(run);

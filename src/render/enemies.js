@@ -12,7 +12,42 @@ export function drawShadow(ctx, e) {
   ctx.fill();
 }
 
+function drawSushiEnemy(ctx, e) {
+  const s = e.size;
+  const spin = e.moving ? e.anim * 4 : 0;
+  const x = Math.round(e.x), cy = Math.round(e.y - s * 0.5);
+  ctx.save();
+  ctx.translate(x, cy);
+  ctx.rotate(spin);
+  ctx.globalAlpha = Math.min(1, (e.age || 0) / 0.4);
+  const hit = e.hitFlash > 0;
+  const w = hit ? '#ffffff' : '#f5e6c8'; // rice white
+  if (e.sushiType === 'nigiri') {
+    ctx.fillStyle = w; ctx.fillRect(-6, -3, 12, 7);
+    ctx.fillStyle = hit ? '#ffffff' : '#d7263d'; ctx.fillRect(-5, -7, 10, 6);
+    ctx.fillStyle = hit ? '#ffffff' : '#ff8888'; ctx.fillRect(-4, -8, 3, 1);
+  } else if (e.sushiType === 'maki') {
+    ctx.fillStyle = hit ? '#ffffff' : '#1a1a1a'; ctx.fillRect(-6, -7, 12, 14);
+    ctx.fillStyle = w; ctx.fillRect(-5, -6, 10, 3); ctx.fillRect(-5, 4, 10, 3);
+    ctx.fillStyle = hit ? '#ffffff' : '#7ec850'; ctx.fillRect(-2, -1, 4, 4);
+  } else { // temaki
+    ctx.fillStyle = hit ? '#ffffff' : '#2a1f0e';
+    ctx.beginPath(); ctx.moveTo(-7, 7); ctx.lineTo(0, -8); ctx.lineTo(7, 7); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = w; ctx.fillRect(-3, -1, 6, 6);
+    ctx.fillStyle = hit ? '#ffffff' : '#e8806a'; ctx.fillRect(-2, -5, 4, 5);
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  if (e.hp < e.maxHp) {
+    const bw = Math.round(s * 0.9), bx = Math.round(e.x - bw / 2), by = Math.round(e.y - s - 2);
+    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(bx - 1, by - 1, bw + 2, 4);
+    ctx.fillStyle = '#d7263d'; ctx.fillRect(bx, by, bw, 2);
+    ctx.fillStyle = '#ff6b8a'; ctx.fillRect(bx, by, Math.max(1, Math.round(bw * e.hp / e.maxHp)), 2);
+  }
+}
+
 export function drawEnemy(ctx, assets, e) {
+  if (e.sushi) { drawSushiEnemy(ctx, e); return; }
   const s = e.size, k = e.scale || 1;
   const frame = e.moving ? Math.floor(e.anim * 2.5) % FRAMES : 1;
   let x = e.x, feet = e.y;
@@ -37,7 +72,8 @@ export function drawEnemy(ctx, assets, e) {
   drawPersonAt(ctx, enemySprite(assets, e, frame), x, feet, facesLeft(e));
   if (e.zombie) ctx.restore();
   if (e.enraged) {
-    // infuriato: pulsa di rosso
+    // infuriato: trema e pulsa di rosso
+    x += Math.round(Math.sin((e.age || 0) * 30) * 1.5);
     ctx.globalAlpha = 0.25 + 0.15 * Math.sin(performance.now() / 120);
     drawPersonAt(ctx, enemySprite(assets, e, frame, '#ff2a3d'), x, feet, facesLeft(e));
     ctx.globalAlpha = 1;
@@ -103,6 +139,7 @@ export function drawEnemy(ctx, assets, e) {
 }
 
 export function drawGhost(ctx, assets, e) {
+  if (e.sushi) return;
   ctx.globalAlpha = 0.4;
   drawPersonAt(ctx, enemySprite(assets, e, 0, true), e.x, e.y, facesLeft(e));
   ctx.globalAlpha = 1;

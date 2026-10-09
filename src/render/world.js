@@ -90,6 +90,24 @@ export function createRenderer(canvas, assets) {
       ctx.globalAlpha = 1;
     }
 
+    if (run?.bonusStage) {
+      // notte giapponese: velo blu scuro + luna piena
+      ctx.fillStyle = 'rgba(5,5,30,0.72)';
+      ctx.fillRect(-MARGIN, -MARGIN, AREA.w, AREA.h);
+      const moonX = -MARGIN + AREA.w * 0.78, moonY = -MARGIN + 45;
+      const moonR = 16;
+      ctx.fillStyle = 'rgba(255,245,200,0.95)';
+      ctx.beginPath(); ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,245,200,0.25)';
+      ctx.beginPath(); ctx.arc(moonX, moonY, moonR + 6, 0, Math.PI * 2); ctx.fill();
+      // petali di ciliegio che cadono
+      const t30 = time * 30;
+      for (let i = 0; i < 12; i++) {
+        const px = ((-MARGIN + (i * 71 + t30 * 0.5) % AREA.w)), py = ((-MARGIN + (i * 53 + t30 * 0.8) % AREA.h));
+        ctx.fillStyle = `rgba(255,180,200,${0.5 + 0.3 * Math.sin(time + i)})`;
+        ctx.beginPath(); ctx.ellipse(px, py, 3, 2, time + i, 0, Math.PI * 2); ctx.fill();
+      }
+    }
     if (run && run.intruders > 0) drawYardAlarm(ctx, time);
     if (run) {
       drawWall(ctx, run, time);

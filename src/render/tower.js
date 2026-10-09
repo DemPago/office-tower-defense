@@ -92,7 +92,77 @@ function drawWindow(p, x, y, kind, flick, i) {
   }
 }
 
+function drawCastle(ctx, assets, run, time) {
+  const dead = run && run.phase === 'over';
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(B.x0 + 6, B.base - 2, B.w + 14, 7);
+  ctx.save();
+  ctx.translate(B.x0, B.top);
+  ctx.scale(0.5, 0.5);
+  const p = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+  const W = TW, H = TH;
+  // Base / ground floor
+  p(18, H * 0.7, W - 36, H * 0.3, '#3a2410');
+  p(18, H * 0.7, W - 36, 3, '#6b4820');
+  // Middle tier
+  p(26, H * 0.42, W - 52, H * 0.3, '#2e1c0e');
+  p(26, H * 0.42, W - 52, 3, '#5c3c18');
+  // Top tier
+  p(36, H * 0.15, W - 72, H * 0.28, '#241408');
+  p(36, H * 0.15, W - 72, 3, '#4a3010');
+  // Roof 1 (bottom, widest) - red
+  p(-14, H * 0.68, W + 28, 5, '#0d0508');
+  p(-14, H * 0.64, W + 28, 10, '#c41c1c');
+  p(-16, H * 0.61, W + 32, 6, '#8c1010');
+  p(-14, H * 0.60, W + 28, 3, '#e63030');
+  // Roof 2 (middle)
+  p(-4, H * 0.40, W + 8, 5, '#0d0508');
+  p(-4, H * 0.36, W + 8, 10, '#c41c1c');
+  p(-6, H * 0.33, W + 12, 6, '#8c1010');
+  p(-4, H * 0.32, W + 8, 3, '#e63030');
+  // Roof 3 (top)
+  p(8, H * 0.13, W - 16, 4, '#0d0508');
+  p(8, H * 0.09, W - 16, 9, '#c41c1c');
+  p(6, H * 0.06, W - 12, 5, '#8c1010');
+  p(8, H * 0.05, W - 16, 3, '#e63030');
+  // Gold finial
+  p(W / 2 - 2, -30, 4, 36, '#a07808');
+  p(W / 2 - 6, -22, 12, 5, '#f2b705');
+  p(W / 2 - 4, -32, 8, 4, '#d4a000');
+  p(W / 2 - 2, -38, 4, 8, '#f2b705');
+  p(W / 2 - 1, -42, 2, 5, '#a07808');
+  // Shoji windows — ground floor (2 × 2)
+  for (let r = 0; r < 2; r++) {
+    for (let c = 0; c < 2; c++) {
+      const wx = 24 + c * 32, wy = Math.round(H * 0.74) + r * 18;
+      p(wx - 1, wy - 1, 22, 18, '#0d0508');
+      const lit = !dead && Math.sin(time * 4 + r * 1.7 + c) > 0.88;
+      p(wx, wy, 20, 16, lit ? '#9aa05a' : '#c8a060');
+      p(wx + 5, wy, 1, 16, '#7a6030'); p(wx + 10, wy, 1, 16, '#7a6030'); p(wx + 15, wy, 1, 16, '#7a6030');
+      p(wx, wy + 5, 20, 1, '#7a6030'); p(wx, wy + 10, 20, 1, '#7a6030');
+    }
+  }
+  // Hit flash
+  if (run && run.tower.hitFlash > 0) {
+    const fi = run.tower.hitFlash / 0.22;
+    p(-3, -3, W + 6, H + 6, `rgba(215,38,61,${(0.2 + fi * 0.45).toFixed(2)})`);
+  }
+  ctx.restore();
+  // Protagonist on roof
+  if (dead) return;
+  const recoil = run && run.tower.recoil > 0 ? 1 : 0;
+  const bob = Math.round(Math.sin(time * 2.2) * 0.6);
+  const feet = B.top - 3 + recoil + bob;
+  drawPersonAt(ctx, assets.person(run ? run.hero : 'peppe', 0, 1), TOWER.x + 4, feet);
+  if (recoil) {
+    const fx = TOWER.x + 5, fy = feet - 15;
+    ctx.fillStyle = PAL.white; ctx.fillRect(fx - 2, fy - 2, 5, 5);
+    ctx.fillStyle = PAL.hazard; ctx.fillRect(fx - 5, fy - 1, 11, 3); ctx.fillRect(fx - 1, fy - 5, 3, 11);
+  }
+}
+
 export function drawTower(ctx, assets, run, time) {
+  if (run?.bonusStage) { drawCastle(ctx, assets, run, time); return; }
   const hpRatio = run ? run.tower.hp / run.stats.maxHp : 1;
   const dead = run && run.phase === 'over';
 

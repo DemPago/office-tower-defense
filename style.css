@@ -215,13 +215,17 @@ button:disabled { cursor: default; }
 }
 .overlay.full {
   z-index: 20;
-  /* muro di cemento sporco */
-  background:
-    radial-gradient(ellipse at 50% 40%, rgba(242,183,5,.07), transparent 60%),
-    repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 24px),
-    repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 1px, transparent 1px 48px),
-    #232326;
+  background: rgba(10,10,12,0.78);
+  overflow: hidden;
 }
+#menu-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+#scr-menu > *:not(#menu-bg) { position: relative; z-index: 1; }
 .overlay.full::before, .overlay.full::after {
   content: ''; position: absolute; left: 0; right: 0; height: 10px; background: var(--stripes);
 }
@@ -230,10 +234,23 @@ button:disabled { cursor: default; }
 h1 {
   font-family: var(--spray); font-weight: normal;
   font-size: 40px; line-height: 1.05; color: var(--hazard);
-  text-shadow: 3px 3px 0 var(--ink), -1px -1px 0 var(--ink);
+  text-shadow:
+    0 0 12px rgba(242,183,5,0.6),
+    0 0 30px rgba(242,183,5,0.25),
+    3px 3px 0 var(--ink), -1px -1px 0 var(--ink);
   transform: rotate(-4deg); margin-bottom: 10px;
+  animation: neon-flicker 6s infinite;
 }
-h1 span { color: var(--pink); }
+h1 span {
+  color: var(--pink);
+  text-shadow: 0 0 12px rgba(255,62,138,0.7), 0 0 28px rgba(255,62,138,0.3), 2px 2px 0 var(--ink);
+}
+@keyframes neon-flicker {
+  0%, 95%, 100% { opacity: 1; }
+  96% { opacity: 0.82; }
+  97% { opacity: 1; }
+  98% { opacity: 0.88; }
+}
 h2 {
   font-family: var(--spray); font-weight: normal;
   font-size: 26px; line-height: 1.1; color: var(--hazard);

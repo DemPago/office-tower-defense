@@ -10,6 +10,7 @@ import * as screens from '../ui/screens.js';
 import { getTop } from '../leaderboard.js';
 import { play } from '../audio.js';
 import { renderShare } from '../ui/share.js';
+import { startMenuAnimation } from '../ui/menu-anim.js';
 
 const $ = id => document.getElementById(id);
 
@@ -28,6 +29,8 @@ export function createFlow(app) {
     return c;
   }
 
+  let menuAnim = null;
+
   function showMenu() {
     screens.showMenu(meta, heroPortrait, id => {
       meta.hero = id;
@@ -35,9 +38,11 @@ export function createFlow(app) {
       play('pick');
       showMenu();
     });
+    if (!menuAnim) menuAnim = startMenuAnimation($('menu-bg'));
   }
 
   function newRun() {
+    if (menuAnim) { menuAnim.stop(); menuAnim = null; }
     app.run = createRun(meta);
     app.paused = false;
     app.overHandled = false;

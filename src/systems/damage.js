@@ -70,7 +70,7 @@ function killEnemy(run, e) {
   e.dead = true;
   run.kills++;
   sfx(run, e.boss ? 'bossdown' : 'kill');
-  run.fx.corpses.push({ look: e.look, animal: e.animal, scale: e.scale, x: e.x, y: e.y, size: e.size, dir: e.x < TOWER.x ? -1 : 1, life: 0.6, max: 0.6 });
+  if (!e.sushi) run.fx.corpses.push({ look: e.look, animal: e.animal, scale: e.scale, x: e.x, y: e.y, size: e.size, dir: e.x < TOWER.x ? -1 : 1, life: 0.6, max: 0.6 });
   const gold = Math.max(1, Math.round(e.gold * run.stats.goldMult));
   run.gold += gold;
   floatText(run, e.x, e.y - e.size, '+' + fmt(gold) + '💰', '#f2b705', 7);
@@ -92,6 +92,7 @@ function killEnemy(run, e) {
     if (run.boss && run.boss.list.every(b => b.dead)) {
       run.bossesKilled++;
       run.boss = null;
+      run.bonusPending = true;
     }
   }
 }

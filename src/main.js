@@ -15,6 +15,7 @@ import { createFlow } from './app/flow.js';
 import { createInitials } from './app/initials.js';
 import { setupControls } from './app/controls.js';
 import { createTutorial } from './ui/tutorial.js';
+import { playIntro } from './render/intro.js';
 
 const $ = id => document.getElementById(id);
 
@@ -79,5 +80,8 @@ if (location.search.includes('debug')) window.otd = { get run() { return app.run
 
 window.addEventListener('resize', renderer.resize);
 renderer.resize();
-app.flow.toMenu();
-requestAnimationFrame(frame);
+playIntro($('cv'), () => {
+  renderer.resize();
+  app.flow.toMenu();
+  requestAnimationFrame(frame);
+});
