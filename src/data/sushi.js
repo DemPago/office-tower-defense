@@ -5,7 +5,8 @@ export const BONUS_WAVES = [10, 100, 1000];
 export const BONUS_GOLD  = [1_000, 10_000, 500_000];
 
 export const SUSHI_TYPES = [
-  { id: 'nigiri', name: 'Nigiri',    speed: 75, hp: 18, atk: 3, gold: 2, color: '#f5e6c8', top: '#d7263d' },
-  { id: 'maki',   name: 'Maki Roll', speed: 38, hp: 45, atk: 6, gold: 5, color: '#1a1a1a', top: '#7ec850' },
-  { id: 'temaki', name: 'Temaki',    speed: 55, hp: 28, atk: 4, gold: 3, color: '#2a1f0e', top: '#e8806a' },
+  { id: 'nigiri',  name: 'Nigiri',  speed: 78, hp: 16, atk: 3, gold: 2 }, // veloce, fragile
+  { id: 'onigiri', name: 'Onigiri', speed: 48, hp: 38, atk: 5, gold: 4 }, // standard, bilanciato
+  { id: 'sashimi', name: 'Sashimi', speed: 98, hp:  8, atk: 6, gold: 3 }, // velocissimo, kamikaze
+  { id: 'uramaki', name: 'Uramaki', speed: 28, hp: 65, atk: 8, gold: 6 }, // lento, corazzato
 ];

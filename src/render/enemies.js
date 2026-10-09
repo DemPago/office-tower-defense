@@ -14,32 +14,82 @@ export function drawShadow(ctx, e) {
 
 function drawSushiEnemy(ctx, e) {
   const s = e.size;
-  const spin = e.moving ? e.anim * 4 : 0;
-  const x = Math.round(e.x), cy = Math.round(e.y - s * 0.5);
+  const spin = e.moving ? e.anim * 3 : 0;
+  const bob  = e.moving ? Math.sin(e.anim * 5) * 1.5 : 0;
+  const x = Math.round(e.x), cy = Math.round(e.y - s * 0.5 + bob);
   ctx.save();
   ctx.translate(x, cy);
   ctx.rotate(spin);
   ctx.globalAlpha = Math.min(1, (e.age || 0) / 0.4);
   const hit = e.hitFlash > 0;
-  const w = hit ? '#ffffff' : '#f5e6c8'; // rice white
+  const W = hit ? '#fff' : '#f5e6c8'; // riso bianco
+
   if (e.sushiType === 'nigiri') {
-    ctx.fillStyle = w; ctx.fillRect(-6, -3, 12, 7);
-    ctx.fillStyle = hit ? '#ffffff' : '#d7263d'; ctx.fillRect(-5, -7, 10, 6);
-    ctx.fillStyle = hit ? '#ffffff' : '#ff8888'; ctx.fillRect(-4, -8, 3, 1);
-  } else if (e.sushiType === 'maki') {
-    ctx.fillStyle = hit ? '#ffffff' : '#1a1a1a'; ctx.fillRect(-6, -7, 12, 14);
-    ctx.fillStyle = w; ctx.fillRect(-5, -6, 10, 3); ctx.fillRect(-5, 4, 10, 3);
-    ctx.fillStyle = hit ? '#ffffff' : '#7ec850'; ctx.fillRect(-2, -1, 4, 4);
-  } else { // temaki
-    ctx.fillStyle = hit ? '#ffffff' : '#2a1f0e';
-    ctx.beginPath(); ctx.moveTo(-7, 7); ctx.lineTo(0, -8); ctx.lineTo(7, 7); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = w; ctx.fillRect(-3, -1, 6, 6);
-    ctx.fillStyle = hit ? '#ffffff' : '#e8806a'; ctx.fillRect(-2, -5, 4, 5);
+    // Base di riso ovalata
+    ctx.fillStyle = W;
+    ctx.fillRect(-7, -1, 14, 6); ctx.fillRect(-6, -2, 12, 1); ctx.fillRect(-6, 5, 12, 1);
+    // Fascia nori
+    ctx.fillStyle = hit ? '#fff' : '#1a1a2e';
+    ctx.fillRect(-7, 1, 14, 1);
+    // Pesce sopra (salmone arancio-rosso)
+    ctx.fillStyle = hit ? '#fff' : '#e8603c';
+    ctx.fillRect(-5, -8, 10, 8); ctx.fillRect(-4, -9, 8, 1);
+    // Venatura chiara
+    ctx.fillStyle = hit ? '#fff' : '#f29070';
+    ctx.fillRect(-4, -7, 5, 2); ctx.fillRect(-3, -4, 3, 2);
+
+  } else if (e.sushiType === 'onigiri') {
+    // Triangolo di riso bianco
+    ctx.fillStyle = W;
+    ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(9, 6); ctx.lineTo(-9, 6); ctx.closePath(); ctx.fill();
+    // Fascia nori alla base
+    ctx.fillStyle = hit ? '#fff' : '#1a1a2e';
+    ctx.fillRect(-9, 3, 18, 4);
+    // Bordo nori laterale (piccole strisce)
+    ctx.fillRect(-9, 0, 2, 4); ctx.fillRect(7, 0, 2, 4);
+    // Umeboshi rosso al centro
+    ctx.fillStyle = hit ? '#fff' : '#c8203c';
+    ctx.fillRect(-2, -5, 5, 5);
+    // Luccichio umeboshi
+    ctx.fillStyle = hit ? '#fff' : '#e8607a';
+    ctx.fillRect(-1, -4, 2, 2);
+
+  } else if (e.sushiType === 'sashimi') {
+    // Fetta di pesce cruda (tonno rosso)
+    ctx.fillStyle = hit ? '#fff' : '#c8283c';
+    ctx.fillRect(-8, -3, 16, 8); ctx.fillRect(-7, -4, 14, 1); ctx.fillRect(-7, 5, 14, 1);
+    // Marmorizzazione (venature bianche)
+    ctx.fillStyle = hit ? '#fff' : '#e0687c';
+    ctx.fillRect(-6, -1, 10, 2); ctx.fillRect(-5, 2, 8, 2);
+    // Bordi scuri (contorno)
+    ctx.fillStyle = hit ? '#fff' : '#8a1828';
+    ctx.fillRect(-8, -3, 1, 9); ctx.fillRect(7, -3, 1, 9);
+    // Sottolineatura wasabi verde
+    ctx.fillStyle = hit ? '#fff' : '#5ab040';
+    ctx.fillRect(-8, 5, 16, 2);
+
+  } else { // uramaki — riso fuori, nori dentro
+    // Riso esterno
+    ctx.fillStyle = W;
+    ctx.fillRect(-8, -8, 16, 16);
+    // Anello nori
+    ctx.fillStyle = hit ? '#fff' : '#1a1a2e';
+    ctx.fillRect(-6, -6, 12, 12);
+    // Ripieno avocado
+    ctx.fillStyle = hit ? '#fff' : '#6ab830';
+    ctx.fillRect(-4, -4, 8, 8);
+    // Salmone al centro
+    ctx.fillStyle = hit ? '#fff' : '#e8603c';
+    ctx.fillRect(-2, -2, 5, 5);
+    // Sesamo sopra il riso
+    ctx.fillStyle = hit ? '#fff' : '#d4b896';
+    ctx.fillRect(-6, -9, 2, 1); ctx.fillRect(-2, -9, 2, 1); ctx.fillRect(2, -9, 2, 1);
   }
+
   ctx.restore();
   ctx.globalAlpha = 1;
   if (e.hp < e.maxHp) {
-    const bw = Math.round(s * 0.9), bx = Math.round(e.x - bw / 2), by = Math.round(e.y - s - 2);
+    const bw = Math.round(s * 0.9), bx = Math.round(e.x - bw / 2), by = Math.round(e.y - s - 4);
     ctx.fillStyle = '#1a1a1a'; ctx.fillRect(bx - 1, by - 1, bw + 2, 4);
     ctx.fillStyle = '#d7263d'; ctx.fillRect(bx, by, bw, 2);
     ctx.fillStyle = '#ff6b8a'; ctx.fillRect(bx, by, Math.max(1, Math.round(bw * e.hp / e.maxHp)), 2);
