@@ -88,7 +88,7 @@ export function createHud({ onBuy, onAbility }) {
   for (const def of ABILITIES) {
     const btn = document.createElement('button');
     btn.className = 'abl';
-    btn.innerHTML = `<span class="ico">${def.icon}</span><span class="nm">${def.short}</span><span class="key">${def.key}</span><span class="mana"></span><span class="cd"></span>`;
+    btn.innerHTML = `<span class="ico">${def.icon}</span><span class="nm">${def.short}</span><span class="key">${def.key}</span><span class="mana"></span><span class="cd"></span><span class="cdnum" hidden></span>`;
     withTip(btn, () => {
       const cost = lastRun ? manaCost(lastRun, def.id) : def.mana;
       const have = lastRun ? Math.floor(lastRun.mana) : 0;
@@ -97,7 +97,7 @@ export function createHud({ onBuy, onAbility }) {
     }, () => onAbility(def.id));
     $('abilities').appendChild(btn);
     if (def.special) { btn.classList.add('special'); btn.hidden = true; }
-    abilityEls[def.id] = { btn, cd: btn.querySelector('.cd'), mana: btn.querySelector('.mana') };
+    abilityEls[def.id] = { btn, cd: btn.querySelector('.cd'), mana: btn.querySelector('.mana'), cdnum: btn.querySelector('.cdnum') };
   }
 
   function update(run, speed) {
@@ -129,8 +129,17 @@ export function createHud({ onBuy, onAbility }) {
     for (const def of ABILITIES) {
       const el = abilityEls[def.id];
       const cost = manaCost(run, def.id);
-      // la parte scura si abbassa man mano che il mana si avvicina al costo
-      el.cd.style.height = Math.max(0, 1 - run.mana / cost) * 100 + '%';
+      const cdLeft = run.abilityCd[def.id] || 0;
+      if (cdLeft > 0) {
+        // Countdown ricarica: copre tutto il pulsante, mostra i secondi rimasti
+        el.cd.style.height = '100%';
+        el.cdnum.hidden = false;
+        setText(el.cdnum, Math.ceil(cdLeft) + 's');
+      } else {
+        // Ricarica mana: la parte scura si abbassa man mano che il mana sale
+        el.cd.style.height = Math.max(0, 1 - run.mana / cost) * 100 + '%';
+        el.cdnum.hidden = true;
+      }
       setText(el.mana, `${cost}💧`);
       el.btn.classList.toggle('off', !canUse(run, def.id));
     }

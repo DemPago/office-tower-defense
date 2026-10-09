@@ -184,6 +184,7 @@ button:disabled { cursor: default; }
 .abl .mana { position: absolute; top: 3px; right: 4px; font-size: 7px; color: #b4a8ff; z-index: 1; text-shadow: 1px 1px 0 var(--ink); }
 .abl .cd { background: rgba(28,22,64,.75) !important; }
 .abl .cd { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: rgba(13,13,15,.75); }
+.abl .cdnum { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--white); z-index: 2; text-shadow: 0 0 6px var(--ink), 0 0 12px rgba(0,0,0,.8); pointer-events: none; }
 .abl:not(.off):hover { background: var(--rust-hi); }
 .abl.off { filter: grayscale(.6); cursor: help; }
 

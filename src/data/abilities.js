@@ -11,7 +11,7 @@ export function maxMana(run) {
 }
 
 export const ABILITIES = [
-  { id: 'bomb',    key: '1', icon: '💣', short: 'Bomba',    name: 'Bomba di carta',   desc: 'Danno enorme a tutti i nemici', mana: 45, cd: 2,
+  { id: 'bomb',    key: '1', icon: '💣', short: 'Bomba',    name: 'Bomba di carta',   desc: 'Danno enorme a tutti i nemici', mana: 45, cd: 10,
     help: 'Colpisce TUTTI i nemici in campo con 12 volte il danno della torre. Ottima quando arriva un gruppo.' },
   { id: 'coffee',  key: '2', icon: '☕', short: 'Caffè',    name: 'Caffè bollente',   desc: 'Rallenta tutti del 60% per 5 s', mana: 25, cd: 2,
     help: 'Tutti i nemici rallentano del 60% per 5 secondi: utile contro i kamikaze in carica.' },
