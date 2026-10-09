@@ -45,7 +45,8 @@ export function updateEnemies(run, dt) {
       e.attackCd -= dt;
       if (e.attackCd <= 0) {
         e.attackCd = e.boss ? 1.3 : 1;
-        damageWall(run, wallSeg, e.atk, e);
+        // Il boss sfonda il tratto di muro in un colpo solo
+        damageWall(run, wallSeg, e.boss ? wallSeg.maxHp * 2 : e.atk, e);
         e.lunge = 0.15;
       }
     } else if (d > stopAt) {
