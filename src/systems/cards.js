@@ -33,12 +33,13 @@ export function rollChoices(run, n = 3) {
   return picked;
 }
 
-export function offerCards(run) {
+export function offerCards(run, { noMalus = false } = {}) {
   run.phase = 'cards';
   const choices = rollChoices(run);
   // Se hai vinto troppo facilmente (vita > 80%), una delle 3 carte è un malus.
+  // Il bonus stage è già abbastanza brutale: niente malus dopo.
   const hpPct = run.tower.hp / run.stats.maxHp;
-  if (run.wave > 2 && hpPct > 0.80) {
+  if (!noMalus && run.wave > 2 && hpPct > 0.80) {
     const pool = MALUS_CARDS.filter(c => (run.cards[c.id] || 0) < c.max);
     if (pool.length) {
       const malus = pool[Math.floor(Math.random() * pool.length)];

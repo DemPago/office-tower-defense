@@ -82,6 +82,6 @@ export function endBonusWave(run) {
     banner(run, 'BONUS STAGE COMPLETATO!', 'Hai lo spirito di un samurai — +500.000💰', '#f2b705');
     run.bonusStage = false;
     run.bonusWaveIdx = 0;
-    offerCards(run);
+    offerCards(run, { noMalus: true });
   }
 }
