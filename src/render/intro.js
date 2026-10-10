@@ -1,13 +1,100 @@
-// Intro: prima il video generato (public/intro.mp4), poi fallback all'animazione pixel art.
-// Chiamata con (canvas, onDone); onDone avvia il menu principale.
+// Sequenza intro: 1) splash con titolo pixel art, 2) video generato, 3) fallback animazione.
+// playIntro(canvas, onDone) → onDone avvia il menu principale.
 
 export function playIntro(canvas, onDone) {
+  playTitleSplash(canvas, () => playVideo(canvas, onDone));
+}
+
+// ─── 1. Splash con titolo ────────────────────────────────────────────────────
+
+function playTitleSplash(canvas, onDone) {
+  const ctx = canvas.getContext('2d');
+  let t = 0, done = false;
+  const DURATION = 3.0;   // secondi totali dello splash
+  const FADE_IN  = 0.5;   // fade in
+  const FADE_OUT = 0.4;   // fade out prima della fine
+  const WORDS = ['OFFICE', 'TOWER', 'DEFENSE'];
+  const WORD_DELAY = 0.28; // ogni parola appare con questo ritardo
+
+  function finish() {
+    if (done) return;
+    done = true;
+    canvas.removeEventListener('click', finish);
+    document.removeEventListener('keydown', finish);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    onDone();
+  }
+  canvas.addEventListener('click', finish);
+  document.addEventListener('keydown', finish);
+
+  let last = performance.now();
+  function frame(now) {
+    if (done) return;
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    t += dt;
+    if (t >= DURATION) { finish(); return; }
+
+    const W = canvas.width, H = canvas.height;
+    const fadeIn  = Math.min(1, t / FADE_IN);
+    const fadeOut = t > DURATION - FADE_OUT ? Math.max(0, 1 - (t - (DURATION - FADE_OUT)) / FADE_OUT) : 1;
+    const alpha   = fadeIn * fadeOut;
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#0d0d0f';
+    ctx.fillRect(0, 0, W, H);
+
+    // Dimensione testo adattiva
+    const fontSize = Math.max(14, Math.min(48, Math.floor(W / 11)));
+    const lineH    = Math.round(fontSize * 1.9);
+    const startY   = H / 2 - lineH;
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    WORDS.forEach((word, i) => {
+      const wordT = t - i * WORD_DELAY;
+      if (wordT <= 0) return;
+      const wordAlpha = Math.min(1, wordT / 0.18) * alpha;
+      const slide = Math.max(0, 1 - wordT / 0.22); // scende verso il basso all'entrata
+
+      ctx.globalAlpha = wordAlpha;
+
+      // Ombra pixel
+      ctx.font = `${fontSize}px "Press Start 2P", monospace`;
+      ctx.fillStyle = '#000';
+      ctx.fillText(word, W / 2 + 3, startY + i * lineH + 3 + slide * 12);
+
+      // Colore: OFFICE=ciano, TOWER=bianco, DEFENSE=arancio
+      const colors = ['#2de2e6', '#f0f0f0', '#f5a623'];
+      ctx.fillStyle = colors[i];
+      ctx.fillText(word, W / 2, startY + i * lineH + slide * 12);
+    });
+
+    // Suggerimento "clic per saltare" — compare dopo 0.8s
+    if (t > 0.8) {
+      const a = (0.4 + 0.25 * Math.sin(t * 3.5)) * alpha;
+      ctx.globalAlpha = a;
+      ctx.font = `${Math.max(6, Math.floor(fontSize * 0.28))}px "Press Start 2P", monospace`;
+      ctx.fillStyle = '#8a8d93';
+      ctx.fillText('CLICCA PER SALTARE', W / 2, H - Math.max(20, H * 0.07));
+    }
+
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// ─── 2. Video generato (public/intro.mp4) ────────────────────────────────────
+
+function playVideo(canvas, onDone) {
   const video = document.createElement('video');
   video.src = import.meta.env.BASE_URL + 'intro.mp4';
   video.playsInline = true;
   video.setAttribute('playsinline', '');
-  video.muted = true;  // autoplay richiede muted su tutti i browser moderni
-  // il video ha audio — l'utente può silenziare con M se vuole
+  video.muted = true; // autoplay richiede muted su tutti i browser moderni
   Object.assign(video.style, {
     position: 'fixed',
     inset: '0',
@@ -19,7 +106,6 @@ export function playIntro(canvas, onDone) {
     cursor: 'pointer',
   });
 
-  // Testo "clicca per saltare" sopra al video
   const skip = document.createElement('div');
   Object.assign(skip.style, {
     position: 'fixed',
@@ -55,17 +141,16 @@ export function playIntro(canvas, onDone) {
   document.body.appendChild(skip);
 
   video.play().catch(() => {
-    // Autoplay bloccato dal browser (es. policy audio) → pixel art di riserva
     video.remove();
     skip.remove();
-    playPixelArtIntro(canvas, onDone);
+    // Autoplay bloccato anche con muted: salta direttamente al gioco
+    onDone();
   });
 }
 
-// ─── Animazione pixel art di riserva ────────────────────────────────────────
-// Impiegato stressato al computer. Dura 5 secondi, clic/tasto per saltare.
+// ─── 3. Animazione pixel art (fallback legacy, non più usata in sequenza) ────
 
-function playPixelArtIntro(canvas, onDone) {
+export function playPixelArtIntro(canvas, onDone) {
   const ctx = canvas.getContext('2d');
   let t = 0, done = false;
 
@@ -86,7 +171,6 @@ function playPixelArtIntro(canvas, onDone) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     t += dt;
-
     if (t >= 5) { finish(); return; }
 
     const W = canvas.width, H = canvas.height;
