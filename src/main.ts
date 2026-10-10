@@ -37,9 +37,26 @@ try {
 }
 
 const use3d = location.search.includes('3d');
-const renderer = use3d
-  ? (await import('./render/three/renderer.js')).createThreeRenderer($('cv') as HTMLCanvasElement, app.assets)
-  : createRenderer($('cv'), app.assets);
+const badge = document.createElement('div');
+badge.style.cssText = 'position:fixed;top:4px;right:4px;font-size:10px;padding:2px 6px;z-index:9999;border-radius:3px;pointer-events:none';
+document.body.appendChild(badge);
+
+let renderer;
+if (use3d) {
+  badge.style.background = '#f2b705'; badge.style.color = '#000'; badge.textContent = '3D';
+  try {
+    const mod = await import('./render/three/renderer.js');
+    renderer = mod.createThreeRenderer($('cv') as HTMLCanvasElement, app.assets);
+    badge.style.background = '#2de2e6';
+  } catch (err) {
+    badge.style.background = '#d7263d'; badge.style.color = '#fff';
+    badge.textContent = 'ERR: ' + (err as Error).message;
+    throw err;
+  }
+} else {
+  badge.remove();
+  renderer = createRenderer($('cv'), app.assets);
+}
 const hud = createHud({
   onBuy: id => { if (app.run && buyUpgrade(app.run, app.meta, id)) play('buy'); },
   onAbility: id => app.run && !app.paused && useAbility(app.run, id),
@@ -90,8 +107,14 @@ if (location.search.includes('debug')) window.otd = { get run() { return app.run
 
 window.addEventListener('resize', renderer.resize);
 renderer.resize();
-playIntro($('cv'), () => {
-  renderer.resize();
+if (use3d) {
+  // L'intro usa getContext('2d') — incompatibile con il canvas WebGL già acquisito.
   app.flow.toMenu();
   requestAnimationFrame(frame);
-});
+} else {
+  playIntro($('cv'), () => {
+    renderer.resize();
+    app.flow.toMenu();
+    requestAnimationFrame(frame);
+  });
+}
