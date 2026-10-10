@@ -17,6 +17,7 @@ export interface Meta {
   runs: number;
   levels: Record<string, number>;
   hero?: string;
+  heroes?: string[];
   tutorialDone?: boolean;
 }
 

@@ -2,7 +2,31 @@
 // Il costo del livello L è: base × grow^L (arrotondato).
 //   mod(u, L) applica L livelli ai bonus dei potenziamenti (vedi systems/stats.js)
 //   help(s, L) spiegazione per il suggerimento (s = statistiche attuali, L = livello)
-export const UPGRADES = [
+import type { BonusSet, Stats } from '../types.js';
+
+export interface UpgradeDef {
+  id: string;
+  icon: string;
+  name: string;
+  base: number;
+  grow: number;
+  max?: number;
+  mod: (u: BonusSet, L: number) => void;
+  help: (s: Stats) => string;
+}
+
+export interface MetaUpgradeDef {
+  id: string;
+  icon: string;
+  name: string;
+  desc: string;
+  base: number;
+  grow: number;
+  max: number;
+  mod: (m: BonusSet, L: number) => void;
+}
+
+export const UPGRADES: UpgradeDef[] = [
   { id: 'dmg',   icon: '⚔️', name: 'Danno',     base: 8,  grow: 1.32, mod: (u, L) => { u.dmg += 0.30 * L; },
     help: s => `Danno di ogni colpo della torre (e, in proporzione, dei colleghi). +30% per livello. Ora: ${Math.round(s.dmg)} a colpo.` },
   { id: 'rate',  icon: '⚡', name: 'Velocità',  base: 10, grow: 1.40, mod: (u, L) => { u.rate += 0.10 * L; },
@@ -16,7 +40,7 @@ export const UPGRADES = [
 ];
 
 // Potenziamenti PERMANENTI comprati con i BUONI PASTO (valgono per sempre).
-export const META_UPGRADES = [
+export const META_UPGRADES: MetaUpgradeDef[] = [
   { id: 'dmg',    icon: '⚔️', name: 'Esperienza',       desc: '+10% danno',             base: 5,  grow: 1.5, max: 20, mod: (m, L) => { m.dmg += 0.10 * L; } },
   { id: 'hp',     icon: '❤️', name: 'Assicurazione',    desc: '+10% vita',              base: 5,  grow: 1.5, max: 20, mod: (m, L) => { m.hp += 0.10 * L; } },
   { id: 'rate',   icon: '⚡', name: 'Macchinetta caffè', desc: '+5% velocità di fuoco', base: 8,  grow: 1.6, max: 10, mod: (m, L) => { m.rate += 0.05 * L; } },
@@ -25,6 +49,6 @@ export const META_UPGRADES = [
   { id: 'reroll', icon: '🎲', name: 'Raccomandazione',  desc: '+1 rilancio carte a partita', base: 15, grow: 2.0, max: 5, mod: (m, L) => { m.rerolls += L; } },
 ];
 
-export function levelCost(def, level) {
+export function levelCost(def: { base: number; grow: number }, level: number): number {
   return Math.round(def.base * Math.pow(def.grow, level));
 }
