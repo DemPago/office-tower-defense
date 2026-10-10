@@ -26,8 +26,13 @@ export function bombMult(run) {
   return 1;
 }
 
+// Quante bombe si possono piazzare in questo quadro (= moltiplicatore arrotondato per difetto, min 1)
+export function bombsForQuadro(run) {
+  return Math.max(1, Math.floor(bombMult(run)));
+}
+
 export function canPlaceBomb(run) {
-  return run.bombPenalty < BOMB_MAX;
+  return run.bombPenalty < BOMB_MAX && (run.bombsLeft ?? 0) > 0;
 }
 
 export function placeBomb(run, x, y) {
@@ -36,6 +41,7 @@ export function placeBomb(run, x, y) {
   if (run.bombs.some(b => !b.detonated && dist({ x, y }, b) < BOMB_MIN_DIST)) return false;
   run.bombs.push({ x, y, mult: bombMult(run), age: 0, detonated: false });
   run.bombPenalty++;
+  run.bombsLeft = Math.max(0, (run.bombsLeft ?? 0) - 1);
   refreshStats(run, run.meta);
   return true;
 }
@@ -44,8 +50,14 @@ export function removeBomb(run, idx) {
   if (idx < 0 || idx >= run.bombs.length) return false;
   run.bombs.splice(idx, 1);
   if (run.bombPenalty > 0) run.bombPenalty--;
+  run.bombsLeft = Math.min(bombsForQuadro(run), (run.bombsLeft ?? 0) + 1);
   refreshStats(run, run.meta);
   return true;
+}
+
+// Da chiamare all'inizio di ogni fase bomb-placement per inizializzare il contatore.
+export function resetBombsLeft(run) {
+  run.bombsLeft = bombsForQuadro(run);
 }
 
 // Controlla ogni bomba non detonata: se un nemico entra nel raggio, esplode in AOE.

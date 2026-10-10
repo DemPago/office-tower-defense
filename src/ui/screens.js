@@ -4,7 +4,7 @@ import { RARITY, cardPower, findCard } from '../data/cards.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
 import { ALLY_LEVELS, allyArc } from '../data/allies.js';
 import { HEROES, UNLOCK_WAVE, unlockedHeroes, heroStatsText } from '../data/heroes.js';
-import { bombMult, nextQuadro, canPlaceBomb, BOMB_MAX } from '../systems/bombs.js';
+import { bombMult, nextQuadro, canPlaceBomb, bombsForQuadro, BOMB_MAX } from '../systems/bombs.js';
 import { weaponDef } from '../data/weapons.js';
 import { slotName } from '../systems/allies.js';
 import { fmt } from '../util.js';
@@ -83,14 +83,16 @@ export function updateBombUI(run) {
   const q = nextQuadro(run);
   const mult = bombMult(run);
   const pct = run.bombPenalty * 5;
+  const left = run.bombsLeft ?? bombsForQuadro(run);
+  const total = bombsForQuadro(run);
   $('bomb-quadro-label').textContent = `QUADRO ${q}`;
   $('bomb-mult-label').textContent = `💣 ×${mult}`;
-  $('bomb-penalty-val').textContent = `−${pct}%`;
-  $('bomb-count-val').textContent = run.bombPenalty;
+  $('bomb-penalty-val').textContent = pct > 0 ? `−${pct}% a tutte le stat` : 'nessuna';
+  $('bomb-count-val').textContent = `${total - left} / ${total}`;
   const can = canPlaceBomb(run);
   document.querySelector('.bombs-hint').textContent = can
-    ? 'Clicca sulla mappa per piazzare le bombe'
-    : `Limite raggiunto (${BOMB_MAX} bombe = stat al minimo)`;
+    ? `Rimangono ${left} bomb${left === 1 ? 'a' : 'e'} — clicca sulla mappa`
+    : left === 0 ? 'Bombe esaurite per questo quadro' : `Limite stat raggiunto`;
 }
 
 export function showBombs(run) {

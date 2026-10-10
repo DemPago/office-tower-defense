@@ -6,7 +6,7 @@ import { runReward } from '../systems/game.js';
 import { pickCard, reroll } from '../systems/cards.js';
 import { pickAlly } from '../systems/allies.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
-import { removeBomb } from '../systems/bombs.js';
+import { removeBomb, resetBombsLeft } from '../systems/bombs.js';
 import * as screens from '../ui/screens.js';
 import { getTop } from '../leaderboard.js';
 import { play } from '../audio.js';
@@ -45,6 +45,7 @@ export function createFlow(app) {
   function onBombPhase() {
     const { run } = app;
     if (!run || run.phase !== 'bomb-placement') return;
+    resetBombsLeft(run);
     screens.showBombs(run);
   }
 
