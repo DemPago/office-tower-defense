@@ -6,6 +6,7 @@ export function playIntro(canvas, onDone) {
   video.src = import.meta.env.BASE_URL + 'intro.mp4';
   video.playsInline = true;
   video.setAttribute('playsinline', '');
+  video.muted = true;  // autoplay richiede muted su tutti i browser moderni
   // il video ha audio — l'utente può silenziare con M se vuole
   Object.assign(video.style, {
     position: 'fixed',
