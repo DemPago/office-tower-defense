@@ -108,9 +108,18 @@ if (location.search.includes('debug')) window.otd = { get run() { return app.run
 window.addEventListener('resize', renderer.resize);
 renderer.resize();
 if (use3d) {
-  // L'intro usa getContext('2d') — incompatibile con il canvas WebGL già acquisito.
-  app.flow.toMenu();
-  requestAnimationFrame(frame);
+  // L'intro usa canvas 2D: lo eseguiamo su un canvas overlay temporaneo
+  // sovrapposto al canvas WebGL, poi lo rimuoviamo.
+  requestAnimationFrame(frame); // avvia subito il loop 3D in background
+  const introOverlay = document.createElement('canvas');
+  introOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9000;pointer-events:all;';
+  introOverlay.width = window.innerWidth;
+  introOverlay.height = window.innerHeight;
+  document.body.appendChild(introOverlay);
+  playIntro(introOverlay, () => {
+    introOverlay.remove();
+    app.flow.toMenu();
+  });
 } else {
   playIntro($('cv'), () => {
     renderer.resize();
