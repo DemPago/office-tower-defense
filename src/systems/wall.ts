@@ -6,6 +6,7 @@ import { WALL } from '../data/wall.js';
 import { atkScale } from './waves.js';
 import { burst, floatText, sfx, shake } from './fx.js';
 import { dealDamage } from './damage.js';
+import type { Run } from '../types.js';
 
 // Crea i tratti lungo i 4 lati del cortile. Ogni tratto: { side, a, b, x, y, hp, maxHp }
 // (a-b = estremi lungo il lato; x, y = centro, usato per mirare e disegnare).
@@ -27,29 +28,29 @@ export function buildWall() {
   return segs;
 }
 
-export function wallMaxHp(run) {
+export function wallMaxHp(run: Run): number {
   return WALL.hp * atkScale(Math.max(1, run.wave)) * (1 + run.stats.wallHp);
 }
 
 // Ripara solo i tratti ancora in piedi (fine ondata normale).
 // I tratti distrutti (hp=0) restano rotti fino al prossimo macro-stage.
-export function repairWall(run) {
+export function repairWall(run: Run): void {
   const max = wallMaxHp(run);
   for (const s of run.wall) { s.maxHp = max; if (s.hp > 0) s.hp = max; }
 }
 
 // Ripara tutto il muro, comprese le brecce (inizio partita e ogni 10 ondate).
-export function fullRepairWall(run) {
+export function fullRepairWall(run: Run): void {
   const max = wallMaxHp(run);
   for (const s of run.wall) { s.maxHp = max; s.hp = max; }
 }
 
-export function insideYard(p) {
+export function insideYard(p: { x: number; y: number }): boolean {
   return p.x > YARD.x && p.x < YARD.x + YARD.w && p.y > YARD.y && p.y < YARD.y + YARD.h;
 }
 
 // Il tratto di muro che sta sulla linea tra il punto p e il palazzo (o null se p è dentro).
-export function segmentToward(run, p) {
+export function segmentToward(run: Run, p: { x: number; y: number }): any {
   if (insideYard(p)) return null;
   const dx = p.x - TOWER.x, dy = p.y - TOWER.y;
   // dove il raggio dal palazzo verso p esce dal rettangolo del cortile
@@ -68,13 +69,13 @@ function insideWallPerimeter(p) {
 }
 
 // Il nemico sta per attraversare il muro di cinta ancora in piedi?
-export function blockingSegment(run, e, nx, ny) {
+export function blockingSegment(run: Run, e: { x: number; y: number }, nx: number, ny: number): any {
   if (insideYard(e) || !insideWallPerimeter({ x: nx, y: ny })) return null;
   const seg = segmentToward(run, e);
   return seg && seg.hp > 0 ? seg : null;
 }
 
-export function damageWall(run, seg, amount, attacker = null) {
+export function damageWall(run: Run, seg: any, amount: number, attacker: any = null): void {
   if (seg.hp <= 0) return;
   seg.hp -= amount;
   seg.hit = 0.15;
@@ -101,7 +102,7 @@ export function damageWall(run, seg, amount, attacker = null) {
 }
 
 // Muro autoriparante: i tratti ancora in piedi recuperano vita durante l'ondata.
-export function updateWall(run, dt) {
+export function updateWall(run: Run, dt: number): void {
   const r = run.stats.wallRegen;
   for (const s of run.wall) {
     s.hit = Math.max(0, (s.hit || 0) - dt);
@@ -110,6 +111,6 @@ export function updateWall(run, dt) {
 }
 
 // Lastre d'acciaio: parte del colpo del cecchino torna indietro.
-export function reflectChance(run) {
+export function reflectChance(run: Run): number {
   return run.stats.wallReflect;
 }

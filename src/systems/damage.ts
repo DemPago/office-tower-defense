@@ -5,8 +5,9 @@ import { floatText, burst, ring, shake, sfx, banner } from './fx.js';
 import { makeEnemy } from './waves.js';
 import { ENEMIES } from '../data/enemies.js';
 import { ANIMALS } from '../data/animals.js';
+import type { Run, Enemy } from '../types.js';
 
-export function dealDamage(run, e, amount, { crit = false, silent = false, color = null } = {}) {
+export function dealDamage(run: Run, e: Enemy, amount: number, { crit = false, silent = false, color = null as string | null } = {}): void {
   if (e.dead) return;
   const dmg = amount * (1 - e.armor);
   const before = e.hp;
@@ -97,7 +98,7 @@ function killEnemy(run, e) {
   }
 }
 
-export function damageTower(run, amount) {
+export function damageTower(run: Run, amount: number): void {
   if (run.phase === 'over') return;
   const t = run.tower;
   const ratioBefore = t.hp / run.stats.maxHp;

@@ -7,29 +7,30 @@ import { offerCards } from './cards.js';
 import { refreshStats } from './economy.js';
 import { banner, ring, sfx, floatText, burst } from './fx.js';
 import { angleOf, inArc } from '../util.js';
+import type { Run, Meta, Ally } from '../types.js';
 
 // Velocità dei colpi: abbastanza lente da vederli partire dalla postazione.
 const SHOT_SPEED = { laser: 650, bolt: 360, pc: 230 };
 const AURA_COLOR = { rate: '#2de2e6', dmg: '#ff3e8a' };
 
-export function allyDef(id) {
+export function allyDef(id: string) {
   return ALLIES.find(a => a.id === id);
 }
 
-export function allyPos(ally) {
+export function allyPos(ally: Ally): { x: number; y: number } {
   const a = ALLY_SLOTS[ally.slot] * Math.PI / 180;
   return { x: TOWER.x + Math.cos(a) * ALLY_RING, y: TOWER.y - Math.sin(a) * ALLY_RING };
 }
 
 // Il collega spara solo ai nemici dentro il suo spicchio (visto dal centro della torre).
-export function allyCovers(ally, enemy) {
+export function allyCovers(ally: Ally, enemy: { x: number; y: number }): boolean {
   return inArc(angleOf(TOWER, enemy), ALLY_SLOTS[ally.slot], allyArc(ally.level));
 }
 
 const MAX_LEVEL = ALLY_LEVELS.length;
 const SLOT_NAMES = { 0: 'Est', 45: 'Nord-Est', 90: 'Nord', 135: 'Nord-Ovest', 180: 'Ovest', 225: 'Sud-Ovest', 270: 'Sud', 315: 'Sud-Est' };
 
-export function slotName(slot) {
+export function slotName(slot: number): string {
   return SLOT_NAMES[ALLY_SLOTS[slot]] || '';
 }
 
@@ -48,7 +49,7 @@ function shuffle(list) {
 
 // Propone 3 carte: "assumi" un collega nuovo (finché ci sono postazioni libere,
 // almeno 2 carte su 3 sono assunzioni) oppure "promuovi" un collega già in campo.
-export function offerAllies(run) {
+export function offerAllies(run: Run): void {
   const slot = freeSlot(run);
   const promos = shuffle(run.allies.filter(a => a.level < MAX_LEVEL))
     .map(a => ({ kind: 'promote', def: allyDef(a.id), ally: a }));
@@ -61,7 +62,7 @@ export function offerAllies(run) {
   run.phase = 'ally';
 }
 
-export function pickAlly(run, meta, index) {
+export function pickAlly(run: Run, meta: Meta, index: number): boolean {
   const choice = run.allyChoices?.[index];
   if (run.phase !== 'ally' || !choice) return false;
   let ally;
@@ -90,7 +91,7 @@ export function pickAlly(run, meta, index) {
 }
 
 // Animazioni dei colleghi (arrivo dall'alto, lampo di promozione): girano anche fra un'ondata e l'altra.
-export function animateAllies(run, dt) {
+export function animateAllies(run: Run, dt: number): void {
   for (const ally of run.allies) {
     ally.spawn = Math.min(1, ally.spawn + dt * 2);
     ally.promoFlash = Math.max(0, (ally.promoFlash || 0) - dt);
@@ -100,11 +101,11 @@ export function animateAllies(run, dt) {
 
 
 // A fine ondata i colleghi sopravvissuti tornano in piena forma.
-export function restAllies(run) {
+export function restAllies(run: Run): void {
   for (const ally of run.allies) ally.hp = ally.maxHp;
 }
 
-export function updateAllies(run, dt) {
+export function updateAllies(run: Run, dt: number): void {
   for (const ally of run.allies) {
     ally.recoil = Math.max(0, ally.recoil - dt);
     const def = allyDef(ally.id);

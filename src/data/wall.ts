@@ -9,7 +9,7 @@ export const WALL = {
 };
 
 // Aspetto in base ai bonus presi (il più "pesante" vince).
-export function wallLook(s) {
+export function wallLook(s: { wallReflect: number; wallHp: number }): string {
   if (s.wallReflect > 0) return 'steel';
   if (s.wallHp >= 0.6) return 'concrete';
   return 'sandbag';

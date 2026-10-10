@@ -4,12 +4,13 @@ import { ANIMALS } from '../data/animals.js';
 import { bossForWave, WEAPONS } from '../data/bosses.js';
 import { TOWER, SPAWN_RADIUS } from '../state.js';
 import { banner, sfx } from './fx.js';
+import type { Run } from '../types.js';
 
 // Quanto crescono i nemici rispetto all'ondata 1.
 // Dopo l'ondata 25 si aggiunge una crescita esponenziale, così prima o poi si perde sempre.
-export function hpScale(w)   { return (1 + 0.15 * (w - 1) + 0.03 * (w - 1) ** 2) * 1.05 ** Math.max(0, w - 25); }
-export function atkScale(w)  { return (1 + 0.10 * (w - 1) + 0.008 * (w - 1) ** 2) * 1.03 ** Math.max(0, w - 25); }
-export function goldScale(w) { return 1 + 0.06 * (w - 1); }
+export function hpScale(w: number): number   { return (1 + 0.15 * (w - 1) + 0.03 * (w - 1) ** 2) * 1.05 ** Math.max(0, w - 25); }
+export function atkScale(w: number): number  { return (1 + 0.10 * (w - 1) + 0.008 * (w - 1) ** 2) * 1.03 ** Math.max(0, w - 25); }
+export function goldScale(w: number): number { return 1 + 0.06 * (w - 1); }
 
 // Posizione nel ciclo di 10 ondate: 1-9 = ondata normale, 0 = boss
 function cyclePos(w) { return w % 10; }
@@ -149,7 +150,7 @@ function makeBoss(b, w, playerDmg) {
   return { bosses: list, escorts };
 }
 
-export function startWave(run) {
+export function startWave(run: Run): void {
   run.wave++;
   const w = run.wave;
   const queue = [];
@@ -183,7 +184,7 @@ export function startWave(run) {
   } else banner(run, `ONDATA ${w}${speedLabel(w)}`, `${n} nemici in arrivo`);
 }
 
-export function updateSpawns(run, dt) {
+export function updateSpawns(run: Run, dt: number): void {
   if (!run.spawnQueue.length) return;
   run.spawnTimer += dt;
   while (run.spawnQueue.length && run.spawnTimer >= run.spawnQueue[0].delay) {
