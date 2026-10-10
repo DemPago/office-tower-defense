@@ -9,6 +9,7 @@ import { isZombieWave } from '../data/enemies.js';
 import { offerAllies, updateAllies, animateAllies, updateYard, restAllies } from './allies.js';
 import { REINFORCE_EVERY } from '../data/allies.js';
 import { updateFx, floatText } from './fx.js';
+import { checkBombs } from './bombs.js';
 import { TOWER } from '../state.js';
 import { UNLOCK_WAVE, unlockNextHero } from '../data/heroes.js';
 import { banner } from './fx.js';
@@ -19,6 +20,12 @@ export function update(run, dt) {
   animateAllies(run, dt);
   if (run.phase === 'over' || run.phase === 'cards' || run.phase === 'ally') return;
   run.time += dt;
+
+  if (run.phase === 'bomb-placement') {
+    updateTower(run, dt);
+    updateAbilities(run, dt);
+    return; // attende la conferma del giocatore
+  }
 
   if (run.phase === 'break') {
     updateTower(run, dt); // la torre si rigenera anche in pausa
@@ -52,6 +59,8 @@ export function update(run, dt) {
     endBonusWave(run);
   }
 
+  checkBombs(run);
+
   if (run.phase === 'wave' && !run.spawnQueue.length && !run.enemies.length) {
     const bonus = 5 + run.wave * 2;
     run.gold += bonus;
@@ -63,7 +72,8 @@ export function update(run, dt) {
     // Ogni 10 ondate (nuovo macro-stage) il muro torna integro, anche le brecce.
     if (run.wave % 10 === 0) {
       fullRepairWall(run);
-      banner(run, `SETTORE ${run.wave / 10 + 1}`, 'Muro ripristinato — ma i nemici sono più forti', '#2de2e6');
+      banner(run, `SETTORE ${run.wave / 10 + 1}`, 'Muro ripristinato — piazza le bombe per il prossimo quadro!', '#2de2e6');
+      run.bombPending = true; // fase bomb-placement dopo le carte
     } else {
       repairWall(run); // solo i tratti ancora in piedi si riparano
     }

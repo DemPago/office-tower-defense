@@ -2,11 +2,23 @@
 import { useAbility } from '../systems/abilities.js';
 import { ABILITIES } from '../data/abilities.js';
 import { initAudio, toggleMute, isMuted } from '../audio.js';
+import { placeBomb } from '../systems/bombs.js';
+import * as screens from '../ui/screens.js';
 
 const $ = id => document.getElementById(id);
 
-export function setupControls(app) {
+export function setupControls(app, canvas, renderer) {
   const { flow } = app;
+
+  // Click sul canvas: durante bomb-placement piazza una bomba
+  canvas.addEventListener('click', e => {
+    const { run } = app;
+    if (!run || run.phase !== 'bomb-placement') return;
+    const world = renderer.screenToWorld(e.clientX, e.clientY);
+    if (placeBomb(run, world.x, world.y)) {
+      screens.updateBombUI(run);
+    }
+  });
 
   $('btn-pause').addEventListener('click', () => flow.setPaused(!app.paused));
   $('btn-speed').addEventListener('click', () => { app.speed = app.speed === 3 ? 1 : app.speed + 1; });

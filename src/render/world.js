@@ -21,6 +21,43 @@ import { isZombieWave } from '../data/enemies.js';
 import { drawWall } from './wall.js';
 import { drawSceneTitle, drawBanner, drawBossBar, drawIntruderWarning, drawBossPointer } from './overlay.js';
 
+function drawBombs(ctx, run, time) {
+  for (const b of run.bombs) {
+    if (b.detonated) continue;
+    // Corpo bomba
+    ctx.fillStyle = '#1a1a1c';
+    ctx.beginPath(); ctx.arc(b.x, b.y, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#555560';
+    ctx.beginPath(); ctx.arc(b.x - 3, b.y - 3, 3, 0, Math.PI * 2); ctx.fill();
+    // Miccia
+    ctx.strokeStyle = '#c87820';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(b.x + 6, b.y - 8);
+    ctx.quadraticCurveTo(b.x + 14, b.y - 18, b.x + 10, b.y - 24);
+    ctx.stroke();
+    // Scintilla lampeggiante
+    const spark = Math.sin(time * 12 + b.x) > 0.3;
+    if (spark) {
+      ctx.fillStyle = '#ffe040';
+      ctx.beginPath(); ctx.arc(b.x + 10, b.y - 24, 3, 0, Math.PI * 2); ctx.fill();
+    }
+    // Etichetta moltiplicatore
+    ctx.fillStyle = '#ffaa00';
+    ctx.font = 'bold 9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`×${b.mult}`, b.x, b.y + 20);
+    // Raggio di detonazione (durante bomb-placement)
+    if (run.phase === 'bomb-placement') {
+      ctx.strokeStyle = 'rgba(255,100,0,0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.arc(b.x, b.y, 70, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+}
+
 export function createRenderer(canvas, assets) {
   const ctx = canvas.getContext('2d');
   const view = { scale: 1, ox: 0, oy: 0, ui: 1 };
@@ -136,6 +173,7 @@ export function createRenderer(canvas, assets) {
     drawTrails(ctx, trails);
     if (run) {
       drawShots(ctx, run, time);
+      drawBombs(ctx, run, time);
       drawFx(ctx, run);
     }
 
@@ -167,5 +205,13 @@ export function createRenderer(canvas, assets) {
     return { left: c.left + (view.ox + area.x * view.scale) * k, top: c.top + (view.oy + area.y * view.scale) * k, width: area.w * view.scale * k, height: area.h * view.scale * k };
   }
 
-  return { resize, draw, screenRect };
+  // Converte coordinate CSS (clientX/clientY) in coordinate mondo.
+  function screenToWorld(cx, cy) {
+    const rect = canvas.getBoundingClientRect();
+    const px = (cx - rect.left) * (canvas.width / rect.width);
+    const py = (cy - rect.top) * (canvas.height / rect.height);
+    return { x: (px - view.ox) / view.scale, y: (py - view.oy) / view.scale };
+  }
+
+  return { resize, draw, screenRect, screenToWorld };
 }

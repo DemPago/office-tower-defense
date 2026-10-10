@@ -48,7 +48,7 @@ app.tutorial = createTutorial({
 app.showTutorial = () => setTimeout(() => app.tutorial.start(renderer.screenRect), 150);
 app.initials = createInitials(app);
 app.flow = createFlow(app);
-setupControls(app);
+setupControls(app, $('cv'), renderer);
 
 // ─── Game loop ──────────────────────────────────────────────────
 
@@ -68,6 +68,7 @@ function frame(now) {
     run.fx.sounds.length = 0;
     if (run.phase === 'ally' && $('scr-cards').hidden) app.flow.onAllyPhase();
     if (run.phase === 'cards' && $('scr-cards').hidden) app.flow.onCardsPhase();
+    if (run.phase === 'bomb-placement' && $('scr-bombs').hidden) app.flow.onBombPhase();
     if (run.phase === 'over' && !app.overHandled) app.flow.onGameOver();
   }
   renderer.draw(run);

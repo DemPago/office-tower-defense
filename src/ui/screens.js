@@ -4,13 +4,14 @@ import { RARITY, cardPower, findCard } from '../data/cards.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
 import { ALLY_LEVELS, allyArc } from '../data/allies.js';
 import { HEROES, UNLOCK_WAVE, unlockedHeroes, heroStatsText } from '../data/heroes.js';
+import { bombMult, nextQuadro, canPlaceBomb, BOMB_MAX } from '../systems/bombs.js';
 import { weaponDef } from '../data/weapons.js';
 import { slotName } from '../systems/allies.js';
 import { fmt } from '../util.js';
 import { domAdvice } from './dom.js';
 
 const $ = id => document.getElementById(id);
-const SCREENS = ['scr-menu', 'scr-shop', 'scr-cards', 'scr-pause', 'scr-over', 'scr-board'];
+const SCREENS = ['scr-menu', 'scr-shop', 'scr-cards', 'scr-pause', 'scr-over', 'scr-board', 'scr-bombs'];
 
 export function show(id) {
   for (const s of SCREENS) $(s).hidden = s !== id;
@@ -77,6 +78,25 @@ export function showMenu(meta, portrait, onHero) {
   show('scr-menu');
 }
 
+
+export function updateBombUI(run) {
+  const q = nextQuadro(run);
+  const mult = bombMult(run);
+  const pct = run.bombPenalty * 5;
+  $('bomb-quadro-label').textContent = `QUADRO ${q}`;
+  $('bomb-mult-label').textContent = `💣 ×${mult}`;
+  $('bomb-penalty-val').textContent = `−${pct}%`;
+  $('bomb-count-val').textContent = run.bombPenalty;
+  const can = canPlaceBomb(run);
+  document.querySelector('.bombs-hint').textContent = can
+    ? 'Clicca sulla mappa per piazzare le bombe'
+    : `Limite raggiunto (${BOMB_MAX} bombe = stat al minimo)`;
+}
+
+export function showBombs(run) {
+  updateBombUI(run);
+  show('scr-bombs');
+}
 
 export function showShop(meta, onBuy) {
   $('shop-buoni').textContent = `🎫 ${fmt(meta.buoni)} buoni pasto`;

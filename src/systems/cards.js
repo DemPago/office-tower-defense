@@ -77,8 +77,13 @@ function applyCard(run, meta, card) {
   run.fx.sounds.push('pick');
   run.cardChoices = null;
   run.isHeavyMalus = false;
-  run.phase = 'break';
-  run.breakTimer = 1.5;
+  if (run.bombPending) {
+    delete run.bombPending;
+    run.phase = 'bomb-placement'; // piazza bombe prima del prossimo quadro
+  } else {
+    run.phase = 'break';
+    run.breakTimer = 1.5;
+  }
 }
 
 export function pickCard(run, meta, index) {

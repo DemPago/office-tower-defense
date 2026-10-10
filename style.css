@@ -669,3 +669,28 @@ h2 {
 #tutorial .tut-text { font-size: 9px; line-height: 1.8; color: var(--white); }
 #tutorial .tut-buttons { display: flex; justify-content: space-between; gap: 8px; }
 #tutorial .btn { min-width: 0; }
+
+/* Bomb placement overlay */
+.bombs-overlay {
+  background: rgba(10,8,6,0.55) !important; /* semi-trasparente: si vede la mappa */
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 24px;
+  pointer-events: none; /* i click passano al canvas */
+}
+.bombs-panel {
+  pointer-events: all; /* ma il pannello è cliccabile */
+  background: rgba(10,8,6,0.88);
+  border: 2px solid var(--hazard);
+  padding: 14px 20px;
+  border-radius: 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  min-width: 240px;
+}
+.bombs-quadro { font-family: var(--spray); font-size: 11px; color: var(--grey); margin: 0; }
+.bombs-mult   { font-family: var(--spray); font-size: 28px; color: var(--hazard); margin: 0; line-height: 1; }
+.bombs-hint   { font-size: 8px; color: var(--grey); margin: 0; }
+.bombs-stat   { font-size: 8px; color: var(--white); margin: 0; }
+.bombs-placed { font-size: 8px; color: var(--white); margin: 0; }
+.bombs-btns   { display: flex; gap: 8px; margin-top: 6px; }
+.btn.small    { font-size: 8px; padding: 4px 10px; }

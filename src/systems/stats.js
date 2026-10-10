@@ -60,13 +60,16 @@ export function computeStats(run, meta) {
   const W = weaponDef(run.weapon);
   const H = { dmg: 0, rate: 0, hp: 0, regen: 0, range: 0, manaRegen: 0, crit: 0, armor: 0, gold: 0, manaMax: 0, ...heroDef(run.hero).stats };
 
+  // Penalità bombe: ogni bomba piazzata = −5% a tutto (min 5%)
+  const bp = Math.max(0.05, 1 - (run.bombPenalty || 0) * 0.05);
+
   return {
-    dmg: (1 + H.dmg) * W.dmg * BASE.dmg * (1 + u.dmg) * (1 + c.dmg) * (1 + m.dmg) * (1 + auraDmg),
-    rate: Math.min(12 * W.rate, (1 + H.rate) * W.rate * BASE.rate * (1 + u.rate + c.rate + m.rate + auraRate)),
+    dmg: bp * (1 + H.dmg) * W.dmg * BASE.dmg * (1 + u.dmg) * (1 + c.dmg) * (1 + m.dmg) * (1 + auraDmg),
+    rate: bp * Math.min(12 * W.rate, (1 + H.rate) * W.rate * BASE.rate * (1 + u.rate + c.rate + m.rate + auraRate)),
     allyRateMult: 1 + auraRate,
-    range: Math.min(260, (1 + H.range) * W.range * BASE.range * (1 + u.range + c.range) * (1 + (run.wave || 0) * 0.003)),
-    maxHp: (BASE.hp + u.hpFlat + c.hpFlat) * (1 + c.hp + m.hp) * (1 + H.hp),
-    regen: (BASE.regen + u.regen + c.regen) * (1 + H.regen),
+    range: bp * Math.min(260, (1 + H.range) * W.range * BASE.range * (1 + u.range + c.range) * (1 + (run.wave || 0) * 0.003)),
+    maxHp: bp * (BASE.hp + u.hpFlat + c.hpFlat) * (1 + c.hp + m.hp) * (1 + H.hp),
+    regen: bp * (BASE.regen + u.regen + c.regen) * (1 + H.regen),
     armor: Math.min(0.7, c.armor + H.armor),
     crit: Math.min(0.8, BASE.crit + c.crit + H.crit),
     critMult: BASE.critMult + c.critMult,

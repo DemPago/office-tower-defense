@@ -13,8 +13,8 @@ export const TOWER = { x: 320, y: 320, radius: 26 };
 // Distanza dalla torre a cui compaiono i nemici (uguale per tutti gli schermi,
 // così la difficoltà non dipende dalla grandezza del monitor).
 export const SPAWN_RADIUS = 330;
-// Cortile fortificato intorno al palazzo: se un nemico ci entra, i colleghi perdono vita.
-export const YARD = { x: TOWER.x - 112, y: TOWER.y - 104, w: 224, h: 200 };
+// Cortile ridotto: zona critica subito intorno al palazzo.
+export const YARD = { x: TOWER.x - 50, y: TOWER.y - 46, w: 100, h: 92 };
 
 export function createRun(meta) {
   const mb = metaBonuses(meta);
@@ -22,8 +22,8 @@ export function createRun(meta) {
     meta,                    // progressi permanenti (servono per ricalcolare le statistiche)
     hero: unlockedHeroes(meta).includes(meta.hero) ? meta.hero : 'peppe', // personaggio sul tetto
     weapon: null,            // arma della torre: quella del personaggio (vedi sotto)
-    phase: 'break',          // 'break' (pausa fra ondate) | 'wave' | 'ally' | 'cards' | 'over'
-    breakTimer: 2,           // secondi prima della prossima ondata
+    phase: 'bomb-placement',  // 'break' | 'wave' | 'ally' | 'cards' | 'over' | 'bomb-placement'
+    breakTimer: 1.5,         // secondi prima della prossima ondata
     wave: 0,
     time: 0,
     gold: 20 + mb.startGold,
@@ -43,6 +43,8 @@ export function createRun(meta) {
     tower: { hp: 0, cooldown: 0, hitFlash: 0 },
     stats: null,
     enemies: [],
+    bombs: [],               // mine piazzate dal giocatore
+    bombPenalty: 0,          // quante bombe piazzate (ognuna = −5% a tutte le stat)
     shots: [],               // colpi della torre
     enemyShots: [],          // colpi dei nemici a distanza
     spawnQueue: [],

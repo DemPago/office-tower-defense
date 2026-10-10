@@ -6,6 +6,7 @@ import { runReward } from '../systems/game.js';
 import { pickCard, reroll } from '../systems/cards.js';
 import { pickAlly } from '../systems/allies.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
+import { removeBomb } from '../systems/bombs.js';
 import * as screens from '../ui/screens.js';
 import { getTop } from '../leaderboard.js';
 import { play } from '../audio.js';
@@ -41,6 +42,12 @@ export function createFlow(app) {
     if (!menuAnim) menuAnim = startMenuAnimation($('menu-bg'));
   }
 
+  function onBombPhase() {
+    const { run } = app;
+    if (!run || run.phase !== 'bomb-placement') return;
+    screens.showBombs(run);
+  }
+
   function newRun() {
     if (menuAnim) { menuAnim.stop(); menuAnim = null; }
     app.run = createRun(meta);
@@ -52,6 +59,8 @@ export function createFlow(app) {
     if (!meta.tutorialDone || app.wantTutorial) {
       app.wantTutorial = false;
       app.showTutorial();
+    } else {
+      onBombPhase(); // piazza bombe prima della prima ondata
     }
   }
 
@@ -99,8 +108,10 @@ export function createFlow(app) {
     screens.showCards(run,
       i => {
         const result = pickCard(run, meta, i);
-        if (result === true) screens.hideAll();
-        else if (result === 'discard') onCardsPhase(); // ri-mostra in modalità scarto
+        if (result === true) {
+          screens.hideAll();
+          if (run.phase === 'bomb-placement') onBombPhase();
+        } else if (result === 'discard') onCardsPhase(); // ri-mostra in modalità scarto
       },
       () => { if (reroll(run)) onCardsPhase(); });
   }
@@ -136,6 +147,20 @@ export function createFlow(app) {
     ? `Sono stato licenziato all'ondata ${app.run.wave} di Office Tower Defense 🏢💥 Riesci a fare meglio?`
     : 'Prova Office Tower Defense 🏢');
 
+  $('btn-bombs-ok').addEventListener('click', () => {
+    const { run } = app;
+    if (!run || run.phase !== 'bomb-placement') return;
+    run.phase = 'break';
+    run.breakTimer = 1.5;
+    screens.hideAll();
+  });
+  $('btn-bombs-remove').addEventListener('click', () => {
+    const { run } = app;
+    if (!run || run.phase !== 'bomb-placement' || !run.bombs.length) return;
+    removeBomb(run, run.bombs.length - 1);
+    screens.updateBombUI(run);
+  });
+
   $('btn-play').addEventListener('click', newRun);
   $('btn-howto').addEventListener('click', () => { app.wantTutorial = true; newRun(); });
   $('btn-shop').addEventListener('click', openShop);
@@ -148,5 +173,5 @@ export function createFlow(app) {
   $('btn-retry').addEventListener('click', newRun);
   $('btn-over-menu').addEventListener('click', toMenu);
 
-  return { toMenu, setPaused, onCardsPhase, onAllyPhase, onGameOver };
+  return { toMenu, setPaused, onCardsPhase, onAllyPhase, onGameOver, onBombPhase };
 }

@@ -28,7 +28,7 @@ export const ALLY_LEVEL_MULT = [1, 1.5, 2.2, 3.2, 4.5];
 // Ogni collega difende uno SPICCHIO centrato sulla sua postazione: 90° al livello 1,
 // e ogni promozione lo allarga di altri 90° (dal livello 4 copre tutto il giro).
 export const ALLY_SLOTS = [45, 135, 225, 315, 0, 180];
-export const ALLY_RING = 80;
+export const ALLY_RING = 200; // postazioni in midfield, tra i nemici
 export function allyArc(level) {
   return Math.min(360, 90 * level);
 }
