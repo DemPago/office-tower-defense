@@ -92,6 +92,21 @@ function drawWindow(p, x, y, kind, flick, i) {
   }
 }
 
+// Tetto pagoda: corpo rosso + gronde che si alzano agli angoli
+function drawRoof(p, x, y, w, h) {
+  p(x, y + h - 2, w, 3, '#0d0508');                          // cornice nera
+  p(x + 2, y + 1, w - 4, h - 3, '#c41c1c');                  // corpo
+  p(x + 2, y + 1, w - 4, 2, '#e63030');                      // highlight cima
+  p(x + 2, y + h - 4, w - 4, 2, '#8c1010');                  // ombra basso
+  // Gronde curve: si alzano verso l'esterno angolo per angolo
+  for (let i = 1; i <= 5; i++) {
+    p(x - i * 2,         y + h - 1 - i, i * 2, 2, '#c41c1c');
+    p(x + w - 1 + i * 0, y + h - 1 - i, i * 2, 2, '#c41c1c');
+  }
+  p(x - 12, y + h - 8, 4, 3, '#e63030'); p(x + w + 8, y + h - 8, 4, 3, '#e63030'); // punte
+  p(x - 14, y + h - 11, 3, 4, '#c41c1c'); p(x + w + 11, y + h - 11, 3, 4, '#c41c1c');
+}
+
 function drawCastle(ctx, assets, run, time) {
   const dead = run && run.phase === 'over';
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
@@ -101,48 +116,76 @@ function drawCastle(ctx, assets, run, time) {
   ctx.scale(0.5, 0.5);
   const p = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
   const W = TW, H = TH;
-  // Base / ground floor
-  p(18, H * 0.7, W - 36, H * 0.3, '#3a2410');
-  p(18, H * 0.7, W - 36, 3, '#6b4820');
-  // Middle tier
-  p(26, H * 0.42, W - 52, H * 0.3, '#2e1c0e');
-  p(26, H * 0.42, W - 52, 3, '#5c3c18');
-  // Top tier
-  p(36, H * 0.15, W - 72, H * 0.28, '#241408');
-  p(36, H * 0.15, W - 72, 3, '#4a3010');
-  // Roof 1 (bottom, widest) - red
-  p(-14, H * 0.68, W + 28, 5, '#0d0508');
-  p(-14, H * 0.64, W + 28, 10, '#c41c1c');
-  p(-16, H * 0.61, W + 32, 6, '#8c1010');
-  p(-14, H * 0.60, W + 28, 3, '#e63030');
-  // Roof 2 (middle)
-  p(-4, H * 0.40, W + 8, 5, '#0d0508');
-  p(-4, H * 0.36, W + 8, 10, '#c41c1c');
-  p(-6, H * 0.33, W + 12, 6, '#8c1010');
-  p(-4, H * 0.32, W + 8, 3, '#e63030');
-  // Roof 3 (top)
-  p(8, H * 0.13, W - 16, 4, '#0d0508');
-  p(8, H * 0.09, W - 16, 9, '#c41c1c');
-  p(6, H * 0.06, W - 12, 5, '#8c1010');
-  p(8, H * 0.05, W - 16, 3, '#e63030');
-  // Gold finial
-  p(W / 2 - 2, -30, 4, 36, '#a07808');
-  p(W / 2 - 6, -22, 12, 5, '#f2b705');
-  p(W / 2 - 4, -32, 8, 4, '#d4a000');
-  p(W / 2 - 2, -38, 4, 8, '#f2b705');
-  p(W / 2 - 1, -42, 2, 5, '#a07808');
-  // Shoji windows — ground floor (2 × 2)
-  for (let r = 0; r < 2; r++) {
-    for (let c = 0; c < 2; c++) {
-      const wx = 24 + c * 32, wy = Math.round(H * 0.74) + r * 18;
-      p(wx - 1, wy - 1, 22, 18, '#0d0508');
-      const lit = !dead && Math.sin(time * 4 + r * 1.7 + c) > 0.88;
-      p(wx, wy, 20, 16, lit ? '#9aa05a' : '#c8a060');
-      p(wx + 5, wy, 1, 16, '#7a6030'); p(wx + 10, wy, 1, 16, '#7a6030'); p(wx + 15, wy, 1, 16, '#7a6030');
-      p(wx, wy + 5, 20, 1, '#7a6030'); p(wx, wy + 10, 20, 1, '#7a6030');
-    }
+
+  // ── Ciliegio pixel art (a sinistra del castello) ──
+  p(-20, Math.round(H * 0.55), 5, Math.round(H * 0.45), '#5a3a22');   // tronco
+  p(-18, Math.round(H * 0.38), 3, Math.round(H * 0.2),  '#5a3a22');   // ramo
+  const blossoms = [[-30,0.18],[-18,0.14],[-12,0.24],[-26,0.30],[-8,0.21],[-22,0.38]];
+  for (const [bx, by] of blossoms) {
+    const gy = Math.round(H * by);
+    p(bx - 7, gy - 3, 14, 7, 'rgba(255,140,170,0.72)');
+    p(bx - 4, gy - 6, 8,13, 'rgba(255,140,170,0.60)');
+    p(bx - 1, gy - 1, 2, 2, '#fff8f8');
   }
-  // Hit flash
+
+  // ── Piano terra ──
+  const f1y = Math.round(H * 0.65), f1h = Math.round(H * 0.35);
+  p(12, f1y, W - 24, f1h, '#3a2010');
+  p(12, f1y, W - 24, 2, '#7a5428');                     // highlight
+  for (let c = 0; c < 3; c++) p(18 + c * 22, f1y, 4, f1h, '#251508'); // colonne
+  // Finestre shoji (3)
+  for (let c = 0; c < 3; c++) {
+    const wx = 16 + c * 22, wy = f1y + 8;
+    p(wx - 1, wy - 1, 16, 18, '#0d0508');
+    const lit = !dead && Math.sin(time * 3.5 + c * 1.8) > 0.72;
+    p(wx, wy, 14, 16, lit ? '#a0b060' : '#c89850');
+    p(wx + 4, wy, 1, 16, '#7a6030'); p(wx + 9, wy, 1, 16, '#7a6030');
+    p(wx, wy + 6, 14, 1, '#7a6030'); p(wx, wy + 11, 14, 1, '#7a6030');
+  }
+  // Porta centrale
+  p(W/2 - 8, f1y + f1h - 22, 16, 22, '#1a0a04');
+  p(W/2 - 7, f1y + f1h - 21, 14, 20, '#251208');
+  p(W/2 - 4, f1y + f1h - 22, 8, 6, '#3a1a08');         // arco porta
+  drawRoof(p, -16, f1y - 16, W + 32, 18);
+
+  // ── Piano medio ──
+  const f2y = Math.round(H * 0.37), f2h = Math.round(H * 0.29);
+  p(24, f2y, W - 48, f2h, '#2e1c0e');
+  p(24, f2y, W - 48, 2, '#5c3c18');
+  for (let c = 0; c < 2; c++) p(30 + c * 24, f2y, 3, f2h, '#1e1008');
+  // Finestre (2)
+  for (let c = 0; c < 2; c++) {
+    const wx = 28 + c * 26, wy = f2y + 7;
+    p(wx - 1, wy - 1, 14, 13, '#0d0508');
+    const lit2 = !dead && Math.sin(time * 4 + c * 2.1 + 0.8) > 0.75;
+    p(wx, wy, 12, 11, lit2 ? '#90a050' : '#b89050');
+    p(wx + 4, wy, 1, 11, '#7a6030'); p(wx + 8, wy, 1, 11, '#7a6030');
+    p(wx, wy + 4, 12, 1, '#7a6030');
+  }
+  drawRoof(p, -4, f2y - 14, W + 8, 16);
+
+  // ── Piano cima ──
+  const f3y = Math.round(H * 0.12), f3h = Math.round(H * 0.26);
+  p(38, f3y, W - 76, f3h, '#241408');
+  p(38, f3y, W - 76, 2, '#4a3010');
+  // Finestra centrale
+  const wx3 = W/2 - 7, wy3 = f3y + 6;
+  p(wx3 - 1, wy3 - 1, 14, 11, '#0d0508');
+  const lit3 = !dead && Math.sin(time * 5 + 1.2) > 0.65;
+  p(wx3, wy3, 12, 9, lit3 ? '#a0b860' : '#c8a060');
+  p(wx3 + 4, wy3, 1, 9, '#8a6030'); p(wx3 + 8, wy3, 1, 9, '#8a6030');
+  p(wx3, wy3 + 4, 12, 1, '#8a6030');
+  drawRoof(p, 14, f3y - 12, W - 28, 14);
+
+  // ── Pinnacolo dorato + banderina rossa ──
+  p(W/2 - 2, -36, 4, 50, '#a07808');
+  p(W/2 - 7, -20, 14, 5, '#f2b705');
+  p(W/2 - 5, -28, 10, 3, '#d4a000');
+  p(W/2 - 2, -38, 4, 6, '#f2b705');
+  p(W/2 - 1, -42, 2, 6, '#a07808');
+  for (let i = 0; i < 6; i++) p(W/2 + 1, -42 + i, 7 - i, 1, i < 3 ? '#d7263d' : '#e85550');
+
+  // ── Hit flash ──
   if (run && run.tower.hitFlash > 0) {
     const fi = run.tower.hitFlash / 0.22;
     p(-3, -3, W + 6, H + 6, `rgba(215,38,61,${(0.2 + fi * 0.45).toFixed(2)})`);
