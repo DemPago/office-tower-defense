@@ -69,25 +69,33 @@
   <!-- Schermate a tutto schermo -->
   <section id="scr-menu" class="overlay full" hidden>
     <canvas id="menu-bg" aria-hidden="true"></canvas>
-    <h1>OFFICE<br><span>TOWER</span><br>DEFENSE</h1>
-    <p class="tag">Difendi la tua scrivania dalla gerarchia aziendale.</p>
-    <p id="menu-best"></p>
-    <p id="menu-buoni" class="buoni"></p>
-    <div id="hero-pick">
-      <p class="dim">Scegli il tuo personaggio</p>
+
+    <div id="menu-left">
+      <div class="menu-brand">
+        <span class="brand-label">— OFFICE —</span>
+        <h1>TOWER<br><span>DEFENSE</span></h1>
+        <p class="tag">Difendi la tua scrivania<br>dalla gerarchia aziendale.</p>
+      </div>
+      <p id="menu-best"></p>
+      <p id="menu-buoni" class="buoni"></p>
+      <button id="btn-play" class="btn big">▶ GIOCA</button>
+      <div class="menu-sec-btns">
+        <button id="btn-shop" class="btn">🏢 Ufficio del personale</button>
+        <button id="btn-board" class="btn">🏆 Classifica</button>
+        <button id="btn-howto" class="btn ghost">❓ Come si gioca</button>
+      </div>
+      <div class="support">
+        <a id="kofi" class="kofi-button" href="https://ko-fi.com/dem420156" target="_blank" rel="noopener noreferrer">☕ Offrimi un caffè</a>
+        <p class="dim">Ti piace? Fallo girare:</p>
+        <div id="share-menu" class="share-row"></div>
+      </div>
+    </div>
+
+    <div id="menu-right">
+      <p class="dim menu-pick-label">Scegli il tuo personaggio</p>
       <div id="hero-list"></div>
       <p id="hero-desc"></p>
     </div>
-    <button id="btn-play" class="btn big">▶ GIOCA</button>
-    <button id="btn-shop" class="btn">🏢 Ufficio del personale</button>
-    <button id="btn-board" class="btn">🏆 Classifica</button>
-    <button id="btn-howto" class="btn ghost">❓ Come si gioca</button>
-    <div class="support">
-      <a id="kofi" class="kofi-button" href="https://ko-fi.com/dem420156" target="_blank" rel="noopener noreferrer">☕ Offrimi un caffè</a>
-      <p class="dim">Ti piace? Fallo girare:</p>
-      <div id="share-menu" class="share-row"></div>
-    </div>
-    <p class="help">La torre spara da sola.<br>Compra potenziamenti con l'oro 💰,<br>scegli una carta dopo ogni ondata,<br>usa i poteri con i tasti 1-4.</p>
   </section>
 
   <section id="scr-shop" class="overlay full" hidden>
