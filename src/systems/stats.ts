@@ -6,20 +6,21 @@ import { ALLIES } from '../data/allies.js';
 import { MANA } from '../data/abilities.js';
 import { weaponDef } from '../data/weapons.js';
 import { heroDef } from '../data/heroes.js';
+import type { Run, Meta, Stats, BonusSet } from '../types.js';
 
 // La torre senza nessun bonus.
 export const BASE = {
-  dmg: 10,         // danno per colpo
-  rate: 1.4,       // colpi al secondo
-  range: 145,      // gittata in pixel (cresce lentamente con le ondate)
-  hp: 150,         // vita massima
-  regen: 1,        // vita recuperata al secondo
-  crit: 0.05,      // probabilità di critico
-  critMult: 2,     // moltiplicatore del critico
-  shotSpeed: 380,  // velocità dei proiettili
+  dmg: 10,
+  rate: 1.4,
+  range: 145,
+  hp: 150,
+  regen: 1,
+  crit: 0.05,
+  critMult: 2,
+  shotSpeed: 380,
 };
 
-function emptyBonus() {
+function emptyBonus(): BonusSet {
   return {
     dmg: 0, rate: 0, range: 0, hp: 0, hpFlat: 0, regen: 0, armor: 0,
     crit: 0, critMult: 0, multishot: 0, bounce: 0, aoe: 0, slow: 0, dot: 0,
@@ -29,7 +30,7 @@ function emptyBonus() {
   };
 }
 
-export function metaBonuses(meta) {
+export function metaBonuses(meta: Meta): BonusSet {
   const m = emptyBonus();
   for (const def of META_UPGRADES) {
     const L = meta.levels[def.id] || 0;
@@ -38,7 +39,7 @@ export function metaBonuses(meta) {
   return m;
 }
 
-export function computeStats(run, meta) {
+export function computeStats(run: Run, meta: Meta): Stats {
   const u = emptyBonus();
   for (const def of UPGRADES) {
     const L = run.upgrades[def.id];
@@ -52,12 +53,12 @@ export function computeStats(run, meta) {
   // Bonus dei maghi (rinforzi con aura): valgono per torre e colleghi.
   let auraRate = 0, auraDmg = 0;
   for (const ally of run.allies) {
-    const def = ALLIES.find(a => a.id === ally.id);
+    const def = ALLIES.find((a: { id: string }) => a.id === ally.id);
     if (def.aura === 'rate') auraRate += def.auraPer * ally.level;
     if (def.aura === 'dmg') auraDmg += def.auraPer * ally.level;
   }
 
-  const W = weaponDef(run.weapon);
+  const W = weaponDef(run.weapon ?? '');
   const H = { dmg: 0, rate: 0, hp: 0, regen: 0, range: 0, manaRegen: 0, crit: 0, armor: 0, gold: 0, manaMax: 0, ...heroDef(run.hero).stats };
 
   // Penalità bombe: ogni bomba piazzata = −5% a tutto (min 5%)
@@ -82,9 +83,9 @@ export function computeStats(run, meta) {
     dot: c.dot,
     goldMult: 1 + c.gold + m.gold + H.gold,
     healOnKill: c.healOnKill,
-    manaMult: Math.max(0.4, 1 - c.cdr), // costo dei poteri (carta Manuale ITIL)
-    manaRegen: (MANA.regen + c.manaRegen) * (1 + H.manaRegen), // mana al secondo
-    manaMax: c.manaMax + H.manaMax,      // mana massimo in più
+    manaMult: Math.max(0.4, 1 - c.cdr),
+    manaRegen: (MANA.regen + c.manaRegen) * (1 + H.manaRegen),
+    manaMax: c.manaMax + H.manaMax,
     manaOnKill: c.manaOnKill,
     wallHp: c.wallHp,
     wallThorns: c.wallThorns,

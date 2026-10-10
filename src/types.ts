@@ -164,6 +164,19 @@ export interface Shot {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type EnemyShot = Record<string, any>;
 
+// ─── Bonus accumulati (usati da stats.ts e dalle carte) ─────────────────────
+
+export interface BonusSet {
+  dmg: number; rate: number; range: number;
+  hp: number; hpFlat: number; regen: number; armor: number;
+  crit: number; critMult: number;
+  multishot: number; bounce: number; aoe: number; slow: number; dot: number;
+  gold: number; healOnKill: number; cdr: number;
+  startGold: number; rerolls: number;
+  manaRegen: number; manaMax: number; manaOnKill: number;
+  wallHp: number; wallThorns: number; wallReflect: number; wallRegen: number;
+}
+
 // ─── Carte ───────────────────────────────────────────────────────────────────
 
 export interface CardPick {
@@ -171,8 +184,22 @@ export interface CardPick {
   m: number;  // power multiplier al momento della scelta
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type CardDef = Record<string, any>;
+export interface CardDef {
+  id: string;
+  icon: string;
+  name: string;
+  rarity: string;
+  max: number;
+  linear?: boolean;
+  type?: 'use';
+  malus?: boolean;
+  heavy?: boolean;
+  desc: (m: number) => string;
+  mod: (c: BonusSet, m: number) => void;
+  onPick?: (run: Run) => void;
+  use?: (run: Run) => void;
+  reward?: (wave: number) => string;
+}
 
 // ─── Alleati ─────────────────────────────────────────────────────────────────
 
