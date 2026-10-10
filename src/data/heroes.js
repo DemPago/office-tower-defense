@@ -16,7 +16,8 @@ export const HEROES = [
   { id: 'frank',   name: 'Frank',      weapon: 'crossbow',  stats: { range: 0.2, crit: 0.1, hp: -0.2, regen: -0.15 }, desc: 'Alto, sottile, pericolosamente preciso' },
   { id: 'cirios',  name: 'Cirios',     weapon: 'daggers',   stats: { gold: 0.3, armor: 0.1, rate: -0.15, range: -0.1 }, desc: 'Una fattura in mano vale più di una spada' },
 ];
-export const START_HEROES = ['peppe', 'dem'];
+// Sempre disponibili — i 7 personaggi originali
+const BASE_HEROES = ['peppe', 'dem', 'nando', 'tony', 'vanessa', 'clara', 'pesce'];
 export const UNLOCK_WAVE = 60;
 
 export function heroDef(id) {
@@ -24,15 +25,16 @@ export function heroDef(id) {
 }
 
 export function unlockedHeroes(meta) {
-  return HEROES.map(h => h.id);
+  const extra = (meta.heroes || []).filter(id => !BASE_HEROES.includes(id));
+  return [...BASE_HEROES, ...extra];
 }
 
-// Sblocca il prossimo personaggio (se ce n'è ancora uno). Restituisce quello nuovo o null.
+// Sblocca il prossimo personaggio non ancora disponibile (solo quelli oltre i 7 base).
 export function unlockNextHero(meta) {
   const have = unlockedHeroes(meta);
   const next = HEROES.find(h => !have.includes(h.id));
   if (!next) return null;
-  meta.heroes = [...have, next.id];
+  meta.heroes = [...(meta.heroes || []), next.id];
   return next;
 }
 
