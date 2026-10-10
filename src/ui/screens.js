@@ -95,6 +95,37 @@ export function updateBombUI(run) {
     : left === 0 ? 'Bombe esaurite per questo quadro' : `Limite stat raggiunto`;
 }
 
+// Sezione "carte giocabili" nella schermata carte: carte usabili dalla mano.
+export function updateHandPlayable(run, onPlay, onSell) {
+  const box = $('hand-playable');
+  if (!box) return;
+  const list = $('hand-play-list');
+  if (run.discarding || run.isHeavyMalus) { box.hidden = true; return; }
+  const playable = run.cardPicks
+    .map((pick, i) => ({ pick, i, def: findCard(pick.id) }))
+    .filter(({ def }) => def && def.type === 'use');
+  if (!playable.length) { box.hidden = true; return; }
+  box.hidden = false;
+  list.innerHTML = '';
+  for (const { pick, i, def } of playable) {
+    const row = document.createElement('div');
+    row.className = 'hc-playable';
+    row.innerHTML = `<span class="ico">${def.icon}</span><span class="nm">${def.name}<br><small>${def.desc(pick.m)}</small></span>`;
+    const playBtn = document.createElement('button');
+    playBtn.className = 'hc-play-btn';
+    playBtn.textContent = '▶ Gioca';
+    playBtn.addEventListener('click', () => onPlay(i));
+    const sellBtn = document.createElement('button');
+    sellBtn.className = 'hc-sell-btn';
+    sellBtn.textContent = '💸';
+    sellBtn.title = 'Vendi: +15% vita, +25 mana';
+    sellBtn.addEventListener('click', () => onSell(i));
+    row.appendChild(playBtn);
+    row.appendChild(sellBtn);
+    list.appendChild(row);
+  }
+}
+
 export function showBombs(run) {
   updateBombUI(run);
   show('scr-bombs');

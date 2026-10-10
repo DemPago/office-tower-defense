@@ -1,6 +1,7 @@
 // Scelta delle carte fra un'ondata e l'altra.
 import { CARDS, MALUS_CARDS, HEAVY_MALUS_CARDS, RARITY, cardPower, MAX_HAND } from '../data/cards.js';
 import { refreshStats } from './economy.js';
+import { maxMana } from '../data/abilities.js';
 
 // Estrae una carta dal mazzo, pesata per rarità.
 function draw(pool) {
@@ -79,6 +80,39 @@ function applyCard(run, meta, card) {
   run.isHeavyMalus = false;
   run.phase = 'break';
   run.breakTimer = 1.5;
+}
+
+// Gioca una carta usabile dalla mano (effetto immediato, poi sparisce).
+export function playCard(run, meta, handIndex) {
+  const pick = run.cardPicks[handIndex];
+  if (!pick) return false;
+  const card = findCard(pick.id);
+  if (!card || card.type !== 'use') return false;
+  card.use(run);
+  run.tower.hp = Math.min(run.stats.maxHp, run.tower.hp);
+  run.mana = Math.min(maxMana(run), run.mana);
+  run.cardPicks.splice(handIndex, 1);
+  if (run.cards[pick.id] > 0) run.cards[pick.id]--;
+  refreshStats(run, meta);
+  run.fx.sounds.push('pick');
+  return card;
+}
+
+// Vende una carta dalla mano: rimuove il bonus e dà HP + mana.
+export function sellCard(run, meta, handIndex) {
+  const pick = run.cardPicks[handIndex];
+  if (!pick) return null;
+  const card = findCard(pick.id);
+  if (!card) return null;
+  const hp = Math.round(run.stats.maxHp * 0.15);
+  const mana = 25;
+  run.cardPicks.splice(handIndex, 1);
+  if (run.cards[pick.id] > 0) run.cards[pick.id]--;
+  refreshStats(run, meta);
+  run.tower.hp = Math.min(run.stats.maxHp, run.tower.hp + hp);
+  run.mana = Math.min(maxMana(run), run.mana + mana);
+  run.fx.sounds.push('pick');
+  return { hp, mana, card };
 }
 
 export function pickCard(run, meta, index) {

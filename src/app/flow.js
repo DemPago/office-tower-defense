@@ -3,7 +3,7 @@
 import { createRun } from '../state.js';
 import { saveMeta } from '../save.js';
 import { runReward } from '../systems/game.js';
-import { pickCard, reroll } from '../systems/cards.js';
+import { pickCard, reroll, playCard, sellCard } from '../systems/cards.js';
 import { pickAlly } from '../systems/allies.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
 import { removeBomb, resetBombsLeft } from '../systems/bombs.js';
@@ -113,6 +113,9 @@ export function createFlow(app) {
         else if (result === 'discard') onCardsPhase();
       },
       () => { if (reroll(run)) onCardsPhase(); });
+    screens.updateHandPlayable(run,
+      i => { if (playCard(run, meta, i)) onCardsPhase(); },
+      i => { if (sellCard(run, meta, i)) onCardsPhase(); });
   }
 
   function onAllyPhase() {

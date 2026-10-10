@@ -7,6 +7,7 @@ import { loadMeta, saveMeta } from './save.js';
 import { update } from './systems/game.js';
 import { buyUpgrade } from './systems/economy.js';
 import { useAbility } from './systems/abilities.js';
+import { sellCard } from './systems/cards.js';
 import { loadAssets } from './render/assets.js';
 import { createRenderer } from './render/world.js';
 import { createHud } from './ui/hud.js';
@@ -39,6 +40,11 @@ const renderer = createRenderer($('cv'), app.assets);
 const hud = createHud({
   onBuy: id => { if (app.run && buyUpgrade(app.run, app.meta, id)) play('buy'); },
   onAbility: id => app.run && !app.paused && useAbility(app.run, id),
+  onSell: i => {
+    if (!app.run) return;
+    const result = sellCard(app.run, app.meta, i);
+    if (result) play('buy');
+  },
 });
 app.tutorial = createTutorial({
   onPause: () => { app.paused = true; },

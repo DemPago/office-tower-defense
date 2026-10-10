@@ -42,6 +42,11 @@ export const CARDS = [
   { id: 'steel',     icon: '🛡️', name: "Lastre d'acciaio",    rarity: 'epic',   max: 2,  linear: true, desc: m => `Muro: +${pct(0.4, m)}% vita e respinge il ${pct(0.35, m)}% dei colpi dei cecchini`, mod: (c, m) => { c.wallHp += 0.4 * m; c.wallReflect += 0.35 * m; } },
   { id: 'selfrepair',icon: '🔧', name: 'Muro autoriparante',  rarity: 'rare',   max: 3,  linear: true, desc: m => `Il muro si ripara: ${num(2, m)}% vita/s in combattimento`, mod: (c, m) => { c.wallRegen += 0.02 * m; } },
   { id: 'scrum',     icon: '📋', name: 'Scrum Master',        rarity: 'epic',   max: 3,  linear: true, desc: m => `+${pct(0.6, m)}% danno e +${pct(0.15, m)}% velocità`, mod: (c, m) => { c.dmg += 0.6 * m; c.rate += 0.15 * m; } },
+  // ── Carte usabili: si tengono in mano e si giocano prima di una wave ──
+  { id: 'medkit',   icon: '🩹', name: 'Kit di pronto soccorso', type: 'use', rarity: 'rare',   max: 3, desc: () => 'Cura il 25% della vita massima al momento giusto',     mod: () => {}, use: run => { run.tower.hp += run.stats.maxHp * 0.25; } },
+  { id: 'redbull',  icon: '🥤', name: 'Red Bull',               type: 'use', rarity: 'common', max: 3, desc: () => 'Ripristina 60 mana al momento giusto',                  mod: () => {}, use: run => { run.mana += 60; } },
+  { id: 'pizza',    icon: '🍕', name: 'Pizza del team',         type: 'use', rarity: 'rare',   max: 2, desc: () => 'Cura il 15% vita e ripristina 30 mana',                 mod: () => {}, use: run => { run.tower.hp += run.stats.maxHp * 0.15; run.mana += 30; } },
+  { id: 'expenses', icon: '🚕', name: 'Note spese',             type: 'use', rarity: 'epic',   max: 2, desc: () => 'Incassa subito 20 × ondata in oro',                     mod: () => {}, use: run => { run.gold += 20 * run.wave; } },
 ];
 
 // Malus pesanti: dopo ogni ondata zombie (7, 17, 27…) le 3 scelte sono TUTTE negative.

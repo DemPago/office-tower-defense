@@ -137,6 +137,47 @@ button:disabled { cursor: default; }
 .hc .nm  { font-size: 5px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50px; }
 .hc.malus  { border-color: var(--red); }
 .hc.heavy  { border-color: var(--red); background: rgba(215,38,61,0.18); }
+.hc.use    { border-color: var(--cyan); }
+.hc-sell {
+  font-size: 8px; line-height: 1; background: none; border: none; cursor: pointer;
+  padding: 0; color: var(--concrete); margin-top: 1px;
+}
+.hc-sell:hover { color: var(--hazard); }
+
+/* ─── Carte giocabili nella fase carte ─────────────────────── */
+#hand-playable {
+  width: 100%; max-width: 640px;
+  background: rgba(45,226,230,0.06);
+  border: 1px solid rgba(45,226,230,0.3);
+  border-radius: 4px;
+  padding: 8px 10px 6px;
+  margin-bottom: 10px;
+}
+.hand-play-title { font-size: 6px; color: var(--cyan); margin-bottom: 6px; }
+#hand-play-list  { display: flex; gap: 6px; flex-wrap: wrap; }
+.hc-playable {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--asphalt);
+  border: 1px solid var(--cyan);
+  border-radius: 3px;
+  padding: 5px 8px;
+  font-family: var(--font); font-size: 6px; color: var(--white);
+}
+.hc-playable .ico { font-size: 18px; }
+.hc-playable .nm  { font-size: 5px; line-height: 1.5; }
+.hc-play-btn {
+  font-family: var(--font); font-size: 6px;
+  background: var(--cyan); color: var(--ink);
+  border: none; cursor: pointer; padding: 3px 5px;
+  white-space: nowrap;
+}
+.hc-play-btn:hover { background: #7ff6f9; }
+.hc-sell-btn {
+  font-family: var(--font); font-size: 8px;
+  background: none; border: none; cursor: pointer;
+  color: var(--concrete); padding: 2px;
+}
+.hc-sell-btn:hover { color: var(--hazard); }
 
 /* ─── Pannello in basso ─────────────────────────────────────── */
 #panel {

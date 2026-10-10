@@ -66,7 +66,7 @@ function withTip(btn, content, onActivate) {
 
 const tipTitle = (icon, name, extra = '') => `<b><span>${icon} ${name}</span><span class="tip-extra">${extra}</span></b>`;
 
-export function createHud({ onBuy, onAbility }) {
+export function createHud({ onBuy, onAbility, onSell }) {
   let lastRun = null;
 
   const upgradeEls = {};
@@ -151,7 +151,7 @@ export function createHud({ onBuy, onAbility }) {
 
   function updateHand(run) {
     if (!run || run.phase === 'over') { handEl.hidden = true; return; }
-    const hash = run.cardPicks.map(p => p.id).join(',');
+    const hash = run.cardPicks.map(p => p.id).join(',') + '|' + run.cardPicks.length;
     if (hash === lastHandHash) return;
     lastHandHash = hash;
     handEl.innerHTML = '';
@@ -161,15 +161,21 @@ export function createHud({ onBuy, onAbility }) {
     lbl.className = 'hand-label';
     lbl.textContent = 'MANO:';
     handEl.appendChild(lbl);
-    for (const pick of run.cardPicks) {
+    run.cardPicks.forEach((pick, i) => {
       const def = findCard(pick.id);
-      if (!def) continue;
+      if (!def) return;
       const el = document.createElement('div');
-      el.className = 'hc' + (def.heavy ? ' heavy' : def.malus ? ' malus' : '');
-      el.title = def.name + ': ' + def.desc(pick.m);
+      el.className = 'hc' + (def.type === 'use' ? ' use' : '') + (def.heavy ? ' heavy' : def.malus ? ' malus' : '');
+      el.title = `${def.name}: ${def.desc(pick.m)}\nVendi: +15% vita, +25 mana`;
       el.innerHTML = `<span class="ico">${def.icon}</span><span class="nm">${def.name}</span>`;
+      const sellBtn = document.createElement('button');
+      sellBtn.className = 'hc-sell';
+      sellBtn.textContent = '💸';
+      sellBtn.title = 'Vendi: +15% vita, +25 mana';
+      sellBtn.addEventListener('click', e => { e.stopPropagation(); onSell?.(i); });
+      el.appendChild(sellBtn);
       handEl.appendChild(el);
-    }
+    });
   }
 
   const _origUpdate = update;
