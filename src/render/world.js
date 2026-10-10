@@ -24,34 +24,28 @@ import { drawSceneTitle, drawBanner, drawBossBar, drawIntruderWarning, drawBossP
 function drawBombs(ctx, run, time) {
   for (const b of run.bombs) {
     if (b.detonated) continue;
-    // Corpo bomba
+    // Corpo bomba (piccolo)
     ctx.fillStyle = '#1a1a1c';
-    ctx.beginPath(); ctx.arc(b.x, b.y, 10, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#555560';
-    ctx.beginPath(); ctx.arc(b.x - 3, b.y - 3, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#444450';
+    ctx.beginPath(); ctx.arc(b.x - 1, b.y - 1, 1.5, 0, Math.PI * 2); ctx.fill();
     // Miccia
     ctx.strokeStyle = '#c87820';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(b.x + 6, b.y - 8);
-    ctx.quadraticCurveTo(b.x + 14, b.y - 18, b.x + 10, b.y - 24);
+    ctx.moveTo(b.x + 3, b.y - 4);
+    ctx.quadraticCurveTo(b.x + 7, b.y - 9, b.x + 5, b.y - 12);
     ctx.stroke();
     // Scintilla lampeggiante
-    const spark = Math.sin(time * 12 + b.x) > 0.3;
-    if (spark) {
+    if (Math.sin(time * 12 + b.x) > 0.3) {
       ctx.fillStyle = '#ffe040';
-      ctx.beginPath(); ctx.arc(b.x + 10, b.y - 24, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(b.x + 5, b.y - 12, 2, 0, Math.PI * 2); ctx.fill();
     }
-    // Etichetta moltiplicatore
-    ctx.fillStyle = '#ffaa00';
-    ctx.font = 'bold 9px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(`×${b.mult}`, b.x, b.y + 20);
-    // Raggio di detonazione (durante bomb-placement)
+    // Raggio di detonazione (solo durante la fase di piazzamento)
     if (run.phase === 'bomb-placement') {
-      ctx.strokeStyle = 'rgba(255,100,0,0.3)';
+      ctx.strokeStyle = 'rgba(255,100,0,0.25)';
       ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
+      ctx.setLineDash([3, 3]);
       ctx.beginPath(); ctx.arc(b.x, b.y, 70, 0, Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]);
     }
