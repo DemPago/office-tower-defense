@@ -2,6 +2,13 @@
 // I file .js li importano via JSDoc (@type {import('./types').Run}) finché
 // non vengono convertiti in .ts — a quel punto si usa l'import diretto.
 
+// ─── Primitivi condivisi ─────────────────────────────────────────────────────
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
 // ─── Meta (progressi permanenti) ────────────────────────────────────────────
 
 export interface Meta {

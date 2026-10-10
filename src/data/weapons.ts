@@ -9,7 +9,25 @@
 //   charm             (cuori) secondi in cui il nemico colpito resta fermo, innamorato
 // ATTENZIONE: la gittata deve restare sopra quella dei cecchini (165), o ti colpiscono da fuori tiro.
 // I numeri sono tarati con `node tools/sim.mjs armi`: tutte devono arrivare circa alla stessa ondata.
-export const WEAPONS = [
+
+export interface WeaponDef {
+  id: string;
+  icon: string;
+  name: string;
+  kind: string;
+  dmg: number;
+  rate: number;
+  range: number;
+  desc: string;
+  pierce?: number;
+  pierceDmg?: number;
+  splash?: number;
+  splashR?: number;
+  fan?: number;
+  charm?: number;
+}
+
+export const WEAPONS: WeaponDef[] = [
   { id: 'pistol',   icon: '🔫', name: 'Pistola',         kind: 'tower',  dmg: 0.88, rate: 1,    range: 1.05,
     desc: 'Equilibrata: colpi rapidi a un bersaglio alla volta.' },
   { id: 'crossbow', icon: '🏹', name: 'Balestra',        kind: 'xbow',   dmg: 1.95,  rate: 0.42, range: 1.1, pierce: 2, pierceDmg: 0.2,
@@ -26,6 +44,6 @@ export const WEAPONS = [
     desc: 'I nemici colpiti si innamorano e restano fermi per un attimo (i boss meno), ma il danno è più basso.' },
 ];
 
-export function weaponDef(id) {
-  return WEAPONS.find(w => w.id === id) || WEAPONS[0];
+export function weaponDef(id: string): WeaponDef {
+  return WEAPONS.find(w => w.id === id) ?? WEAPONS[0];
 }

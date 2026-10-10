@@ -4,13 +4,27 @@
 //   short  nome breve sotto l'icona; help = spiegazione nel suggerimento
 // Mana: il massimo parte da `base` e cresce di `perWave` a ogni ondata; si ricarica
 // di `regen` al secondo (aumentabile con le carte).
+import type { Run } from '../types.js';
+
+export interface AbilityDef {
+  id: string;
+  key: string;
+  icon: string;
+  short: string;
+  name: string;
+  desc: string;
+  mana: number;
+  cd: number;
+  help: string;
+}
+
 export const MANA = { base: 100, perWave: 5, regen: 0.8, start: 100 };
 
-export function maxMana(run) {
+export function maxMana(run: Run): number {
   return MANA.base + MANA.perWave * Math.max(0, run.wave - 1) + run.stats.manaMax;
 }
 
-export const ABILITIES = [
+export const ABILITIES: AbilityDef[] = [
   { id: 'bomb',    key: '1', icon: '💣', short: 'Bomba',    name: 'Bomba di carta',   desc: 'Danno enorme a tutti i nemici', mana: 45, cd: 10,
     help: 'Colpisce TUTTI i nemici in campo con 12 volte il danno della torre. Ottima quando arriva un gruppo.' },
   { id: 'coffee',  key: '2', icon: '☕', short: 'Caffè',    name: 'Caffè bollente',   desc: 'Rallenta tutti del 60% per 5 s', mana: 25, cd: 15,

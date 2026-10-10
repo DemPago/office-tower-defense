@@ -1,7 +1,8 @@
 // Piccole funzioni di uso generale.
+import type { Point } from './types.js';
 
 // 1234 -> "1.2K", 2500000 -> "2.5M"
-export function fmt(n) {
+export function fmt(n: number): string {
   n = Math.floor(n);
   if (n < 1000) return String(n);
   const units = ['K', 'M', 'B', 'T'];
@@ -11,18 +12,18 @@ export function fmt(n) {
 }
 
 // Angolo in gradi (0-360) del punto p visto da "from": 0 = destra, 90 = su.
-export function angleOf(from, p) {
+export function angleOf(from: Point, p: Point): number {
   const a = Math.atan2(-(p.y - from.y), p.x - from.x) * 180 / Math.PI;
   return (a + 360) % 360;
 }
 
 // true se l'angolo sta nello spicchio largo "width" gradi centrato su "center".
-export function inArc(angle, center, width) {
+export function inArc(angle: number, center: number, width: number): boolean {
   if (width >= 360) return true;
   const d = Math.abs(((angle - center + 540) % 360) - 180);
   return d <= width / 2;
 }
 
-export function dist(a, b) {
+export function dist(a: Point, b: Point): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
