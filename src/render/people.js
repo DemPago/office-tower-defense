@@ -56,16 +56,20 @@ export const LOOKS = {
   portavoce:  { skin: SKIN.light, hair: '#d9b45a', hairStyle: 'bun', top: '#2f4f8f', shirt: '#e8e2d0', skirt: '#2f4f8f', shoes: '#141416', item: 'phone', angry: true },
 
   // Boss
-  teamleader: { skin: SKIN.mid, hair: '#8a3b1e', hairStyle: 'short', build: 'huge', top: '#7a1f2b', shirt: '#e8e2d0', tie: '#141416', pants: '#2a2a2e', headphones: true, item: 'megaphone', scar: true, angry: true },
-  capoarea:   { skin: SKIN.tan, hair: '#2a2a2e', hairStyle: 'bald', facial: 'mustache', build: 'huge', top: '#3a3c42', shirt: '#d9d4c7', tie: '#a67c00', pants: '#2a2a2e', chain: '#f2b705', item: 'phone', angry: true },
-  direttore:  { skin: SKIN.light, hair: '#8a8d93', hairStyle: 'slick', build: 'huge', top: '#1b1b1e', shirt: '#e8e2d0', tie: '#7a0f1c', pants: '#1b1b1e', cape: '#5a0f18', capeTrim: '#a67c00', item: 'cigar', scar: true, angry: true },
-  leadership: { skin: SKIN.mid, hair: '#141416', hairStyle: 'slick', glasses: 'shades', build: 'fat', top: '#2a2a2e', shirt: '#e8e2d0', tie: '#f2b705', pants: '#2a2a2e', chain: '#f2b705', item: 'phone', angry: true },
-  dg:         { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'slick', glasses: 'shades', build: 'huge', top: '#0d0d0f', shirt: '#e8e2d0', tie: '#f2b705', pants: '#0d0d0f', cape: '#141416', capeTrim: '#f2b705', chain: '#f2b705', item: 'cigar', angry: true },
-  consiglio:  { skin: SKIN.light, hair: '#8a8d93', hairStyle: 'bald', glasses: 'glasses', top: '#3a3c42', shirt: '#e8e2d0', tie: '#2f4f8f', pants: '#3a3c42', chain: '#c0c4cc', item: 'briefcase', angry: true },
-  ceo:        { skin: SKIN.mid, hair: '#8a8d93', hairStyle: 'short', glasses: 'glasses', build: 'huge', top: '#141416', shirt: '#141416', pants: '#3a4a6a', shoes: '#d9d4c7', headphones: true, item: 'laptop', angry: true },
-  socio:      { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'bald', facial: 'mustache', monocle: true, hat: 'tophat', hatColor: '#0d0d0f', build: 'huge', top: '#2a2a2e', shirt: '#e8e2d0', tie: '#f2b705', pants: '#2a2a2e', cape: '#3a1a3a', capeTrim: '#f2b705', chain: '#f2b705', item: 'cane', angry: true },
-  docbrown:   { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'wild', glasses: 'goggles', top: '#3a3226', shirt: '#d9d4c7', coat: '#e8e2d0', pants: '#3a3226', item: 'device', angry: true },
-  galattico:  { skin: SKIN.mid, hair: '#c0c4cc', hairStyle: 'slick', glasses: 'shades', build: 'huge', top: '#5d275d', shirt: '#2de2e6', tie: '#2de2e6', pants: '#3a1a3a', shoes: '#2de2e6', cape: '#1a1240', capeTrim: '#2de2e6', capeStars: true, chain: '#2de2e6', angry: true },
+  teamleader: { skin: SKIN.mid, hair: '#8a3b1e', hairStyle: 'short', build: 'huge', top: '#7a1f2b', shirt: '#e8e2d0', tie: '#141416', pants: '#2a2a2e', headphones: true, item: 'megaphone', weapon: 'mazza',         scar: true, angry: true },
+  capoarea:   { skin: SKIN.tan, hair: '#2a2a2e', hairStyle: 'bald', facial: 'mustache', build: 'huge', top: '#3a3c42', shirt: '#d9d4c7', tie: '#a67c00', pants: '#2a2a2e', chain: '#f2b705', item: 'phone', weapon: 'palla_ferrata', angry: true },
+  direttore:  { skin: SKIN.light, hair: '#8a8d93', hairStyle: 'slick', build: 'huge', top: '#1b1b1e', shirt: '#e8e2d0', tie: '#7a0f1c', pants: '#1b1b1e', cape: '#5a0f18', capeTrim: '#a67c00', item: 'cigar', weapon: 'spada',         scar: true, angry: true },
+  leadership: { skin: SKIN.mid, hair: '#141416', hairStyle: 'slick', glasses: 'shades', build: 'fat', top: '#2a2a2e', shirt: '#e8e2d0', tie: '#f2b705', pants: '#2a2a2e', chain: '#f2b705', item: 'phone', weapon: 'pistola',        angry: true },
+  dg:         { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'slick', glasses: 'shades', build: 'huge', top: '#0d0d0f', shirt: '#e8e2d0', tie: '#f2b705', pants: '#0d0d0f', cape: '#141416', capeTrim: '#f2b705', chain: '#f2b705', item: 'cigar', weapon: 'fucile',         angry: true },
+  consiglio:  { skin: SKIN.light, hair: '#8a8d93', hairStyle: 'bald', glasses: 'glasses', top: '#3a3c42', shirt: '#e8e2d0', tie: '#2f4f8f', pants: '#3a3c42', chain: '#c0c4cc', item: 'briefcase', weapon: 'arco',           angry: true },
+  ceo:        { skin: SKIN.mid, hair: '#8a8d93', hairStyle: 'short', glasses: 'glasses', build: 'huge', top: '#141416', shirt: '#141416', pants: '#3a4a6a', shoes: '#d9d4c7', headphones: true, item: 'laptop', weapon: 'laser',          angry: true },
+  socio:      { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'bald', facial: 'mustache', monocle: true, hat: 'tophat', hatColor: '#0d0d0f', build: 'huge', top: '#2a2a2e', shirt: '#e8e2d0', tie: '#f2b705', pants: '#2a2a2e', cape: '#3a1a3a', capeTrim: '#f2b705', chain: '#f2b705', item: 'cane', weapon: 'fiocina', angry: true },
+  docbrown:   { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'wild', glasses: 'goggles', top: '#3a3226', shirt: '#d9d4c7', coat: '#e8e2d0', pants: '#3a3226', item: 'device', weapon: 'balestra', angry: true },
+  galattico:  { skin: SKIN.mid, hair: '#c0c4cc', hairStyle: 'slick', glasses: 'shades', build: 'huge', top: '#5d275d', shirt: '#2de2e6', tie: '#2de2e6', pants: '#3a1a3a', shoes: '#2de2e6', cape: '#1a1240', capeTrim: '#2de2e6', capeStars: true, chain: '#2de2e6', weapon: 'laser', angry: true },
+
+  // Focal Point: mini-boss prima di ogni Frontier Manager
+  focal_m: { skin: SKIN.dark,  hair: '#141416', hairStyle: 'short', glasses: 'shades', build: 'fat', top: '#1b1b1e', shirt: '#e8e2d0', tie: '#d7263d', pants: '#1b1b1e', chain: '#f2b705', badge: true, scar: true, item: 'megaphone', angry: true },
+  focal_f: { skin: SKIN.light, hair: '#2a2a2e', hairStyle: 'bun',   glasses: 'glasses', build: 'fat', top: '#3a1a3a', shirt: '#e8e2d0', skirt: '#3a1a3a', shoes: '#141416', chain: '#f2b705', badge: true, item: 'phone', angry: true },
 
   // Personaggi giocabili (sul tetto del palazzo)
   peppe:      { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'bald', glasses: 'glasses', facial: 'mustache', top: '#6e6a64', shirt: '#e8e2d0', tie: '#2f4f8f', pants: '#3a3226' },
@@ -375,8 +379,80 @@ export function drawPerson(g, L, frame) {
   }
 
   drawItem(px, L, tx + tw, 34 - swing, tw, tx);
+  if (L.weapon) drawWeapon(px, L, tx - 4, 34 + swing, tw);
   if (L.zombie) drawZombieDetails(px, L, tx, tw);
   if (L.zombie && L.stage) drawZombieDamage(px, clear, L, tx, tw, [2, 0, -2, 0][frame]);
+}
+
+// Arma in mano (lato SINISTRO). hx, hy = posizione della mano sinistra, tw = larghezza busto.
+function drawWeapon(px, L, hx, hy, tw) {
+  switch (L.weapon) {
+    case 'mazza': // mazza da baseball di legno
+      px(hx + 1, hy - 1, 2, 16, '#8b6a3e'); // manico
+      px(hx - 1, hy - 11, 6, 5,  '#6b4a2b'); // testa
+      px(hx - 1, hy - 11, 6, 1,  '#a58054'); // luce
+      px(hx - 1, hy - 6,  6, 1,  '#4a3020'); // ombra
+      break;
+    case 'arco': // arco con freccia
+      px(hx - 2, hy - 12, 2, 20, '#8b6a3e'); // arco dritto... corpo curvo
+      px(hx - 3, hy - 12, 1, 1,  '#8b6a3e'); // estremità sup
+      px(hx - 3, hy + 7,  1, 1,  '#8b6a3e'); // estremità inf
+      px(hx - 3, hy - 11, 1, 19, '#c0c4cc'); // corda
+      px(hx + 1, hy - 8,  1, 12, '#a58054'); // freccia
+      px(hx + 1, hy - 9,  2, 1,  '#c0c4cc'); // punta freccia
+      break;
+    case 'spada': // spada dritta
+      px(hx + 1, hy,      2, 4,  '#8b6a3e'); // impugnatura
+      px(hx,     hy - 1,  4, 1,  '#8b6a3e'); // guardia (crossguard)
+      px(hx + 1, hy - 14, 2, 14, '#c0c4cc'); // lama
+      px(hx + 1, hy - 14, 1, 14, '#e8e2d0'); // riflesso
+      px(hx + 1, hy - 15, 1, 1,  '#e8e2d0'); // punta
+      break;
+    case 'palla_ferrata': // mazza stellata (morning star)
+      px(hx + 1, hy,      2, 12, '#6b4a2b'); // manico
+      px(hx - 1, hy - 10, 6, 6,  '#5b5f66'); // sfera
+      px(hx,     hy - 12, 2, 2,  '#5b5f66'); // spuntoni
+      px(hx + 2, hy - 12, 2, 2,  '#5b5f66');
+      px(hx - 2, hy - 8,  2, 2,  '#5b5f66');
+      px(hx + 4, hy - 8,  2, 2,  '#5b5f66');
+      px(hx,     hy - 6,  2, 2,  '#5b5f66');
+      px(hx,     hy - 11, 2, 1,  '#8a8d93'); // luce sfera
+      break;
+    case 'laser': // pistola laser futuristica
+      px(hx - 1, hy - 2, 7, 4, '#3a3c42'); // corpo pistola
+      px(hx + 6, hy - 3, 3, 2, '#2de2e6'); // canna luminosa
+      px(hx + 9, hy - 3, 2, 2, '#90f4f6'); // bagliore
+      px(hx,     hy - 2, 5, 1, '#5b5f66'); // riflesso
+      px(hx - 1, hy + 2, 2, 2, '#141416'); // impugnatura
+      break;
+    case 'pistola': // pistola compatta
+      px(hx - 1, hy - 2, 6, 3, '#3a3c42'); // corpo
+      px(hx + 5, hy - 2, 4, 2, '#5b5f66'); // canna
+      px(hx,     hy + 1, 2, 3, '#141416'); // impugnatura
+      px(hx,     hy - 2, 5, 1, '#6e6a64'); // riflesso
+      break;
+    case 'fucile': // fucile lungo
+      px(hx - 3, hy - 2, 13, 3, '#5a3a22'); // calcio e corpo (legno)
+      px(hx + 8, hy - 2, 7,  2, '#3a3c42'); // canna (acciaio)
+      px(hx + 2, hy - 2, 8,  1, '#7a5a3a'); // riflesso legno
+      px(hx + 8, hy - 2, 7,  1, '#5b5f66'); // riflesso canna
+      px(hx - 2, hy + 1, 3,  3, '#3a3226'); // impugnatura
+      break;
+    case 'fiocina': // fiocina / arpione
+      px(hx + 1, hy - 1, 2, 16, '#8b6a3e'); // asta
+      px(hx,     hy - 14, 4, 4, '#c0c4cc'); // punta metallica
+      px(hx,     hy - 12, 2, 1, '#e8e2d0'); // riflesso
+      px(hx + 3, hy - 12, 1, 4, '#8a8d93'); // barba dell'arpione
+      px(hx + 3, hy - 10, 2, 1, '#8a8d93');
+      break;
+    case 'balestra': // balestra da caccia
+      px(hx - 4, hy - 2, 10, 2, '#6b4a2b'); // corpo (legno)
+      px(hx + 6, hy - 6, 2, 8,  '#8b6a3e'); // calcio verticale
+      px(hx + 7, hy - 5, 1, 6,  '#a58054'); // riflesso calcio
+      px(hx - 3, hy - 1, 9, 1,  '#c0c4cc'); // guida dardo
+      px(hx + 3, hy - 1, 2, 1,  '#d7263d'); // dardo rosso
+      break;
+  }
 }
 
 // Oggetto in mano (lato destro). hx, hy = posizione della mano.

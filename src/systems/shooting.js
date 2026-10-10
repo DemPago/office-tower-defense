@@ -13,7 +13,8 @@ export function updateTower(run, dt) {
   t.hitFlash = Math.max(0, t.hitFlash - dt);
   t.recoil = Math.max(0, (t.recoil || 0) - dt);
   t.hp = Math.min(s.maxHp, t.hp + s.regen * dt);
-  t.cooldown -= dt;
+  if (run.slowTowerT > 0) run.slowTowerT -= dt; // fiocina: rallenta temporaneamente la torre
+  t.cooldown -= dt * (run.slowTowerT > 0 ? 0.45 : 1);
   if (t.cooldown > 0) return;
 
   const targets = pickTargets(run.enemies, TOWER, s.range, s.multishot);

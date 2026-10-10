@@ -47,6 +47,7 @@ export function createRun(meta) {
     enemyShots: [],          // colpi dei nemici a distanza
     spawnQueue: [],
     boss: null,              // il boss vivo (per la barra in alto)
+    slowTowerT: 0,           // fiocina: riduce temporaneamente la velocità di fuoco della torre
     fx: { texts: [], parts: [], rings: [], corpses: [], sounds: [], beams: [], waves: [], shake: 0, banner: null },
     healFull: false,
   };

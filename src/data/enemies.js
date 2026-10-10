@@ -18,6 +18,31 @@ export const ROLES = {
 // Quanto spesso esce ogni ruolo in un'ondata (tanti tank, come richiesto).
 export const ROLE_WEIGHTS = { tank: 0.38, sniper: 0.24, charger: 0.26, special: 0.12 };
 
+// Tier gerarchico: Graduate → Junior → Middle → Senior → Focal Point.
+// Il ruolo determina il COMPORTAMENTO; il tier determina il LIVELLO (stat + vestiti).
+//   graduate → charger: stagista kamikaze, veloce e fragile
+//   junior   → sniper:  recluta a distanza, infastidisce
+//   middle   → tank:    impiegato rodato, lento e corazzato
+//   senior   → special: veterano strategico, guarisce o si divide
+//   focal    → mini-boss: "il punto di riferimento del team", 2 ondate prima del boss
+export const TIERS = {
+  graduate: { hpMult: 0.65, speedMult: 1.10, atkMult: 0.70, goldMult: 0.50 },
+  junior:   { hpMult: 1.00, speedMult: 1.00, atkMult: 1.00, goldMult: 1.00 },
+  middle:   { hpMult: 1.45, speedMult: 0.90, atkMult: 1.25, goldMult: 1.35 },
+  senior:   { hpMult: 1.90, speedMult: 0.85, atkMult: 1.55, goldMult: 1.75 },
+  focal:    { hpMult: 3.50, speedMult: 0.90, atkMult: 2.50, goldMult: 3.50 },
+};
+
+// Mappa ruolo → tier (per applicare i moltiplicatori).
+export const ROLE_TIER = { tank: 'middle', sniper: 'junior', charger: 'graduate', special: 'senior' };
+
+// Focal Point: il riferimento organizzativo del reparto.
+// Appare 2 ondate prima di ogni boss (ondate 8, 18, 28…).
+export const FOCAL_POINT_DEF = {
+  name: 'Focal Point', look: 'focal_m', role: 'tank', tier: 'focal',
+  hp: 30, speed: 20, atk: 10, range: 0, gold: 12, armor: 0.22, taunt: true,
+};
+
 function enemy(name, look, role, extra = {}) {
   return { name, look, role, ...ROLES[role], ...extra };
 }

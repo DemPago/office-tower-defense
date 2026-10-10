@@ -1,7 +1,7 @@
 // Nemici: movimento verso il palazzo, attacchi, cariche dei kamikaze, cure, boss infuriati.
 import { TOWER } from '../state.js';
 import { dist } from '../util.js';
-import { floatText, burst, ring, shake, sfx } from './fx.js';
+import { floatText, burst, ring, shake, sfx, banner } from './fx.js';
 import { dealDamage, damageTower } from './damage.js';
 import { blockingSegment, segmentToward, damageWall, reflectChance } from './wall.js';
 import { WALL } from '../data/wall.js';
@@ -61,15 +61,27 @@ export function updateEnemies(run, dt) {
       e.moving = false;
       e.attackCd -= dt;
       if (e.attackCd <= 0) {
-        e.attackCd = e.boss ? 1.3 : e.shotCd;
+        e.attackCd = e.shotCd || (e.boss ? 1.3 : 1);
         if (e.range > 0) {
           // se tra lui e il palazzo c'è un tratto di muro in piedi, spara al muro (breccia)
           const seg = segmentToward(run, e);
           const target = seg && seg.hp > 0 ? seg : null;
-          run.enemyShots.push({ x: e.x, y: e.y - e.size * 0.3, dmg: e.atk, speed: 210, sniper: e.role === 'sniper', seg: target, from: e });
+          if (e.weaponBeam) {
+            // laser: colpo istantaneo — non ha proiettile, danneggia subito
+            if (target) damageWall(run, target, e.atk * (e.weaponPierce ? 1 : 1) * 1.5, e);
+            else damageTower(run, e.atk * 1.5);
+            ring(run, e.x, e.y - e.size * 0.5, 22, '#2de2e6');
+          } else {
+            run.enemyShots.push({ x: e.x, y: e.y - e.size * 0.3, dmg: e.atk, speed: 210,
+              sniper: e.role === 'sniper' || e.weaponType === 'fucile',
+              pierce: e.weaponPierce,
+              slow: e.weaponSlow,
+              seg: target, from: e });
+          }
           e.lunge = 0.12;
         } else {
           damageTower(run, e.atk);
+          if (e.weaponAoe) aoeWallHit(run, e); // palla ferrata: splash
           e.lunge = 0.15;
         }
       }
@@ -77,6 +89,21 @@ export function updateEnemies(run, dt) {
     if (e.lunge > 0) e.lunge -= dt;
   }
   run.enemies = run.enemies.filter(e => !e.dead);
+}
+
+// Palla ferrata: su ogni colpo al palazzo distrugge anche i muri vicini (splash).
+function aoeWallHit(run, e) {
+  let hit = false;
+  for (const seg of run.wall) {
+    if (seg.hp > 0 && dist(seg, e) < 55) {
+      damageWall(run, seg, e.atk * 0.6, e);
+      hit = true;
+    }
+  }
+  if (hit) {
+    burst(run, e.x, e.y, '#8a3b1e', 8, 70);
+    ring(run, e.x, e.y - 10, 42, '#a67c00');
+  }
 }
 
 // Boss: passi pesanti che fanno tremare il terreno e rabbia a metà vita.
@@ -132,14 +159,26 @@ export function updateEnemyShots(run, dt) {
     const d = dist(s, goal);
     if (d < (goal === TOWER ? TOWER.radius : 4)) {
       s.done = true;
-      if (goal === TOWER) { damageTower(run, s.dmg); continue; }
+      if (goal === TOWER) {
+        damageTower(run, s.dmg);
+        if (s.slow) run.slowTowerT = (run.slowTowerT || 0) + 2.5; // fiocina: rallenta attacchi torre
+        continue;
+      }
       if (Math.random() < reflectChance(run) && s.from && !s.from.dead) {
         // lastre d'acciaio: il colpo torna indietro su chi l'ha sparato
         dealDamage(run, s.from, s.dmg * 3);
         burst(run, s.x, s.y, '#c0c4cc', 5, 70);
         continue;
       }
-      damageWall(run, s.seg, s.dmg * (s.sniper ? WALL.sniperMult : 1));
+      // balestra (pierce): ignora l'armor del tratto di muro
+      const wallDmg = s.sniper ? WALL.sniperMult : 1;
+      if (s.pierce) {
+        const seg = s.seg;
+        seg.hp -= s.dmg * wallDmg;
+        if (seg.hp <= 0) { seg.hp = 0; burst(run, seg.x, seg.y, '#c0c4cc', 6, 80); }
+      } else {
+        damageWall(run, s.seg, s.dmg * wallDmg);
+      }
       continue;
     }
     s.x += (goal.x - s.x) / d * s.speed * dt;

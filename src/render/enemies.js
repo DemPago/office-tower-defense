@@ -5,6 +5,15 @@ import { PAL, FONT } from './palette.js';
 import { drawPersonAt, enemySprite, facesLeft, hexA } from './view.js';
 import { drawHeart } from './effects.js';
 
+// Colori badge per tier (Graduate→Junior→Middle→Senior→Focal).
+const TIER_COLORS = {
+  graduate: '#7bd332', // verde
+  junior:   '#2de2e6', // ciano
+  middle:   '#f2b705', // giallo
+  senior:   '#ff7b1c', // arancio
+  focal:    '#ff3e8a', // rosa/magenta
+};
+
 export function drawShadow(ctx, e) {
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.beginPath();
@@ -185,6 +194,17 @@ export function drawEnemy(ctx, assets, e) {
     ctx.fillRect(bx, by, bw, 2);
     ctx.fillStyle = PAL.red;
     ctx.fillRect(bx, by, Math.max(1, Math.round(bw * e.hp / e.maxHp)), 2);
+  }
+  // Tier badge: piccolo indicatore visivo del livello del nemico
+  if (!e.boss && e.tier) {
+    const tc = TIER_COLORS[e.tier];
+    if (tc) {
+      const bx = Math.round(e.x + s * 0.28), by = y + 1;
+      ctx.fillStyle = PAL.black;
+      ctx.fillRect(bx - 1, by - 1, 6, 6);
+      ctx.fillStyle = tc;
+      ctx.fillRect(bx, by, 4, 4);
+    }
   }
 }
 

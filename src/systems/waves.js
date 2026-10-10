@@ -1,7 +1,7 @@
 // Ondate: quanti nemici, quali, quanto sono forti e da dove arrivano.
-import { ENEMIES, ROLE_WEIGHTS, decadeFor, isZombieWave, ZOMBIE } from '../data/enemies.js';
+import { ENEMIES, ROLE_WEIGHTS, TIERS, ROLE_TIER, FOCAL_POINT_DEF, decadeFor, isZombieWave, ZOMBIE } from '../data/enemies.js';
 import { ANIMALS } from '../data/animals.js';
-import { bossForWave } from '../data/bosses.js';
+import { bossForWave, WEAPONS } from '../data/bosses.js';
 import { TOWER, SPAWN_RADIUS } from '../state.js';
 import { banner, sfx } from './fx.js';
 
@@ -36,17 +36,20 @@ export function makeEnemy(def, w, extra = {}) {
   const decade = decadeFor(w);
   const elite = decade.elite;
   const zombie = isZombieWave(w);
-  // i reparti più avanzati sono un po' più robusti (e gli zombie ancora di più)
-  const hp = def.hp * hpScale(w) * (1 + 0.12 * Math.min(decade.index, 5)) * (zombie ? ZOMBIE.hp : 1);
+  // moltiplicatori tier: Graduate è più debole, Middle è più robusto, ecc.
+  const tier = def.tier ? TIERS[def.tier] : TIERS[ROLE_TIER[def.role] || 'junior'];
+  const deptBonus = 1 + 0.12 * Math.min(decade.index, 5);
+  const hp = def.hp * hpScale(w) * deptBonus * (zombie ? ZOMBIE.hp : 1) * tier.hpMult;
   return {
     id: Math.random(),
     def,
     name: def.name,
     look: def.look,
+    tier: def.tier || ROLE_TIER[def.role] || 'junior',
     scale: 1,
     x: p.x, y: p.y,
     hp, maxHp: hp,
-    speed: def.speed * (0.9 + Math.random() * 0.2) * (elite ? 1.15 : 1) * (zombie ? ZOMBIE.speed : 1),
+    speed: def.speed * (0.9 + Math.random() * 0.2) * (elite ? 1.15 : 1) * (zombie ? ZOMBIE.speed : 1) * tier.speedMult,
     elite,
     zombie,
     role: def.role,
@@ -55,10 +58,10 @@ export function makeEnemy(def, w, extra = {}) {
     charging: false,
     shotCd: def.shotCd || 1,
     healCd: 3,
-    atk: def.atk * atkScale(w),
+    atk: def.atk * atkScale(w) * tier.atkMult,
     range: def.range,
     armor: def.armor || 0,
-    gold: def.gold * goldScale(w),
+    gold: def.gold * goldScale(w) * tier.goldMult,
     size: 28,
     attackCd: 1,
     slowT: 0, slowF: 0, stunT: 0, dotT: 0, dotDps: 0,
@@ -66,6 +69,11 @@ export function makeEnemy(def, w, extra = {}) {
     boss: false,
     ...extra,
   };
+}
+
+function makeFocalPoint(w) {
+  const def = { ...FOCAL_POINT_DEF, look: Math.random() < 0.5 ? 'focal_m' : 'focal_f' };
+  return makeEnemy(def, w);
 }
 
 // Base dei boss: un "dipendente medio" a cui si applicano i moltiplicatori del boss.
@@ -83,6 +91,7 @@ function makeBoss(b, w) {
   for (let i = 0; i < group; i++) {
     // 0.75: i boss hanno anche una seconda vita (la forma bestiale), quindi la prima è più corta
     const hp = base.hp * hpScale(w) * b.hpFactor * 0.75 / group;
+    const W = b.weapon ? WEAPONS[b.weapon] : null;
     list.push(makeEnemy(base, w, {
       at: { x: at.x + (Math.random() - 0.5) * 50, y: at.y + (Math.random() - 0.5) * 50 },
       animalId: b.animal, bossName: b.name,
@@ -91,10 +100,17 @@ function makeBoss(b, w) {
       aura: b.aura,
       trail: b.trail || null,
       hp, maxHp: hp,
-      speed: b.speed,
-      atk: base.atk * atkScale(w) * b.atkFactor,
+      speed: b.speed * (W && W.speedMult ? W.speedMult : 1),
+      atk: base.atk * atkScale(w) * b.atkFactor * (W ? W.atkMult : 1),
+      range: W ? W.range : 0,
+      shotCd: W ? W.shotCd : 1.3,
       gold: 30 * goldScale(w) / group,
       size: 28 * b.scale,
+      weaponType: b.weapon || null, // per effetti speciali in updateEnemies
+      weaponPierce: W && W.pierce,
+      weaponAoe:    W && W.aoe,
+      weaponBeam:   W && W.beam,
+      weaponSlow:   W && W.slow,
       attackCd: 0, // sfonda il muro subito senza aspettare
     }));
   }
@@ -114,6 +130,8 @@ export function startWave(run) {
   const w = run.wave;
   const queue = [];
   const boss = bossForWave(w);
+  // Ondata 8, 18, 28… → arriva il Focal Point (2 prima del boss)
+  const focalWave = w > 5 && w % 10 === 8;
   const n = boss ? Math.ceil(enemyCount(w) / 2) : enemyCount(w);
   // Intervallo fra un nemico e l'altro: si accorcia con le ondate.
   const gap = Math.max(0.25, 1.1 - w * 0.02);
@@ -121,12 +139,17 @@ export function startWave(run) {
   if (boss) {
     queue.splice(Math.floor(n / 3), 0, { delay: 1.5, enemies: () => makeBoss(boss, w), boss });
   }
+  if (focalWave) {
+    // il Focal Point entra da solo, a metà ondata
+    queue.splice(Math.floor(queue.length / 2), 0, { delay: 2.5, enemy: () => makeFocalPoint(w) });
+  }
   run.spawnQueue = queue;
   run.spawnTimer = 0;
   run.phase = 'wave';
   const decade = decadeFor(w);
   sfx(run, boss ? 'boss' : 'wave');
   if (boss) banner(run, boss.name, boss.sub, '#d7263d');
+  else if (focalWave) banner(run, 'FOCAL POINT IN ARRIVO', 'Il riferimento del reparto è furioso!', '#f2b705');
   else if (isZombieWave(w)) {
     banner(run, 'NOTTE DEGLI ZOMBIE', 'I colleghi non sono più loro… più lenti ma più duri a morire', '#7bd332');
     sfx(run, 'zombie');
