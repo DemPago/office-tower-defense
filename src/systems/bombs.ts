@@ -6,6 +6,7 @@ import { dist } from '../util.js';
 import { burst, ring, floatText } from './fx.js';
 import { dealDamage } from './damage.js';
 import { refreshStats } from './economy.js';
+import type { Run } from '../types.js';
 
 const BOMB_RADIUS      = 70;   // raggio detonazione (pixel)
 const BOMB_BASE_SHOTS  = 40;   // danno = stats.dmg × BOMB_BASE_SHOTS × mult
@@ -14,11 +15,11 @@ const BOMB_TOWER_CLEAR = 80;   // distanza minima dalla torre
 export const BOMB_MAX  = 19;   // al 20° le stat scenderebbero a 0
 
 // Quadro che stiamo per iniziare (1-indexed). run.wave = ondate già completate.
-export function nextQuadro(run) {
+export function nextQuadro(run: Run): number {
   return Math.floor(run.wave / 10) + 1;
 }
 
-export function bombMult(run) {
+export function bombMult(run: Run): number {
   const q = nextQuadro(run);
   if (q <= 3) return 3;
   if (q <= 6) return 2;
@@ -27,15 +28,15 @@ export function bombMult(run) {
 }
 
 // Quante bombe si possono piazzare in questo quadro (= moltiplicatore arrotondato per difetto, min 1)
-export function bombsForQuadro(run) {
+export function bombsForQuadro(run: Run): number {
   return Math.max(1, Math.floor(bombMult(run)));
 }
 
-export function canPlaceBomb(run) {
+export function canPlaceBomb(run: Run): boolean {
   return run.bombPenalty < BOMB_MAX && (run.bombsLeft ?? 0) > 0;
 }
 
-export function placeBomb(run, x, y) {
+export function placeBomb(run: Run, x: number, y: number): boolean {
   if (!canPlaceBomb(run)) return false;
   if (dist({ x, y }, TOWER) < BOMB_TOWER_CLEAR) return false;
   if (run.bombs.some(b => !b.detonated && dist({ x, y }, b) < BOMB_MIN_DIST)) return false;
@@ -46,7 +47,7 @@ export function placeBomb(run, x, y) {
   return true;
 }
 
-export function removeBomb(run, idx) {
+export function removeBomb(run: Run, idx: number): boolean {
   if (idx < 0 || idx >= run.bombs.length) return false;
   run.bombs.splice(idx, 1);
   if (run.bombPenalty > 0) run.bombPenalty--;
@@ -56,12 +57,12 @@ export function removeBomb(run, idx) {
 }
 
 // Da chiamare all'inizio di ogni fase bomb-placement per inizializzare il contatore.
-export function resetBombsLeft(run) {
+export function resetBombsLeft(run: Run): void {
   run.bombsLeft = bombsForQuadro(run);
 }
 
 // Controlla ogni bomba non detonata: se un nemico entra nel raggio, esplode in AOE.
-export function checkBombs(run) {
+export function checkBombs(run: Run): void {
   for (const bomb of run.bombs) {
     if (bomb.detonated) continue;
     const trigger = run.enemies.some(e => !e.dead && dist(e, bomb) < BOMB_RADIUS * 0.6);

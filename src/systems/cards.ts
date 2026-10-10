@@ -2,9 +2,10 @@
 import { CARDS, MALUS_CARDS, HEAVY_MALUS_CARDS, RARITY, cardPower, MAX_HAND, findCard } from '../data/cards.js';
 import { refreshStats } from './economy.js';
 import { maxMana } from '../data/abilities.js';
+import type { Run, Meta, CardDef } from '../types.js';
 
 // Estrae una carta dal mazzo, pesata per rarità.
-function draw(pool) {
+function draw(pool: CardDef[]): CardDef {
   const total = pool.reduce((sum, c) => sum + RARITY[c.rarity].weight, 0);
   let r = Math.random() * total;
   return pool.find(c => (r -= RARITY[c.rarity].weight) <= 0) || pool[pool.length - 1];
@@ -14,7 +15,7 @@ function draw(pool) {
 //  1) prima quelle che non hai ancora preso;
 //  2) solo se non bastano, quelle già prese (diventano "POTENZIA", l'effetto si somma);
 //  3) se possibile, mai le stesse dell'offerta precedente.
-export function rollChoices(run, n = 3) {
+export function rollChoices(run: Run, n = 3): CardDef[] {
   const last = new Set(run.lastOffer || []);
   const available = CARDS.filter(c => !c.malus && (run.cards[c.id] || 0) < c.max);
   const fresh = available.filter(c => !run.cards[c.id]);
@@ -34,7 +35,7 @@ export function rollChoices(run, n = 3) {
   return picked;
 }
 
-export function offerCards(run, { noMalus = false } = {}) {
+export function offerCards(run: Run, { noMalus = false } = {}): void {
   run.phase = 'cards';
   const choices = rollChoices(run);
   // Se hai vinto troppo facilmente (vita > 80%), una delle 3 carte è un malus.
@@ -51,7 +52,7 @@ export function offerCards(run, { noMalus = false } = {}) {
 }
 
 // Dopo ogni ondata zombie: tutte e 3 le scelte sono malus pesanti, nessun reroll.
-export function offerHeavyMalus(run) {
+export function offerHeavyMalus(run: Run): void {
   run.phase = 'cards';
   run.isHeavyMalus = true;
   const pool = [...HEAVY_MALUS_CARDS];
@@ -63,14 +64,14 @@ export function offerHeavyMalus(run) {
   run.cardChoices = choices;
 }
 
-export function reroll(run) {
+export function reroll(run: Run): boolean {
   if (run.phase !== 'cards' || run.rerolls <= 0 || run.isHeavyMalus) return false;
   run.rerolls--;
   run.cardChoices = rollChoices(run);
   return true;
 }
 
-function applyCard(run, meta, card) {
+function applyCard(run: Run, meta: Meta, card: CardDef): void {
   run.cards[card.id] = (run.cards[card.id] || 0) + 1;
   run.cardPicks.push({ id: card.id, m: card.malus ? 1 : cardPower(run.wave) });
   if (card.onPick) card.onPick(run);
@@ -83,7 +84,7 @@ function applyCard(run, meta, card) {
 }
 
 // Gioca una carta usabile dalla mano (effetto immediato, poi sparisce).
-export function playCard(run, meta, handIndex) {
+export function playCard(run: Run, meta: Meta, handIndex: number): CardDef | false {
   const pick = run.cardPicks[handIndex];
   if (!pick) return false;
   const card = findCard(pick.id);
@@ -99,7 +100,7 @@ export function playCard(run, meta, handIndex) {
 }
 
 // Vende una carta dalla mano: rimuove il bonus e dà HP + mana.
-export function sellCard(run, meta, handIndex) {
+export function sellCard(run: Run, meta: Meta, handIndex: number): { hp: number; mana: number; card: CardDef } | null {
   const pick = run.cardPicks[handIndex];
   if (!pick) return null;
   const card = findCard(pick.id);
@@ -115,7 +116,7 @@ export function sellCard(run, meta, handIndex) {
   return { hp, mana, card };
 }
 
-export function pickCard(run, meta, index) {
+export function pickCard(run: Run, meta: Meta, index: number): boolean | 'discard' {
   // Modalità scarto: il giocatore ha scelto quale carta rimuovere.
   if (run.discarding) {
     if (index < 0 || index >= run.cardPicks.length) return false;

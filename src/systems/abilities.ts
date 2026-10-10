@@ -5,6 +5,7 @@ import { MUZZLE } from './shooting.js';
 import { banner, burst, shake, sfx } from './fx.js';
 import { TOWER } from '../state.js';
 import { dist } from '../util.js';
+import type { Run } from '../types.js';
 
 const EFFECTS = {
   bomb(run) {
@@ -44,17 +45,17 @@ const EFFECTS = {
   },
 };
 
-export function manaCost(run, id) {
+export function manaCost(run: Run, id: string): number {
   return Math.round(ABILITIES.find(a => a.id === id).mana * run.stats.manaMult);
 }
 
-export function canUse(run, id) {
+export function canUse(run: Run, id: string): boolean {
   if (run.phase !== 'wave' || run.abilityCd[id] > 0 || run.mana < manaCost(run, id)) return false;
   if (id === 'sniper') return run.enemies.some(e => !e.dead && dist(e, TOWER) > run.stats.range);
   return run.enemies.length > 0;
 }
 
-export function useAbility(run, id) {
+export function useAbility(run: Run, id: string): boolean {
   if (!canUse(run, id)) return false;
   const def = ABILITIES.find(a => a.id === id);
   run.mana -= manaCost(run, id);
@@ -67,7 +68,7 @@ export function useAbility(run, id) {
 }
 
 // Ricarica del mana e della piccola pausa dopo l'uso.
-export function updateAbilities(run, dt) {
+export function updateAbilities(run: Run, dt: number): void {
   run.mana = Math.min(maxMana(run), run.mana + run.stats.manaRegen * dt);
   for (const id in run.abilityCd) run.abilityCd[id] = Math.max(0, run.abilityCd[id] - dt);
 }

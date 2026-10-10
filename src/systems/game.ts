@@ -14,8 +14,9 @@ import { TOWER } from '../state.js';
 import { UNLOCK_WAVE, unlockNextHero } from '../data/heroes.js';
 import { banner } from './fx.js';
 import { startBonusWave, endBonusWave } from './bonus.js';
+import type { Run } from '../types.js';
 
-export function update(run, dt) {
+export function update(run: Run, dt: number): void {
   updateFx(run, dt);
   animateAllies(run, dt);
   if (run.phase === 'over' || run.phase === 'cards' || run.phase === 'ally') return;
@@ -109,7 +110,7 @@ export function update(run, dt) {
 }
 
 // Buoni pasto guadagnati a fine partita (valuta permanente).
-export function runReward(run) {
+export function runReward(run: Run): number {
   const cleared = Math.max(0, run.wave - 1);
   return Math.floor(cleared ** 1.25) + run.bossesKilled * 10;
 }
