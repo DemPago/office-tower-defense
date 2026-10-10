@@ -28,9 +28,13 @@ function speedLabel(w) {
   return ` — ${labels[pos - 1]}`;
 }
 
-// Sempre 100 nemici; le ondate boss mantengono ~50 normali + il boss
+// Nemici per posizione nel ciclo: 1-3 = 50, 4-6 = 75, 7-9 = 100; boss = 50 normali
 function enemyCount(w) {
-  return cyclePos(w) === 0 ? 50 : 100;
+  const pos = cyclePos(w);
+  if (pos === 0) return 50;
+  if (pos <= 3) return 50;
+  if (pos <= 6) return 75;
+  return 100;
 }
 
 // Sceglie un nemico del reparto di questa ondata, pesando i ruoli (tanti tank).
