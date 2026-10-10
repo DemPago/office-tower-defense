@@ -30,7 +30,7 @@ export function sceneIndexForWave(wave) {
 }
 
 // Costruisce lo sfondo di uno scenario: { canvas, ambient(ctx, time) }.
-export function buildScene(index) {
+export function buildScene(index, opts?: { skipCars?: boolean }) {
   const scene = SCENES[index];
   const c = document.createElement('canvas');
   c.width = AREA.w * SCENE_RES;
@@ -40,7 +40,7 @@ export function buildScene(index) {
   g.translate(MARGIN, MARGIN); // si disegna in coordinate del mondo, con dettagli a mezzo pixel
   const rnd = seeded(101 + index * 7);
   const data = { leds: [], neons: [], lights: [] };
-  const yardStyle = scene.build(g, rnd, data) || {};
+  const yardStyle = scene.build(g, rnd, data, opts) || {};
   if (scene.italian) placeItalian(g, rnd, data, scene.italian);
   drawYard(g, rnd, yardStyle);
   const ambient = (ctx, t) => {

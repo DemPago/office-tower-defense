@@ -28,7 +28,7 @@ const S  = 1 / 32;
 const wx = (x: number) => (x - WORLD.w / 2) * S;
 const wz = (y: number) => (y - WORLD.h / 2) * S;
 const wy = (h: number) => h * S;
-const TOWER_H = 2.0;
+const TOWER_H = 2.8;
 const WALL_H  = 0.30;
 const SHOT_R  = 0.13;
 
@@ -170,27 +170,147 @@ function buildScene() {
 }
 
 // ─── Torre ────────────────────────────────────────────────────────────────────
-function buildTower() {
+interface TowerResult { group: THREE.Group; litWins: THREE.Mesh[]; antLight: THREE.Mesh; signMat: THREE.MeshStandardMaterial; drawSign: (broken: boolean) => void; }
+
+function buildTower(): TowerResult {
   const g = new THREE.Group();
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(TOWER.radius * 2 * S * 0.9, TOWER_H, TOWER.radius * 2 * S * 0.9),
-    new THREE.MeshLambertMaterial({ color: 0x9e8c7a }),
-  );
-  body.position.y = TOWER_H / 2; body.name = 'body'; g.add(body);
-  const roofMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(TOWER.radius * 2 * S + 0.12, 0.12, TOWER.radius * 2 * S + 0.12),
-    new THREE.MeshLambertMaterial({ color: 0x6a5a4e }),
-  );
-  roofMesh.position.set(0, TOWER_H + 0.06, 0);
-  g.add(roofMesh);
-  const winMat = new THREE.MeshLambertMaterial({ color: 0x3a4a5a });
-  for (let row = 0; row < 3; row++) for (let col = -1; col <= 1; col++) {
-    const win = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.15, 0.02), winMat);
-    win.position.set(col * 0.19, 0.38 + row * 0.58, TOWER.radius * S * 0.9 + 0.02);
-    g.add(win);
+  const W = TOWER.radius * 2 * S * 0.85;
+  const H = TOWER_H;
+  const FLOORS = 4;
+  const floorH = H / FLOORS;
+  const halfW = W / 2;
+
+  // Corpo principale
+  const bodyMat = new THREE.MeshLambertMaterial({ color: 0x9e8c7a });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(W, H, W), bodyMat);
+  body.position.y = H / 2; body.name = 'body'; g.add(body);
+
+  // Cornici orizzontali tra i piani
+  const bandMat = new THREE.MeshLambertMaterial({ color: 0x7a6a5e });
+  for (let f = 1; f < FLOORS; f++) {
+    const band = new THREE.Mesh(new THREE.BoxGeometry(W + 0.06, 0.055, W + 0.06), bandMat);
+    band.position.y = f * floorH;
+    g.add(band);
   }
+
+  // Finestre — pattern LDL/XLL/LBD/DLX su tutte le 4 facce
+  const WIN_PATTERN = 'LDL' + 'XLL' + 'LBD' + 'DLX';
+  const litWins: THREE.Mesh[] = [];
+  const frameMat = new THREE.MeshLambertMaterial({ color: 0xb0a090 });
+  const darkMat  = new THREE.MeshLambertMaterial({ color: 0x1a2530 });
+  const FACE_ROTS = [0, Math.PI, Math.PI / 2, -Math.PI / 2];
+  const colOffsets = [-W * 0.27, 0, W * 0.27];
+
+  for (let fi = 0; fi < 4; fi++) {
+    const fy = FACE_ROTS[fi];
+    for (let row = 0; row < FLOORS; row++) {
+      for (let ci = 0; ci < 3; ci++) {
+        const kind = WIN_PATTERN[row * 3 + ci];
+        const yPos  = floorH * 0.32 + row * floorH;
+        const colOff = colOffsets[ci];
+        // telaio
+        const frame = new THREE.Mesh(new THREE.BoxGeometry(W * 0.22, floorH * 0.55, 0.015), frameMat);
+        frame.rotation.y = fy;
+        if (fi < 2) { frame.position.set(colOff, yPos, fi === 0 ? halfW + 0.005 : -(halfW + 0.005)); }
+        else        { frame.position.set(fi === 2 ? halfW + 0.005 : -(halfW + 0.005), yPos, colOff); }
+        g.add(frame);
+        // vetro
+        let winMesh: THREE.Mesh;
+        if (kind === 'L') {
+          const litMat = new THREE.MeshStandardMaterial({ color: 0x9aaa60, emissive: 0xaacc44, emissiveIntensity: 0.65, roughness: 0.9 });
+          winMesh = new THREE.Mesh(new THREE.BoxGeometry(W * 0.18, floorH * 0.44, 0.018), litMat);
+          winMesh.name = `win_L_${fi}_${row}_${ci}`;
+          litWins.push(winMesh);
+        } else {
+          winMesh = new THREE.Mesh(new THREE.BoxGeometry(W * 0.18, floorH * 0.44, 0.018), darkMat);
+        }
+        winMesh.rotation.y = fy;
+        winMesh.position.copy(frame.position);
+        const nudge = 0.009;
+        if (fi === 0) winMesh.position.z += nudge;
+        else if (fi === 1) winMesh.position.z -= nudge;
+        else if (fi === 2) winMesh.position.x += nudge;
+        else winMesh.position.x -= nudge;
+        g.add(winMesh);
+      }
+    }
+  }
+
+  // Insegna "UFFICIO" al neon (fronte) — canvas ridisegnata dopo caricamento font
+  const signCanvas = document.createElement('canvas');
+  signCanvas.width = 512; signCanvas.height = 96;
+  const signTex = new THREE.CanvasTexture(signCanvas);
+  const signMat = new THREE.MeshStandardMaterial({ map: signTex, emissive: new THREE.Color(0xff2a8a), emissiveIntensity: 0.8, roughness: 1 });
+  function drawSign(broken: boolean) {
+    const sc = signCanvas.getContext('2d')!;
+    sc.fillStyle = '#06060a';
+    sc.fillRect(0, 0, 512, 96);
+    sc.font = 'bold 48px monospace';
+    sc.textAlign = 'center';
+    sc.textBaseline = 'middle';
+    const letters = 'UFFICIO'.split('');
+    letters.forEach((ch, i) => {
+      sc.fillStyle = (broken && i === 4) ? '#4a1830' : '#ff2a8a';
+      sc.shadowColor = '#ff2a8a';
+      sc.shadowBlur = (broken && i === 4) ? 0 : 12;
+      sc.fillText(ch, 36 + i * 64, 52);
+    });
+    sc.shadowBlur = 0;
+    signTex.needsUpdate = true;
+  }
+  drawSign(false);
+  // Ridisegna dopo che i font sono pronti
+  document.fonts.ready.then(() => drawSign(false));
+  const sign = new THREE.Mesh(new THREE.BoxGeometry(W * 0.80, floorH * 0.38, 0.03), signMat);
+  sign.position.set(0, H - floorH * 0.28, halfW + 0.018);
+  g.add(sign);
+
+  // Ingresso: saracinesca + strisce pericolo
+  const doorMat = new THREE.MeshLambertMaterial({ color: 0x50545e });
+  const door = new THREE.Mesh(new THREE.BoxGeometry(W * 0.32, floorH * 0.65, 0.02), doorMat);
+  door.position.set(0, floorH * 0.32, halfW + 0.012);
+  g.add(door);
+  const hazMat = new THREE.MeshLambertMaterial({ color: 0xf2b705 });
+  const haz = new THREE.Mesh(new THREE.BoxGeometry(W * 0.38, 0.055, 0.025), hazMat);
+  haz.position.set(0, floorH * 0.65, halfW + 0.014);
+  g.add(haz);
+
+  // Tetto con aggetto
+  const roofMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(W + 0.22, 0.14, W + 0.22),
+    new THREE.MeshLambertMaterial({ color: 0x4a3e38 }),
+  );
+  roofMesh.position.set(0, H + 0.07, 0);
+  g.add(roofMesh);
+
+  // Parapetto tetto
+  const parMat = new THREE.MeshLambertMaterial({ color: 0x7a6a5e });
+  const parH = 0.20, parT = 0.07, half = (W + 0.22) / 2;
+  const parDefs: [number, number, number, number][] = [
+    [0, half, W + 0.22, parT],
+    [0, -half, W + 0.22, parT],
+    [half, 0, parT, W + 0.22],
+    [-half, 0, parT, W + 0.22],
+  ];
+  for (const [px, pz, pw, pd] of parDefs) {
+    const par = new THREE.Mesh(new THREE.BoxGeometry(pw, parH, pd), parMat);
+    par.position.set(px, H + 0.14 + parH / 2, pz);
+    g.add(par);
+  }
+
+  // Antenna + luce rossa lampeggiante
+  const antMat = new THREE.MeshLambertMaterial({ color: 0x555560 });
+  const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.55, 6), antMat);
+  ant.position.set(W * 0.28, H + 0.14 + parH + 0.28, W * 0.28);
+  g.add(ant);
+  const antLightMat = new THREE.MeshStandardMaterial({ color: 0xff2020, emissive: 0xff2020, emissiveIntensity: 1.0 });
+  const antLight = new THREE.Mesh(new THREE.SphereGeometry(0.028, 6, 4), antLightMat);
+  antLight.position.set(W * 0.28, H + 0.14 + parH + 0.58, W * 0.28);
+  antLight.name = 'antLight';
+  g.add(antLight);
+
   g.position.set(wx(TOWER.x), 0, wz(TOWER.y));
-  return g;
+  return { group: g, litWins, antLight, signMat, drawSign };
 }
 
 // ─── Prop 3D per dipartimento ─────────────────────────────────────────────────
@@ -264,9 +384,10 @@ function buildParkingEnv(g: THREE.Group) {
   const winMat = new THREE.MeshLambertMaterial({ color: 0x1c2430 });
   const useModels = modelCache.has('sedan');
   let ci = 0;
-  for (let ry = 20; ry < WORLD.h - 30; ry += 76) {
-    for (let sx = 10; sx < WORLD.w - 20; sx += 44) {
-      const cx = sx + 11, cy = ry + 20;
+  // ry=8, sx=12 per allinearsi al grid della texture 2D (AREA.y+20=-220, step 76 → 1° visibile=8)
+  for (let ry = 8; ry < WORLD.h - 30; ry += 76) {
+    for (let sx = 12; sx < WORLD.w - 20; sx += 44) {
+      const cx = sx + 11, cy = ry + 14;
       if (nearTower(cx, cy, 40)) continue;
       if (useModels) {
         const name = CAR_MODELS[ci % CAR_MODELS.length];
@@ -587,7 +708,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   const scene   = buildScene();
-  const towerG  = buildTower();
+  const { group: towerG, litWins: towerLitWins, antLight: towerAntLight, signMat: towerSignMat, drawSign: drawTowerSign } = buildTower();
   scene.add(towerG);
   const towerBody = towerG.getObjectByName('body') as THREE.Mesh;
   const ambLight  = scene.getObjectByName('amb') as THREE.AmbientLight;
@@ -630,8 +751,13 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
   });
 
   const bombPool  = new MeshPool(scene, () => new THREE.Mesh(
-    new THREE.SphereGeometry(0.09, 6, 4),
-    new THREE.MeshLambertMaterial({ color: 0x1a1a1c }),
+    new THREE.SphereGeometry(0.14, 8, 6),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a1c, emissive: 0x000000, roughness: 0.6, metalness: 0.3 }),
+  ));
+  const BOMB_RADIUS_3D = 70 * S; // raggio detonazione in unità Three.js
+  const bombRingPool = new MeshPool(scene, () => new THREE.Mesh(
+    new THREE.RingGeometry(BOMB_RADIUS_3D - 0.04, BOMB_RADIUS_3D + 0.04, 48),
+    new THREE.MeshBasicMaterial({ color: 0xff6400, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }),
   ));
   const wallPool  = new MeshPool(scene, () => new THREE.Mesh(new THREE.BoxGeometry(1, WALL_H, 0.08), new THREE.MeshLambertMaterial({ color: 0xbfa574 })));
 
@@ -662,7 +788,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
   const sceneTexCache = new Map<number, THREE.CanvasTexture>();
   function applySceneTex(deptIdx: number) {
     if (!sceneTexCache.has(deptIdx)) {
-      const built = build2DScene(deptIdx);
+      const built = build2DScene(deptIdx, deptIdx === 0 ? { skipCars: true } : undefined);
       const tex = new THREE.CanvasTexture(built.canvas);
       tex.magFilter = THREE.LinearFilter;
       tex.minFilter = THREE.LinearFilter;
@@ -693,8 +819,6 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
     }
     currentEnvGroup = envPropsCache.get(deptIdx)!;
     currentEnvGroup.visible = true;
-    // Nascondi la texture 2D per il parcheggio quando i modelli 3D sono pronti
-    if (modelsLoaded) scenePlane.visible = deptIdx !== 0;
   }
   applyEnvDept(0);
 
@@ -728,6 +852,8 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
 
   let lastT = performance.now() / 1000;
   let shakeAmt = 0;
+  // ?dept=N forza il dipartimento (utile per testing)
+  const forceDept = parseInt(new URLSearchParams(location.search).get('dept') ?? '-1');
   let lastDept = -1;
   let zombieK = 0;
   let sceneTitle: { name: string; timer: number } | null = null;
@@ -753,8 +879,6 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       );
     }))).then(() => {
       modelsLoaded = true;
-      // Le auto 2D non servono più: nascondi la texture 2D (solo per parcheggio)
-      scenePlane.visible = Math.max(0, lastDept) !== 0;
       // Ricostruisce ambiente con i modelli reali
       for (const grp of envPropsCache.values()) scene.remove(grp);
       envPropsCache.clear();
@@ -793,7 +917,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
 
     // ── Atmosfera per reparto ──────────────────────────────────────────────
     const wave  = run?.wave ?? 1;
-    const dept  = Math.floor((Math.max(1, wave) - 1) / 10) % DEPT_PALETTE.length;
+    const dept  = forceDept >= 0 ? forceDept % DEPT_PALETTE.length : Math.floor((Math.max(1, wave) - 1) / 10) % DEPT_PALETTE.length;
     const isZombie = run ? isZombieWave(wave) : false;
     zombieK += (Math.min(1, (isZombie ? 1 : 0) - zombieK) * dt * 1.5);
     zombieK  = Math.max(0, Math.min(1, zombieK));
@@ -830,12 +954,25 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       cam.lookAt(0, 0, 0);
     }
 
-    // ── Torre: colore dai danni ────────────────────────────────────────────
+    // ── Torre: colore dai danni + animazioni neon/finestre ───────────────
     if (run) {
       const ratio = run.tower.hp / run.stats.maxHp;
       (towerBody.material as THREE.MeshLambertMaterial).color
         .setHSL(ratio * 0.07, 0.22, 0.30 + ratio * 0.28);
     }
+    // Finestre illuminate: flickering casuale
+    for (const win of towerLitWins) {
+      const mat = win.material as THREE.MeshStandardMaterial;
+      const flick = Math.sin(now * 9 + win.position.x * 11 + win.position.y * 7) > 0.92;
+      mat.emissiveIntensity = flick ? 0.15 : 0.65;
+    }
+    // Insegna "UFFICIO": la quinta lettera 'C' fa i capricci + pulsazione globale
+    const signBroken = Math.sin(now * 17) > 0.2 || Math.sin(now * 1.3) > 0.7;
+    const signBrokenPrev = Math.sin((now - 0.016) * 17) > 0.2 || Math.sin((now - 0.016) * 1.3) > 0.7;
+    if (signBroken !== signBrokenPrev) drawTowerSign(signBroken);
+    towerSignMat.emissiveIntensity = run?.phase === 'over' ? 0.05 : signBroken ? 0.15 : 0.8;
+    // Antenna: lampeggio rosso
+    (towerAntLight.material as THREE.MeshStandardMaterial).emissiveIntensity = Math.sin(now * 4) > 0 ? 1.0 : 0.08;
 
     // ── Hero sul tetto ────────────────────────────────────────────────────
     heroSp.visible = !!run;
@@ -895,7 +1032,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       const col = t.color ?? '#ff88aa';
       try { (m.material as THREE.MeshLambertMaterial).color.set(col); } catch { /* */ }
       (m.material as THREE.MeshLambertMaterial).opacity = Math.min(1, t.life / (t.max ?? 0.5));
-      m.material.transparent = true;
+      (m.material as THREE.MeshLambertMaterial).transparent = true;
       const sc = 0.5 + t.life * 1.5;
       m.scale.setScalar(sc);
     }
@@ -1062,13 +1199,22 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
 
     // ── Bombe ─────────────────────────────────────────────────────────────
     bombPool.reset();
+    bombRingPool.reset();
     if (run) for (const b of (run as any).bombs ?? []) {
       if (b.detonated) continue;
       const m = bombPool.get();
-      m.position.set(wx(b.x), 0.12, wz(b.y));
-      // Scintilla: la bomba pulsa leggermente
+      m.position.set(wx(b.x), 0.18, wz(b.y));
       const pulse = 1 + Math.sin(now * 12 + b.x) * 0.15;
       m.scale.setScalar(pulse);
+      (m.material as THREE.MeshStandardMaterial).emissive.setHex(
+        Math.sin(now * 12 + b.x) > 0.3 ? 0xffe040 : 0x000000
+      );
+      // Cerchio raggio di detonazione (solo fase piazzamento)
+      if (run.phase === 'bomb-placement') {
+        const ring = bombRingPool.get();
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(wx(b.x), 0.02, wz(b.y));
+      }
     }
 
     // ── Flash boss ────────────────────────────────────────────────────────
@@ -1194,6 +1340,37 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       v.addColorStop(1,   `rgba(13,13,15,${(0.72 + danger * 0.12).toFixed(2)})`);
       overlayCtx.fillStyle = v;
       overlayCtx.fillRect(0, 0, OW, OH);
+    }
+
+    // Zombie grade: luce verde malata + tremolio neon (riproduce drawZombieGrade del 2D)
+    if (zombieK > 0) {
+      overlayCtx.fillStyle = `rgba(20,45,15,${(0.35 * zombieK).toFixed(3)})`;
+      overlayCtx.fillRect(0, 0, OW, OH);
+      if (Math.sin(now * 13) > 0.94) {
+        overlayCtx.fillStyle = `rgba(0,0,0,${(0.25 * zombieK).toFixed(3)})`;
+        overlayCtx.fillRect(0, 0, OW, OH);
+      }
+    }
+
+    // Bonus stage: notte giapponese — velo blu + luna piena + petali di ciliegio
+    if ((run as any)?.bonusStage) {
+      overlayCtx.fillStyle = 'rgba(5,5,30,0.72)';
+      overlayCtx.fillRect(0, 0, OW, OH);
+      const moonX = OW * 0.78, moonY = OH * 0.08, moonR = 22 * dpr;
+      overlayCtx.fillStyle = 'rgba(255,245,200,0.95)';
+      overlayCtx.beginPath(); overlayCtx.arc(moonX, moonY, moonR, 0, Math.PI * 2); overlayCtx.fill();
+      overlayCtx.fillStyle = 'rgba(255,245,200,0.22)';
+      overlayCtx.beginPath(); overlayCtx.arc(moonX, moonY, moonR * 1.35, 0, Math.PI * 2); overlayCtx.fill();
+      for (let i = 0; i < 14; i++) {
+        const px2 = ((i * 71 + now * 15) % OW);
+        const py2 = ((i * 53 + now * 22) % OH);
+        overlayCtx.fillStyle = `rgba(255,180,200,${(0.45 + 0.3 * Math.sin(now + i)).toFixed(3)})`;
+        overlayCtx.save();
+        overlayCtx.translate(px2, py2);
+        overlayCtx.rotate(now + i);
+        overlayCtx.beginPath(); overlayCtx.ellipse(0, 0, 4 * dpr, 2.5 * dpr, 0, 0, Math.PI * 2); overlayCtx.fill();
+        overlayCtx.restore();
+      }
     }
 
     if (run?.boss) {

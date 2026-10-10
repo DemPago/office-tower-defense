@@ -4,7 +4,7 @@ import { PAL, FONT, shade } from '../palette.js';
 import * as P from '../props.js';
 import { AREA, LANE, free, inYard, scatter, many } from './common.js';
 
-export function build(g, rnd) {
+export function build(g, rnd, data?, opts?: { skipCars?: boolean }) {
   P.rect(g, AREA.x, AREA.y, AREA.w, AREA.h, PAL.asphalt);
   P.noise(g, AREA, many(60000), [PAL.asphalt2, PAL.asphaltHi, PAL.black, '#38383d'], rnd);
   P.noise(g, AREA, many(4000), ['#55555c', '#1c1c20'], rnd, 1); // sassolini nell'asfalto
@@ -33,7 +33,7 @@ export function build(g, rnd) {
       if (!free(sx + 10, ry + 16, 4) || !free(sx + 10, ry, 4) || !free(sx + 10, ry + 32, 4)) continue;
       P.rect(g, sx, ry, 1, 34, 'rgba(232,226,208,0.45)');
       P.rect(g, sx, ry + 34, 22, 1, 'rgba(232,226,208,0.3)');
-      if (rnd() < 0.7) P.italianCar(g, sx + 3, ry + 3, kinds[Math.floor(rnd() * kinds.length)], colors[Math.floor(rnd() * colors.length)], rnd() < 0.15, rnd);
+      if (!opts?.skipCars && rnd() < 0.7) P.italianCar(g, sx + 3, ry + 3, kinds[Math.floor(rnd() * kinds.length)], colors[Math.floor(rnd() * colors.length)], rnd() < 0.15, rnd);
       else if (rnd() < 0.3) P.trash(g, sx + 10, ry + 20, rnd);
     }
   }
