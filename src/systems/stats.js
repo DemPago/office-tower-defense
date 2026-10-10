@@ -11,7 +11,7 @@ import { heroDef } from '../data/heroes.js';
 export const BASE = {
   dmg: 10,         // danno per colpo
   rate: 1.4,       // colpi al secondo
-  range: 170,      // gittata in pixel
+  range: 145,      // gittata in pixel (cresce lentamente con le ondate)
   hp: 150,         // vita massima
   regen: 1,        // vita recuperata al secondo
   crit: 0.05,      // probabilità di critico
@@ -64,7 +64,7 @@ export function computeStats(run, meta) {
     dmg: (1 + H.dmg) * W.dmg * BASE.dmg * (1 + u.dmg) * (1 + c.dmg) * (1 + m.dmg) * (1 + auraDmg),
     rate: Math.min(12 * W.rate, (1 + H.rate) * W.rate * BASE.rate * (1 + u.rate + c.rate + m.rate + auraRate)),
     allyRateMult: 1 + auraRate,
-    range: Math.min(260, (1 + H.range) * W.range * BASE.range * (1 + u.range + c.range)),
+    range: Math.min(260, (1 + H.range) * W.range * BASE.range * (1 + u.range + c.range) * (1 + (run.wave || 0) * 0.003)),
     maxHp: (BASE.hp + u.hpFlat + c.hpFlat) * (1 + c.hp + m.hp) * (1 + H.hp),
     regen: (BASE.regen + u.regen + c.regen) * (1 + H.regen),
     armor: Math.min(0.7, c.armor + H.armor),
