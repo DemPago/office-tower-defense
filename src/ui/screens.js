@@ -20,10 +20,36 @@ export function hideAll() {
   show(null);
 }
 
-// Descrizione del personaggio: chi è, arma e statistiche.
-function heroText(h) {
+// Popola #hero-preview con ritratto + info strutturate.
+function updateHeroPreview(h, portrait, locked) {
+  const box = $('hero-preview');
+  if (!box) return;
+  if (locked) {
+    box.innerHTML = `<p class="preview-locked">🔒 Si sblocca completando tutti i livelli (ondata ${UNLOCK_WAVE})</p>`;
+    return;
+  }
   const w = weaponDef(h.weapon);
-  return `${h.name}: ${h.desc}\nArma: ${w.icon} ${w.name} – ${w.desc}\nStatistiche: ${heroStatsText(h)}`;
+  const pills = Object.entries(h.stats || {}).map(([k, v]) => {
+    const n = k === 'manaMax' ? `${v > 0 ? '+' : ''}${v}` : `${v > 0 ? '+' : ''}${Math.round(v * 100)}%`;
+    const label = { dmg:'danno', rate:'fuoco', hp:'vita', regen:'regen',
+                    range:'gittata', manaRegen:'mana', crit:'crit',
+                    armor:'armor', gold:'oro', manaMax:'mana+' }[k] || k;
+    return `<span class="stat-pill ${v > 0 ? 'pos' : 'neg'}">${n} ${label}</span>`;
+  }).join('');
+
+  box.innerHTML = '';
+  const cv = portrait(h.id, false);
+  cv.className = 'preview-canvas';
+  box.appendChild(cv);
+
+  const info = document.createElement('div');
+  info.className = 'preview-info';
+  info.innerHTML = `
+    <p class="preview-name">${h.name}</p>
+    <p class="preview-desc">${h.desc}</p>
+    <p class="preview-weapon">${w.icon} <b>${w.name}</b><br><span>${w.desc}</span></p>
+    <div class="preview-pills">${pills}</div>`;
+  box.appendChild(info);
 }
 
 // portrait(id, locked) restituisce un canvas col ritratto; onHero(id) quando ne scegli uno.
@@ -42,17 +68,12 @@ export function showMenu(meta, portrait, onHero) {
     const name = document.createElement('span');
     name.textContent = locked ? '🔒' : `${weaponDef(h.weapon).icon} ${h.name}`;
     btn.appendChild(name);
-    const describe = () => {
-      $('hero-desc').textContent = locked
-        ? `🔒 Si sblocca completando tutti i livelli (ondata ${UNLOCK_WAVE})`
-        : heroText(h);
-    };
-    btn.addEventListener('pointerenter', describe);
-    btn.addEventListener('click', () => { if (!locked) onHero(h.id); else describe(); });
+    btn.addEventListener('pointerenter', () => updateHeroPreview(h, portrait, locked));
+    btn.addEventListener('click', () => { if (!locked) onHero(h.id); else updateHeroPreview(h, portrait, locked); });
     list.appendChild(btn);
   }
   const sel = HEROES.find(h => h.id === current);
-  $('hero-desc').textContent = heroText(sel);
+  updateHeroPreview(sel, portrait, false);
   show('scr-menu');
 }
 

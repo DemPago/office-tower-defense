@@ -12,7 +12,9 @@ export const HEROES = [
   { id: 'tony',    name: 'Tony',       weapon: 'pistol', stats: { dmg: 0.05, crit: 0.1, regen: -0.5, hp: -0.1 }, desc: 'È come una macchina' },
   { id: 'vanessa', name: 'Vanessa',    weapon: 'hearts', stats: { regen: 0.6, hp: 0.15, dmg: -0.1 }, desc: 'Bionda, decisa, inarrestabile' },
   { id: 'clara',   name: 'Clara',      weapon: 'energy', stats: { manaRegen: 0.4, manaMax: 25, hp: -0.1 }, desc: 'Epiche su Jira' },
-  { id: 'pesce',   name: 'Uomo Pesce', weapon: 'sonic', stats: { hp: 0.3, armor: 0.1, rate: -0.15 }, desc: 'Nessuno sa come sia stato assunto' },
+  { id: 'pesce',   name: 'Uomo Pesce', weapon: 'sonic',     stats: { hp: 0.3, armor: 0.1, rate: -0.15 },               desc: 'Nessuno sa come sia stato assunto' },
+  { id: 'frank',   name: 'Frank',      weapon: 'crossbow',  stats: { range: 0.2, crit: 0.1, hp: -0.2, regen: -0.15 }, desc: 'Alto, sottile, pericolosamente preciso' },
+  { id: 'cirios',  name: 'Cirios',     weapon: 'daggers',   stats: { gold: 0.3, armor: 0.1, rate: -0.15, range: -0.1 }, desc: 'Una fattura in mano vale più di una spada' },
 ];
 export const START_HEROES = ['peppe', 'dem'];
 export const UNLOCK_WAVE = 60;

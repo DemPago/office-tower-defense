@@ -488,35 +488,78 @@ h2 {
 .menu-sec-btns .btn { min-width: 0; width: 100%; font-size: 8px; padding: 9px 10px; }
 
 /* Selezione personaggio nella colonna destra */
+#menu-right {
+  background: rgba(8, 8, 10, 0.60);
+  backdrop-filter: blur(3px);
+}
 .menu-pick-label { font-size: 7px; color: var(--grey); margin-bottom: 2px; }
 #hero-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  width: 100%; max-width: 360px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  width: 100%; max-width: 380px;
 }
 .hero {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 6px 4px 5px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 5px 3px 4px;
   background: var(--asphalt);
   border: 2px solid var(--ink);
-  font-size: 7px; color: var(--white);
+  font-size: 6px; color: var(--white);
   transition: background .1s, border-color .1s;
 }
-.hero canvas { width: 66px; height: 66px; image-rendering: pixelated; background: #2e2e34; }
+.hero canvas { width: 54px; height: 54px; image-rendering: pixelated; background: #2a2a30; }
+.hero span { font-size: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .hero:hover:not(.locked) { background: var(--steel); }
 .hero.sel {
   border-color: var(--hazard);
-  background: #3a3420;
-  box-shadow: 0 0 0 2px var(--hazard-dk), inset 0 0 8px rgba(242,183,5,0.12);
+  background: #2e2818;
+  box-shadow: 0 0 0 2px var(--hazard-dk), inset 0 0 10px rgba(242,183,5,0.1);
 }
 .hero.sel span { color: var(--hazard); }
-.hero.locked { opacity: .5; cursor: help; }
-#hero-desc {
-  color: var(--grey); font-size: 7px; min-height: 14px;
-  max-width: 340px; white-space: pre-line; line-height: 1.8;
-  text-align: center;
+.hero.locked { opacity: .45; cursor: help; }
+
+/* Panel di preview del personaggio selezionato */
+#hero-preview {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%; max-width: 380px;
+  padding: 10px;
+  background: rgba(20,20,24,0.9);
+  border: 2px solid var(--steel);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+  min-height: 80px;
 }
+.preview-canvas {
+  width: 68px; height: 68px;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+  background: #1a1a1e;
+  border: 2px solid var(--steel-hi);
+}
+.preview-info {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 4px;
+  text-align: left;
+}
+.preview-name {
+  font-family: var(--spray); font-weight: normal;
+  font-size: 15px; color: var(--hazard); line-height: 1;
+  text-shadow: 2px 2px 0 var(--ink);
+}
+.preview-desc { color: var(--concrete-hi); font-size: 6px; font-style: italic; }
+.preview-weapon { font-size: 6px; color: var(--white); line-height: 1.6; }
+.preview-weapon b { color: var(--cyan); }
+.preview-weapon span { color: var(--grey); }
+.preview-pills { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
+.stat-pill {
+  font-size: 6px; padding: 2px 5px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.stat-pill.pos { color: var(--toxic); border-color: rgba(123,211,50,0.4); background: rgba(123,211,50,0.08); }
+.stat-pill.neg { color: var(--red); border-color: rgba(215,38,61,0.4); background: rgba(215,38,61,0.08); }
+.preview-locked { color: var(--grey); font-size: 7px; padding: 20px 10px; text-align: center; line-height: 1.8; }
 
 /* Mobile: colonna singola compatta */
 @media (max-width: 680px) {
@@ -531,9 +574,9 @@ h2 {
   .menu-sec-btns { max-width: 100%; }
   .menu-sec-btns .btn { font-size: 7px; padding: 8px; }
   #menu-right { flex: none; padding: 12px; }
-  #hero-list { gap: 5px; max-width: 100%; }
-  .hero canvas { width: 52px; height: 52px; }
-  .hero { padding: 4px 3px; }
+  #hero-list { gap: 4px; max-width: 100%; grid-template-columns: repeat(4, 1fr); }
+  .hero canvas { width: 48px; height: 48px; }
+  .hero { padding: 3px 2px; }
 }
 
 /* Mitra: potere speciale che compare contro la forma bestiale dei boss */

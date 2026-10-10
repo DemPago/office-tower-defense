@@ -72,13 +72,15 @@ export const LOOKS = {
   focal_f: { skin: SKIN.light, hair: '#2a2a2e', hairStyle: 'bun',   glasses: 'glasses', build: 'fat', top: '#3a1a3a', shirt: '#e8e2d0', skirt: '#3a1a3a', shoes: '#141416', chain: '#f2b705', badge: true, item: 'phone', angry: true },
 
   // Personaggi giocabili (sul tetto del palazzo)
-  peppe:      { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'bald', glasses: 'glasses', facial: 'mustache', top: '#6e6a64', shirt: '#e8e2d0', tie: '#2f4f8f', pants: '#3a3226' },
-  dem:        { skin: SKIN.tan, hair: '#141416', hairStyle: 'slick', facial: 'stubble', top: '#e8e2d0', shirt: '#e8e2d0', sleeves: 'short', chain: '#f2b705', pants: '#2a3a5a', shoes: '#5a3a22' },
-  nando:      { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'curly', glasses: 'glasses', top: '#3e6b2a', shirt: '#3e6b2a', pants: '#3a4a6a', shoes: '#d9d4c7' },
+  peppe:      { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'bald', glasses: 'glasses', facial: 'mustache', top: '#4a5a70', shirt: '#e8e2d0', tie: '#2f4f8f', pants: '#3a3226', headphones: true },
+  dem:        { skin: SKIN.tan, hair: '#141416', hairStyle: 'slick', facial: 'stubble', top: '#e8e2d0', shirt: '#e8e2d0', sleeves: 'short', chain: '#f2b705', pants: '#2a3a5a', shoes: '#5a3a22', item: 'mug' },
+  nando:      { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'curly', glasses: 'glasses', top: '#3e6b2a', shirt: '#3e6b2a', pants: '#3a4a6a', shoes: '#d9d4c7', item: 'crossbow' },
   tony:       { skin: SKIN.tan, hair: '#0d0d0f', hairStyle: 'slick', scar: true, top: '#e8e2d0', shirt: '#b02030', chain: '#f2b705', pants: '#e8e2d0', shoes: '#e8e2d0', item: 'cigar' },
-  vanessa:    { skin: SKIN.light, hair: '#e0c060', hairStyle: 'long', top: '#b02a5a', shirt: '#e8e2d0', skirt: '#2a2a2e', shoes: '#b02a5a' },
-  clara:      { skin: SKIN.light, hair: '#1e1e22', hairStyle: 'bob', glasses: 'big', top: '#257179', shirt: '#e8e2d0', pants: '#2a2a2e' },
+  vanessa:    { skin: SKIN.light, hair: '#e0c060', hairStyle: 'long', top: '#b02a5a', shirt: '#e8e2d0', skirt: '#2a2a2e', shoes: '#b02a5a', item: 'phone' },
+  clara:      { skin: SKIN.light, hair: '#1e1e22', hairStyle: 'bob', glasses: 'big', top: '#257179', shirt: '#e8e2d0', pants: '#2a2a2e', item: 'laptop' },
   pesce:      { skin: '#4a8a9a', hair: '#2f6070', hairStyle: 'fin', glasses: 'fish', gills: true, top: '#1f2a44', shirt: '#e8e2d0', tie: '#e8641b', pants: '#1f2a44' },
+  frank:      { skin: SKIN.light, hair: '#1e1e22', hairStyle: 'short', build: 'thin', top: '#3a3c42', shirt: '#e8e2d0', tie: '#2de2e6', pants: '#2a2a2e', shoes: '#141416', item: 'laptop' },
+  cirios:     { skin: SKIN.mid, hair: '#a0a4a8', hairStyle: 'slick', facial: 'mustache', glasses: 'glasses', top: '#2a2a2e', shirt: '#c8c0b0', pants: '#3a3226', shoes: '#141416', item: 'invoice' },
 
   // Protagonista (vecchio look) e colleghi (rinforzi)
   player:     { skin: SKIN.mid, hair: '#141416', hairStyle: 'short', hat: 'hardhat', hatColor: '#f2b705', top: '#2f4f6f', shirt: '#2f4f6f', vest: '#f2b705', pants: '#3a4a6a' },
@@ -559,6 +561,13 @@ function drawItem(px, L, hx, hy, tw, tx) {
       break;
     case 'flyers':
       px(hx - 1, hy - 6, 5, 7, '#ff3e8a'); px(hx + 1, hy - 8, 5, 7, '#f2b705'); px(hx + 2, hy - 6, 3, 1, INK); px(hx + 2, hy - 4, 2, 1, INK);
+      break;
+    case 'invoice':
+      // foglio bianco, tre righe grigie, simbolo € giallo in basso
+      px(hx - 4, hy - 9, 10, 12, '#e8e2d0');
+      px(hx - 4, hy - 9, 10, 2, '#c0c4cc');
+      px(hx - 3, hy - 5, 8, 1, '#8a8d93'); px(hx - 3, hy - 3, 6, 1, '#8a8d93'); px(hx - 3, hy - 1, 8, 1, '#8a8d93');
+      px(hx - 3, hy + 1, 3, 1, '#f2b705'); px(hx - 3, hy + 2, 4, 1, '#f2b705'); px(hx - 3, hy + 3, 3, 1, '#f2b705');
       break;
     case 'baton':
       px(hx + 1, hy - 10, 2, 15, INK); px(hx, hy - 1, 4, 3, '#3a3c42'); px(hx + 1, hy - 10, 1, 8, '#3a3c42');
