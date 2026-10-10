@@ -1,6 +1,6 @@
 // Rinforzi: scelta del collega e i loro spari.
-import { ALLIES, ALLY_LEVELS, ALLY_LEVEL_MULT, ALLY_SLOTS, ALLY_RING, allyArc, allyHp, YARD_DRAIN } from '../data/allies.js';
-import { TOWER, YARD } from '../state.js';
+import { ALLIES, ALLY_LEVELS, ALLY_LEVEL_MULT, ALLY_SLOTS, ALLY_RING, allyArc, allyHp } from '../data/allies.js';
+import { TOWER } from '../state.js';
 import { dist } from '../util.js';
 import { fire, pickTargets } from './combat.js';
 import { offerCards } from './cards.js';
@@ -98,13 +98,6 @@ export function animateAllies(run, dt) {
   }
 }
 
-function inYard(e) {
-  return e.x > YARD.x && e.x < YARD.x + YARD.w && e.y > YARD.y && e.y < YARD.y + YARD.h;
-}
-
-export function updateYard(run, dt) {
-  run.intruders = 0;
-}
 
 // A fine ondata i colleghi sopravvissuti tornano in piena forma.
 export function restAllies(run) {

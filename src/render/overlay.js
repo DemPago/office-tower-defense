@@ -66,18 +66,6 @@ export function drawBossBar(ctx, run, W) {
   ctx.fillText(run.boss.name, W / 2, y + 24);
 }
 
-export function drawIntruderWarning(ctx, run, W, time) {
-  if (Math.sin(time * 8) < -0.3) return; // lampeggia
-  const y = run.boss ? 58 : 18;
-  const text = `⚠ ${run.intruders} INTRUS${run.intruders > 1 ? 'I' : 'O'} NEL CORTILE: i colleghi perdono vita!`;
-  ctx.font = `7px ${FONT}`;
-  ctx.textAlign = 'center';
-  const w = ctx.measureText(text).width + 16;
-  ctx.fillStyle = 'rgba(13,13,15,0.8)';
-  ctx.fillRect(W / 2 - w / 2, y - 10, w, 15);
-  ctx.fillStyle = PAL.red;
-  ctx.fillText(text, W / 2, y);
-}
 
 // Freccia sul bordo dello schermo che indica da dove arriva il boss.
 export function drawBossPointer(ctx, run, view, W, H) {

@@ -2,7 +2,6 @@
 import { TOWER } from '../state.js';
 import { allyDef, allyPos } from '../systems/allies.js';
 import { ALLY_SLOTS, allyArc } from '../data/allies.js';
-import { FENCE } from '../systems/combat.js';
 import { PAL } from './palette.js';
 import { sandbag } from './props.js';
 import { drawPersonAt, rad } from './view.js';
@@ -29,38 +28,6 @@ export function drawSectors(ctx, run, time) {
   }
 }
 
-// Recinto elettrico: pali e fili sui quarti di cerchio costruiti.
-// back=true disegna la metà dietro al palazzo, back=false quella davanti.
-export function drawFence(ctx, run, time, back) {
-  if (!run || !run.stats.fence) return;
-  const q = run.stats.fence, r = FENCE.outer - 4;
-  for (let deg = 0; deg < q * 90; deg += 12) {
-    const a = rad(deg + 6);
-    const x = TOWER.x + Math.cos(a) * r, y = TOWER.y + Math.sin(a) * r * 0.8;
-    if ((y < TOWER.y) !== back) continue;
-    ctx.fillStyle = PAL.black;
-    ctx.fillRect(Math.round(x) - 1, Math.round(y) - 12, 3, 13);
-    ctx.fillStyle = PAL.steel;
-    ctx.fillRect(Math.round(x), Math.round(y) - 11, 1, 11);
-    ctx.fillStyle = PAL.hazard;
-    ctx.fillRect(Math.round(x) - 1, Math.round(y) - 13, 3, 2);
-  }
-  ctx.save();
-  ctx.strokeStyle = 'rgba(45,226,230,0.75)';
-  ctx.lineWidth = 1;
-  for (const h of [-10, -5]) {
-    ctx.beginPath();
-    for (let deg = 0; deg <= q * 90; deg += 3) {
-      const a = rad(deg);
-      const y = TOWER.y + Math.sin(a) * r * 0.8;
-      if ((y < TOWER.y) !== back) { ctx.moveTo(TOWER.x + Math.cos(a) * r, y + h); continue; }
-      const jitter = Math.random() < 0.08 ? (Math.random() - 0.5) * 3 : 0;
-      ctx.lineTo(TOWER.x + Math.cos(a) * r, y + h + jitter);
-    }
-    ctx.stroke();
-  }
-  ctx.restore();
-}
 
 export function drawAlly(ctx, assets, ally, time) {
   const def = allyDef(ally.id);

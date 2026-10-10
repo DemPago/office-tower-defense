@@ -36,7 +36,6 @@ export function createRun(meta) {
     cardChoices: null,       // le 3 carte proposte durante la fase 'cards'
     allies: [],              // rinforzi: { id, level, slot, ... }
     allyChoices: null,       // i 3 colleghi proposti durante la fase 'ally'
-    intruders: 0,            // nemici vivi dentro al cortile in questo momento
     wall: buildWall(),       // tratti del muro di cinta (systems/wall.js)
     abilityCd: Object.fromEntries(ABILITIES.map(a => [a.id, 0])),
     mana: MANA.start,

@@ -13,9 +13,6 @@ export const UPGRADES = [
     help: s => `Vita massima del palazzo. +25 per livello. Ora: ${Math.round(s.maxHp)}.` },
   { id: 'regen', icon: '💚', name: 'Rigenera',  base: 10, grow: 1.38, mod: (u, L) => { u.regen += 0.8 * L; },
     help: s => `Vita che il palazzo recupera da solo ogni secondo. +0,8 per livello. Ora: ${s.regen.toFixed(1)}/s.` },
-  // Recinto elettrico intorno alla torre, a settori: liv.1 copre 0-90°, liv.2 0-180°, liv.3 0-270°, liv.4 tutto.
-  { id: 'fence', icon: '🔌', name: 'Recinto',   base: 30, grow: 2.2, max: 4, mod: (u, L) => { u.fence += L; },
-    help: (s, L) => `Recinto elettrico intorno al palazzo: fulmina i nemici che si avvicinano. Liv.1 copre 0-90° (in alto a destra), liv.2 fino a 180°, liv.3 fino a 270°, liv.4 tutto il giro. Ora: ${L ? `${L * 90}°` : 'non costruito'}.` },
 ];
 
 // Potenziamenti PERMANENTI comprati con i BUONI PASTO (valgono per sempre).

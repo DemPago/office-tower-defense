@@ -6,7 +6,7 @@ import { dealDamage } from './damage.js';
 import { weaponDef } from '../data/weapons.js';
 
 // Punto da cui partono i colpi: il personaggio sul tetto della torre.
-const MUZZLE = { x: TOWER.x + 7, y: TOWER.y - 75 };
+export const MUZZLE = { x: TOWER.x + 7, y: TOWER.y - 75 };
 
 export function updateTower(run, dt) {
   const t = run.tower, s = run.stats;
@@ -111,7 +111,7 @@ function onShotHit(run, shot, e) {
   shot.hitIds.add(e.id);
   if (shot.kind !== 'wave') burst(run, shot.x, shot.y, '#ffd23f', 3, 50); // scintille d'impatto
   // i numeri dei colleghi sono azzurri, quelli del palazzo chiari
-  const fromTower = ['tower', 'xbow', 'laser', 'wave', 'energy', 'dagger', 'heart'].includes(shot.kind);
+  const fromTower = ['tower', 'xbow', 'laser', 'wave', 'energy', 'dagger', 'heart', 'sniper'].includes(shot.kind);
   dealDamage(run, e, shot.dmg, { crit: shot.crit, color: fromTower ? null : '#2de2e6' });
   if (fx.charm > 0) e.charmT = Math.max(e.charmT || 0, fx.charm * (e.boss ? 0.25 : 1)); // innamorato: resta fermo
   if (fx.slow > 0) { e.slowT = 1.5; e.slowF = fx.slow * (e.boss ? 0.5 : 1); }

@@ -13,13 +13,13 @@ import { PAL } from './palette.js';
 import { buildScene, sceneIndexForWave, MARGIN, AREA } from './scenery.js';
 import { VIEW_R, CAMERA, setPixelSize } from './view.js';
 import { drawTower, updateSmoke, drawSmoke, hiddenByTower } from './tower.js';
-import { drawSectors, drawFence, drawAlly } from './allies.js';
-import { drawShadow, drawEnemy, drawGhost, updateTrails, drawTrails, drawCorpse, drawYardAlarm } from './enemies.js';
+import { drawSectors, drawAlly } from './allies.js';
+import { drawShadow, drawEnemy, drawGhost, updateTrails, drawTrails, drawCorpse } from './enemies.js';
 import { drawDust, drawGrade, drawRange, drawShots, drawFx } from './effects.js';
 import { drawZombieWorld, drawZombieGrade } from './zombie.js';
 import { isZombieWave } from '../data/enemies.js';
 import { drawWall } from './wall.js';
-import { drawSceneTitle, drawBanner, drawBossBar, drawIntruderWarning, drawBossPointer } from './overlay.js';
+import { drawSceneTitle, drawBanner, drawBossBar, drawBossPointer } from './overlay.js';
 
 function drawBombs(ctx, run, time) {
   for (const b of run.bombs) {
@@ -154,9 +154,7 @@ export function createRenderer(canvas, assets) {
     ].sort((a, b) => a.y - b.y) : [];
     const behind = actors.filter(a => a.y < TOWER.y + 20);
     for (const a of behind) a.draw();
-    drawFence(ctx, run, time, true);
     drawTower(ctx, assets, run, time);
-    drawFence(ctx, run, time, false);
     // Nemici nascosti dietro al palazzo: si vedono in trasparenza
     for (const a of behind) if (a.e && hiddenByTower(a.e)) drawGhost(ctx, assets, a.e);
     for (const a of actors) if (a.y >= TOWER.y + 20) a.draw();

@@ -1,12 +1,12 @@
 // Il "regista" della partita: fa avanzare tutti i sistemi di un passo
 // e decide quando un'ondata finisce, quando scegliere le carte e quando si perde.
 import { updateSpawns, startWave } from './waves.js';
-import { updateEnemies, updateEnemyShots, updateTower, updateShots, updateFence } from './combat.js';
+import { updateEnemies, updateEnemyShots, updateTower, updateShots } from './combat.js';
 import { updateWall, repairWall, fullRepairWall } from './wall.js';
 import { updateAbilities } from './abilities.js';
 import { offerCards, offerHeavyMalus } from './cards.js';
 import { isZombieWave } from '../data/enemies.js';
-import { offerAllies, updateAllies, animateAllies, updateYard, restAllies } from './allies.js';
+import { offerAllies, updateAllies, animateAllies, restAllies } from './allies.js';
 import { REINFORCE_EVERY } from '../data/allies.js';
 import { updateFx, floatText } from './fx.js';
 import { checkBombs } from './bombs.js';
@@ -59,7 +59,6 @@ export function update(run, dt) {
   updateEnemyShots(run, dt);
   updateTower(run, dt);
   updateAllies(run, dt);
-  updateYard(run, dt);
   updateWall(run, dt);
   updateFence(run, dt);
   updateShots(run, dt);
@@ -77,7 +76,6 @@ export function update(run, dt) {
     floatText(run, TOWER.x, TOWER.y - 90, `Ondata superata! +${bonus}💰`, '#7bd332', 9);
     run.enemyShots = [];
     run.shots = [];
-    run.intruders = 0;
     restAllies(run);
     // Ogni 10 ondate (nuovo macro-stage) il muro torna integro, anche le brecce.
     if (run.wave % 10 === 0) {

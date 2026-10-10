@@ -1,7 +1,10 @@
 // Poteri attivi (vedi data/abilities.js per nomi e ricariche).
 import { ABILITIES, maxMana } from '../data/abilities.js';
-import { dealDamage } from './combat.js';
+import { dealDamage, fire } from './combat.js';
+import { MUZZLE } from './shooting.js';
 import { banner, burst, shake, sfx } from './fx.js';
+import { TOWER } from '../state.js';
+import { dist } from '../util.js';
 
 const EFFECTS = {
   bomb(run) {
@@ -23,6 +26,22 @@ const EFFECTS = {
       dealDamage(run, e, loss / (1 - e.armor)); // ignora l'armatura
     }
   },
+  sniper(run) {
+    const target = run.enemies
+      .filter(e => !e.dead && dist(e, TOWER) > run.stats.range)
+      .sort((a, b) => dist(a, TOWER) - dist(b, TOWER))[0];
+    if (!target) return;
+    fire(run, MUZZLE.x, MUZZLE.y, target, {
+      dmg: run.stats.dmg * 5,
+      bounces: 0,
+      hitIds: new Set(),
+      speed: run.stats.shotSpeed * 2.5,
+      effects: {},
+      kind: 'sniper',
+    });
+    run.fx.beams.push({ x1: MUZZLE.x, y1: MUZZLE.y, x2: target.x, y2: target.y - target.size * 0.35, life: 0.08, crit: true });
+    burst(run, target.x, target.y - target.size * 0.3, '#ffffff', 4, 80);
+  },
 };
 
 export function manaCost(run, id) {
@@ -30,7 +49,9 @@ export function manaCost(run, id) {
 }
 
 export function canUse(run, id) {
-  return run.phase === 'wave' && run.abilityCd[id] <= 0 && run.enemies.length > 0 && run.mana >= manaCost(run, id);
+  if (run.phase !== 'wave' || run.abilityCd[id] > 0 || run.mana < manaCost(run, id)) return false;
+  if (id === 'sniper') return run.enemies.some(e => !e.dead && dist(e, TOWER) > run.stats.range);
+  return run.enemies.length > 0;
 }
 
 export function useAbility(run, id) {

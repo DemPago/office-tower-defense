@@ -19,4 +19,6 @@ export const ABILITIES = [
     help: 'Tutti i nemici si fermano per 3 secondi (i boss solo 1,2). Salva il cortile quando entrano gli intrusi.' },
   { id: 'audit',   key: '4', icon: '🔍', short: 'Audit',    name: 'Audit fiscale',    desc: 'Dimezza la vita dei nemici', mana: 60, cd: 10,
     help: "Toglie metà della vita a tutti i nemici (ai boss il 15%), ignorando l'armatura. Perfetto contro i tank." },
+  { id: 'sniper',  key: '5', icon: '🎯', short: 'Cecchino', name: 'Colpo di precisione', desc: 'Colpo da cecchino a un nemico fuori gittata', mana: 1, cd: 0.3,
+    help: 'Spara un colpo potente (5× danno) al nemico più vicino oltre la gittata normale. Costa solo 1 mana — utile quando i boss si avvicinano ancora lontani.' },
 ];
