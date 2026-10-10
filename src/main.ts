@@ -36,7 +36,21 @@ try {
   // senza font si usa quello di riserva
 }
 
-const use3d = location.search.includes('3d');
+// Modalità grafica: legge da localStorage, poi da URL param (legacy).
+const stored = localStorage.getItem('otd_mode');
+const use3d = stored ? stored === '3d' : location.search.includes('3d');
+
+// Toggle 2D/3D nel menu
+const rt2d = $('rt-2d') as HTMLButtonElement;
+const rt3d = $('rt-3d') as HTMLButtonElement;
+function updateRendererToggle() {
+  rt2d.classList.toggle('active', !use3d);
+  rt3d.classList.toggle('active', use3d);
+}
+updateRendererToggle();
+rt2d.addEventListener('click', () => { localStorage.setItem('otd_mode', '2d'); location.replace(location.pathname); });
+rt3d.addEventListener('click', () => { localStorage.setItem('otd_mode', '3d'); location.replace(location.pathname); });
+
 const badge = document.createElement('div');
 badge.style.cssText = 'position:fixed;top:4px;right:4px;font-size:10px;padding:2px 6px;z-index:9999;border-radius:3px;pointer-events:none';
 document.body.appendChild(badge);

@@ -522,6 +522,24 @@ h2 {
 }
 
 /* Pulsanti secondari impilati, larghezza uniforme */
+.renderer-toggle {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; max-width: 260px;
+  background: var(--asphalt); border: 2px solid var(--ink);
+  padding: 5px 10px; box-sizing: border-box;
+}
+.rt-label { font-size: 7px; color: var(--grey); flex: 1; }
+.rt-btn {
+  font-family: var(--font); font-size: 8px; cursor: pointer;
+  padding: 4px 10px; background: var(--char); color: var(--steel-hi);
+  border: 2px solid var(--steel); min-width: 0;
+}
+.rt-btn.active {
+  background: var(--cyan); color: var(--ink);
+  border-color: var(--cyan);
+}
+.rt-btn:hover:not(.active) { background: var(--steel); }
+
 .menu-sec-btns {
   display: flex; flex-direction: column; gap: 5px;
   width: 100%; max-width: 260px;
