@@ -14,14 +14,38 @@ export function drawDust(ctx, dust, dt, canvas) {
   }
 }
 
-export function drawGrade(ctx, canvas) {
+// Pattern scanlines (creato una volta sola)
+let _scanPat = null;
+function scanlinePattern(ctx) {
+  if (_scanPat) return _scanPat;
+  const pc = document.createElement('canvas');
+  pc.width = 1; pc.height = 2;
+  const pg = pc.getContext('2d');
+  pg.fillStyle = 'rgba(0,0,0,0.07)';
+  pg.fillRect(0, 0, 1, 1);
+  _scanPat = ctx.createPattern(pc, 'repeat');
+  return _scanPat;
+}
+
+export function drawGrade(ctx, canvas, run) {
   const w = canvas.width, h = canvas.height;
-  const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.32, w / 2, h / 2, Math.max(w, h) * 0.72);
-  g.addColorStop(0, 'rgba(13,13,15,0)');
-  g.addColorStop(1, 'rgba(13,13,15,0.75)');
-  ctx.fillStyle = 'rgba(255,140,40,0.04)';
+  const hp = (run && run.stats) ? run.tower.hp / run.stats.maxHp : 1;
+
+  // Tonalità atmosferica: calda e arancione, vira al rosso quando la vita è bassa
+  const danger = Math.max(0, 1 - hp / 0.4); // 0 sopra 40% HP, 1 quando quasi morti
+  ctx.fillStyle = `rgba(255,${Math.round(100 - danger * 80)},${Math.round(20 - danger * 20)},${(0.05 + danger * 0.08).toFixed(3)})`;
   ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = g;
+
+  // Scanlines: riga scura ogni 2px per unificare la texture pixel art
+  ctx.fillStyle = scanlinePattern(ctx);
+  ctx.fillRect(0, 0, w, h);
+
+  // Vignette più marcata e rettangolare
+  const v = ctx.createRadialGradient(w / 2, h * 0.48, Math.min(w, h) * 0.22, w / 2, h * 0.52, Math.max(w, h) * 0.76);
+  v.addColorStop(0,   'rgba(13,13,15,0)');
+  v.addColorStop(0.6, 'rgba(13,13,15,0.15)');
+  v.addColorStop(1,   `rgba(13,13,15,${(0.82 + danger * 0.1).toFixed(2)})`);
+  ctx.fillStyle = v;
   ctx.fillRect(0, 0, w, h);
 }
 
@@ -176,18 +200,28 @@ export function drawShots(ctx, run, time) {
   }
 }
 
+// Anello quadrato in pixel art — più coerente con gli sprite fillRect.
+function pixelRing(ctx, x, y, r, color, k) {
+  const rd = Math.round(r * (1.2 - k * 0.4));
+  const px = Math.round(x), py = Math.round(y);
+  const th = Math.max(2, Math.round(rd * 0.08 + 1));
+  ctx.fillStyle = color;
+  ctx.globalAlpha = k * 0.85;
+  ctx.fillRect(px - rd,      py - rd,      rd * 2, th);         // top
+  ctx.fillRect(px - rd,      py + rd - th, rd * 2, th);         // bottom
+  ctx.fillRect(px - rd,      py - rd + th, th,     rd * 2 - th * 2); // left
+  ctx.fillRect(px + rd - th, py - rd + th, th,     rd * 2 - th * 2); // right
+  // riempimento centrale semitrasparente
+  ctx.fillStyle = color.replace('#', 'rgba(').replace(/(..)(..)(..)$/, (_, r, g, b) =>
+    `${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},0.06)`);
+  ctx.fillRect(px - rd + th, py - rd + th, rd * 2 - th * 2, rd * 2 - th * 2);
+}
+
 export function drawFx(ctx, run) {
   const fx = run.fx;
   for (const r of fx.rings) {
     const k = r.life / r.max;
-    ctx.globalAlpha = k;
-    ctx.fillStyle = 'rgba(242,183,5,0.25)';
-    ctx.beginPath();
-    ctx.arc(r.x, r.y, r.radius * (1.2 - k * 0.4), 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = r.color;
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    pixelRing(ctx, r.x, r.y, r.radius, r.color, k);
   }
   for (const p of fx.parts) {
     ctx.globalAlpha = Math.min(1, p.life / p.max * 2);

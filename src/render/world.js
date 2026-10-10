@@ -147,7 +147,7 @@ export function createRenderer(canvas, assets) {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     drawDust(ctx, dust, dt, canvas);
-    drawGrade(ctx, canvas);
+    drawGrade(ctx, canvas, run);
     if (zombieK > 0) drawZombieGrade(ctx, canvas, time, zombieK);
     ctx.setTransform(view.ui, 0, 0, view.ui, 0, 0);
     const W = canvas.width / view.ui, H = canvas.height / view.ui;
