@@ -37,6 +37,14 @@ export function updateEnemies(run, dt) {
     const wallSeg = d > stopAt && e.range === 0 ? blockingSegment(run, e, nx, ny) : null;
     if (wallSeg) {
       e.moving = false;
+      // Boss: al primo contatto col muro si rigenera completamente
+      if (e.boss && !e.wallTouching) {
+        e.hp = e.maxHp;
+        e.wallTouching = true;
+        e.hitFlash = 0.3;
+        ring(run, e.x, e.y, 50, '#ff4488');
+        floatText(run, e.x, e.y - 50, '♻ REGEN!', '#ff4488', 10);
+      }
       if (e.charge) {
         damageWall(run, wallSeg, e.atk * WALL.boomMult);
         explode(run, e, false);
@@ -50,6 +58,7 @@ export function updateEnemies(run, dt) {
         e.lunge = 0.15;
       }
     } else if (d > stopAt) {
+      if (e.boss) e.wallTouching = false; // reset quando si allontana dal muro
       e.x = nx;
       e.y = ny;
       e.anim += dt * (speed / 30);
