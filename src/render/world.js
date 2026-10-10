@@ -139,7 +139,6 @@ export function createRenderer(canvas, assets) {
         ctx.beginPath(); ctx.ellipse(px, py, 3, 2, time + i, 0, Math.PI * 2); ctx.fill();
       }
     }
-    if (run && run.intruders > 0) drawYardAlarm(ctx, time);
     if (run) {
       drawWall(ctx, run, time);
       drawSectors(ctx, run, time);
@@ -184,7 +183,6 @@ export function createRenderer(canvas, assets) {
     ctx.setTransform(view.ui, 0, 0, view.ui, 0, 0);
     const W = canvas.width / view.ui, H = canvas.height / view.ui;
     if (fade > 0.2) drawSceneTitle(ctx, cur.name, W, H, fade);
-    if (run && run.intruders > 0 && run.allies.length) drawIntruderWarning(ctx, run, W, time);
     if (run) {
       drawBossPointer(ctx, run, view, W, H);
       drawBanner(ctx, run, W, H);

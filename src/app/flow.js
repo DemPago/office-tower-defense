@@ -109,10 +109,8 @@ export function createFlow(app) {
     screens.showCards(run,
       i => {
         const result = pickCard(run, meta, i);
-        if (result === true) {
-          screens.hideAll();
-          if (run.phase === 'bomb-placement') onBombPhase();
-        } else if (result === 'discard') onCardsPhase(); // ri-mostra in modalità scarto
+        if (result === true) screens.hideAll();
+        else if (result === 'discard') onCardsPhase();
       },
       () => { if (reroll(run)) onCardsPhase(); });
   }

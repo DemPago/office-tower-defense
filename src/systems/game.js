@@ -31,7 +31,17 @@ export function update(run, dt) {
     updateTower(run, dt); // la torre si rigenera anche in pausa
     updateAbilities(run, dt); // e il mana si ricarica
     run.breakTimer -= dt;
-    if (run.breakTimer <= 0) startWave(run);
+    if (run.breakTimer <= 0) {
+      // Prima di ogni nuovo quadro (wave 11, 21, 31...) → piazza le bombe
+      const nextWave = run.wave + 1;
+      const isQuadroStart = nextWave % 10 === 1 && nextWave > 1;
+      if (isQuadroStart && run.bombsPlacedQuadro !== Math.ceil(nextWave / 10)) {
+        run.bombsPlacedQuadro = Math.ceil(nextWave / 10);
+        run.phase = 'bomb-placement';
+      } else {
+        startWave(run);
+      }
+    }
     return;
   }
 
@@ -72,8 +82,7 @@ export function update(run, dt) {
     // Ogni 10 ondate (nuovo macro-stage) il muro torna integro, anche le brecce.
     if (run.wave % 10 === 0) {
       fullRepairWall(run);
-      banner(run, `SETTORE ${run.wave / 10 + 1}`, 'Muro ripristinato — piazza le bombe per il prossimo quadro!', '#2de2e6');
-      run.bombPending = true; // fase bomb-placement dopo le carte
+      banner(run, `SETTORE ${run.wave / 10 + 1}`, 'Muro ripristinato — nuovo quadro in arrivo!', '#2de2e6');
     } else {
       repairWall(run); // solo i tratti ancora in piedi si riparano
     }

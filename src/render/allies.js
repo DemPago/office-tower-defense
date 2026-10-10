@@ -65,7 +65,7 @@ export function drawFence(ctx, run, time, back) {
 export function drawAlly(ctx, assets, ally, time) {
   const def = allyDef(ally.id);
   const { x, y } = allyPos(ally);
-  const drop = Math.round((1 - ally.spawn) * -40); // arriva "paracadutato" dall'alto
+  const drop = 0;
 
   // postazione di sacchi di sabbia
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
@@ -83,15 +83,13 @@ export function drawAlly(ctx, assets, ally, time) {
     ctx.fillStyle = `rgba(242,183,5,${0.35 * ally.promoFlash / 1.5})`;
     ctx.fillRect(x - 8, y - 70, 16, 72);
   }
-  ctx.globalAlpha = ally.spawn;
   drawPersonAt(ctx, assets.person(def.look, 0, 1), x, y - 1 + drop + recoil);
   if (ally.hurt > 0) {
-    // sta perdendo vita: lampeggia di rosso
     ctx.globalAlpha = 0.45;
     drawPersonAt(ctx, assets.person(def.look, 0, 1, '#ff2a3d'), x, y - 1 + drop + recoil);
+    ctx.globalAlpha = 1;
   }
-  ctx.globalAlpha = 1;
-  if (ally.hp < ally.maxHp && ally.spawn >= 1) {
+  if (ally.hp < ally.maxHp) {
     const bw = 18, bx = x - bw / 2, by = y - 34, k = Math.max(0, ally.hp / ally.maxHp);
     ctx.fillStyle = PAL.black;
     ctx.fillRect(bx - 0.5, by - 0.5, bw + 1, 3);
@@ -112,7 +110,7 @@ export function drawAlly(ctx, assets, ally, time) {
   sandbag(ctx, x + 1, y - 5);
 
   // segno di riconoscimento: freccia gialla e tacche del livello
-  if (ally.spawn >= 1) {
+  {
     const by = y - (def.aura ? 44 : 38) + Math.round(Math.sin(time * 3 + ally.slot));
     ctx.fillStyle = PAL.black;
     ctx.fillRect(x - 4, by - 1, 9, 5);
