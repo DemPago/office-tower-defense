@@ -36,7 +36,10 @@ try {
   // senza font si usa quello di riserva
 }
 
-const renderer = createRenderer($('cv'), app.assets);
+const use3d = location.search.includes('3d');
+const renderer = use3d
+  ? (await import('./render/three/renderer.js')).createThreeRenderer($('cv') as HTMLCanvasElement, app.assets)
+  : createRenderer($('cv'), app.assets);
 const hud = createHud({
   onBuy: id => { if (app.run && buyUpgrade(app.run, app.meta, id)) play('buy'); },
   onAbility: id => app.run && !app.paused && useAbility(app.run, id),
