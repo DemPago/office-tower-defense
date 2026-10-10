@@ -3,7 +3,7 @@
 
 export function playIntro(canvas, onDone) {
   const video = document.createElement('video');
-  video.src = '/intro.mp4';
+  video.src = import.meta.env.BASE_URL + 'intro.mp4';
   video.playsInline = true;
   video.setAttribute('playsinline', '');
   // il video ha audio — l'utente può silenziare con M se vuole
