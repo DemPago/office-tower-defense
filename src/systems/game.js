@@ -60,7 +60,6 @@ export function update(run, dt) {
   updateTower(run, dt);
   updateAllies(run, dt);
   updateWall(run, dt);
-  updateFence(run, dt);
   updateShots(run, dt);
   updateAbilities(run, dt);
 

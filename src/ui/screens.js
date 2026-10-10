@@ -100,7 +100,7 @@ export function updateHandPlayable(run, onPlay, onSell) {
   const box = $('hand-playable');
   if (!box) return;
   const list = $('hand-play-list');
-  if (run.discarding || run.isHeavyMalus) { box.hidden = true; return; }
+  if (!list || run.discarding || run.isHeavyMalus) { box.hidden = true; return; }
   const playable = run.cardPicks
     .map((pick, i) => ({ pick, i, def: findCard(pick.id) }))
     .filter(({ def }) => def && def.type === 'use');

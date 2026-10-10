@@ -1,5 +1,5 @@
 // Scelta delle carte fra un'ondata e l'altra.
-import { CARDS, MALUS_CARDS, HEAVY_MALUS_CARDS, RARITY, cardPower, MAX_HAND } from '../data/cards.js';
+import { CARDS, MALUS_CARDS, HEAVY_MALUS_CARDS, RARITY, cardPower, MAX_HAND, findCard } from '../data/cards.js';
 import { refreshStats } from './economy.js';
 import { maxMana } from '../data/abilities.js';
 

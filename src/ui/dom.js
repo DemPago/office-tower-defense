@@ -106,7 +106,6 @@ export function domUpgradeAdvice(run) {
     range: upgrades.range < 4 ? 50 : 15,
     hp:    hpPct < 0.6 ? 85 : 40,
     regen: hpPct < 0.8 ? 60 : 30,
-    fence: 45,
   };
 
   let best = null, bestScore = -Infinity;
