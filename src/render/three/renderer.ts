@@ -127,6 +127,15 @@ function applySprite(sp: THREE.Sprite, spr: Spr, worldX: number, worldY: number,
 const zStage = (e: { hp: number; maxHp: number }) =>
   Math.max(0, Math.min(3, Math.floor((1 - e.hp / e.maxHp) * 4)));
 
+// Converte un colore hex (#rrggbb) in rgba() per i gradienti dell'overlay canvas
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha.toFixed(2)})`;
+}
+
 // ─── Scena base ───────────────────────────────────────────────────────────────
 function buildScene() {
   const sc = new THREE.Scene();
@@ -845,6 +854,10 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
   // ─── Fumo dalla torre (locale, non nel game state) ────────────────────────
   interface Smoke3d { x: number; y: number; z: number; vx: number; vy: number; vz: number; life: number; max: number; r: number; }
   const smoke3d: Smoke3d[] = [];
+
+  // ─── Scie boss (locale come in 2D — NON in run.fx) ────────────────────────
+  interface Trail3d { x: number; y: number; vx: number; vy: number; life: number; max: number; c: string; size: number; grow: number; }
+  const trails3d: Trail3d[] = [];
   const smokePool = new MeshPool(scene, () => new THREE.Mesh(
     new THREE.SphereGeometry(1, 6, 4),
     new THREE.MeshLambertMaterial({ color: 0x554433, transparent: true, depthWrite: false }),
@@ -1023,18 +1036,24 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       } catch { /* */ }
     }
 
-    // ── Trails dei boss ───────────────────────────────────────────────────
+    // ── Trails dei boss (gestiti localmente come in 2D) ───────────────────
+    if (run) {
+      for (const e of run.enemies as any[]) {
+        if (!e.boss || !e.trail || Math.random() > dt * 18) continue;
+        const s = e.size;
+        if (e.trail === 'smoke') trails3d.push({ x: e.x + s * 0.18, y: e.y - s * 0.7, vx: 4, vy: -14, life: 1.6, max: 1.6, c: '#8a8d93', size: 1.5, grow: 2 });
+      }
+    }
+    for (const p of trails3d) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.size += p.grow * dt; }
+    trails3d.splice(0, trails3d.length, ...trails3d.filter(p => p.life > 0));
     trailPool.reset();
-    if (run) for (const t of (run as any).fx?.trails ?? []) {
-      if (!t || t.life <= 0) continue;
+    for (const t of trails3d) {
       const m = trailPool.get();
-      m.position.set(wx(t.x), 0.2 + t.life * 0.3, wz(t.y));
-      const col = t.color ?? '#ff88aa';
-      try { (m.material as THREE.MeshLambertMaterial).color.set(col); } catch { /* */ }
-      (m.material as THREE.MeshLambertMaterial).opacity = Math.min(1, t.life / (t.max ?? 0.5));
+      m.position.set(wx(t.x), 0.15 + t.life * 0.2, wz(t.y));
+      try { (m.material as THREE.MeshLambertMaterial).color.set(t.c); } catch { /* */ }
+      (m.material as THREE.MeshLambertMaterial).opacity = Math.min(0.5, t.life / t.max * 0.6);
       (m.material as THREE.MeshLambertMaterial).transparent = true;
-      const sc = 0.5 + t.life * 1.5;
-      m.scale.setScalar(sc);
+      m.scale.setScalar((0.05 + t.size * S) * (0.5 + (t.max - t.life) / t.max));
     }
 
     // ── Nemici ────────────────────────────────────────────────────────────
@@ -1466,6 +1485,47 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
         // Becco giallo
         overlayCtx.fillStyle = '#f2b705';
         overlayCtx.fillRect(ex + 2 * dpr, ey - 6 * dpr, 3 * dpr, 2 * dpr);
+        overlayCtx.restore();
+      }
+    }
+
+    // Aura boss: alone colorata pulsante intorno ai nemici boss
+    if (run) {
+      for (const e of run.enemies) {
+        if (!e.boss || e.dead) continue;
+        const auraCol: string = (e as any).aura ?? '#f2b705';
+        const enraged = (e as any).enraged ?? false;
+        const { x: bx, y: by, behind: bh } = project3d(wx(e.x), 0.0, wz(e.y));
+        if (bh) continue;
+        // Raggio schermo ricavato proiettando il bordo dell'aura
+        const baseR = (e.size ?? 30) * S * 1.4;
+        const { x: edX } = project3d(wx(e.x) + baseR, 0.0, wz(e.y));
+        const screenR = Math.abs(edX - bx) * (0.85 + Math.sin(now * 3 + e.id * 0.7) * 0.12);
+        if (screenR < 4) continue;
+        overlayCtx.save();
+        overlayCtx.globalCompositeOperation = 'lighter';
+        const col = enraged ? '#ff2a3d' : auraCol;
+        const auraAlpha = enraged ? 0.45 : 0.35;
+        const grad = overlayCtx.createRadialGradient(bx, by, screenR * 0.08, bx, by, screenR);
+        grad.addColorStop(0, hexToRgba(col, auraAlpha));
+        grad.addColorStop(1, hexToRgba(col, 0));
+        overlayCtx.fillStyle = grad;
+        overlayCtx.beginPath();
+        overlayCtx.arc(bx, by, screenR, 0, Math.PI * 2);
+        overlayCtx.fill();
+        overlayCtx.globalCompositeOperation = 'source-over';
+        // Ellisse a terra
+        const { x: gx, y: gy } = project3d(wx(e.x), 0.01, wz(e.y));
+        const groundR = (e.size ?? 30) * S * 0.55;
+        const { x: geX } = project3d(wx(e.x) + groundR, 0.01, wz(e.y));
+        const gsR = Math.abs(geX - gx);
+        if (gsR > 2) {
+          overlayCtx.strokeStyle = hexToRgba(auraCol, 0.6);
+          overlayCtx.lineWidth = 1.5 * dpr;
+          overlayCtx.beginPath();
+          overlayCtx.ellipse(gx, gy, gsR, gsR * 0.3, 0, 0, Math.PI * 2);
+          overlayCtx.stroke();
+        }
         overlayCtx.restore();
       }
     }
