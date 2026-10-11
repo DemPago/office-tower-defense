@@ -86,6 +86,20 @@ function spawnPoint() {
   return { x: TOWER.x + Math.cos(a) * SPAWN_RADIUS, y: TOWER.y + Math.sin(a) * SPAWN_RADIUS };
 }
 
+// I cecchini si affacciano sempre da finestre fisse (palazzi di fronte) — non vagano a caso.
+const SNIPER_NESTS = [
+  { x: TOWER.x + 240, y: TOWER.y - 210 }, // palazzo NE
+  { x: TOWER.x - 240, y: TOWER.y - 200 }, // palazzo NO
+  { x: TOWER.x + 230, y: TOWER.y + 210 }, // palazzo SE
+  { x: TOWER.x - 220, y: TOWER.y + 220 }, // palazzo SO
+];
+let _sniperNestIdx = 0;
+function sniperSpawnPoint() {
+  const nest = SNIPER_NESTS[_sniperNestIdx % SNIPER_NESTS.length];
+  _sniperNestIdx++;
+  return { ...nest };
+}
+
 // Calcola le statistiche scalate di un nemico dato il suo def e l'ondata corrente.
 // Separato da makeEnemy per rendere la logica di bilanciamento testabile in isolamento.
 export function scaleEnemyStats(def: any, w: number, wsm = 1) {
@@ -103,7 +117,7 @@ export function scaleEnemyStats(def: any, w: number, wsm = 1) {
 }
 
 export function makeEnemy(def: any, w: number, extra: Record<string, any> = {}) {
-  const p   = extra.at || spawnPoint();
+  const p   = extra.at || (def.role === 'sniper' ? sniperSpawnPoint() : spawnPoint());
   const wsm = extra.wsm ?? 1;
   const { hp, speed, atk, gold, tierKey, elite, zombie } = scaleEnemyStats(def, w, wsm);
   return {
