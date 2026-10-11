@@ -45,6 +45,14 @@ export function buildScene(index: number, opts?: { skipCars?: boolean }) {
   const yardStyle = scene.build(g, rnd, data, opts) || {};
   if ((scene as any).italian) placeItalian(g, rnd, data, (scene as any).italian);
   drawYard(g, rnd, yardStyle);
+  // Profondità atmosferica: lontano (alto) = leggera foschia azzurra, vicino (basso) = leggermente più scuro
+  const depthGrad = g.createLinearGradient(AREA.x, AREA.y, AREA.x, AREA.y + AREA.h);
+  depthGrad.addColorStop(0,    'rgba(50,80,150,0.10)');
+  depthGrad.addColorStop(0.30, 'rgba(0,0,0,0)');
+  depthGrad.addColorStop(0.70, 'rgba(0,0,0,0)');
+  depthGrad.addColorStop(1,    'rgba(0,0,0,0.12)');
+  g.fillStyle = depthGrad;
+  g.fillRect(AREA.x, AREA.y, AREA.w, AREA.h);
   const ambient = (ctx: CanvasRenderingContext2D, t: number) => {
     if ((scene as any).ambient) (scene as any).ambient(ctx, t, data);
     animateItalian(ctx, t, data);

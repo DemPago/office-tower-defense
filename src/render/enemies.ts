@@ -25,9 +25,10 @@ const TIER_COLORS = {
 };
 
 export function drawShadow(ctx: CanvasRenderingContext2D, e: EnemyExt) {
-  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillStyle = 'rgba(0,0,0,0.38)';
   ctx.beginPath();
-  ctx.ellipse(e.x, e.y, e.size * 0.32, e.size * 0.1, 0, 0, Math.PI * 2);
+  // Ombra ellittica schiacciata: più larga che alta, leggera sfasatura verso il basso (vista obliqua)
+  ctx.ellipse(e.x + e.size * 0.08, e.y + e.size * 0.06, e.size * 0.38, e.size * 0.10, 0, 0, Math.PI * 2);
   ctx.fill();
 }
 

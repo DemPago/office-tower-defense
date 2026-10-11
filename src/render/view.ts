@@ -14,7 +14,7 @@ export function setPixelSize(px: number): void {
 
 export const snap = (v: number): number => Math.round(v * PX) / PX;
 
-export const CAMERA = { x: TOWER.x, y: TOWER.y - 16 };
+export const CAMERA = { x: TOWER.x, y: TOWER.y - 30 };
 
 // Disegna uno sprite (da assets.person o assets.animal) con i piedi nel punto (x, feetY).
 // flip = specchiato (gli animali, visti di profilo, guardano verso il palazzo).

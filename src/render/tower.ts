@@ -231,6 +231,27 @@ export function drawTower(ctx: CanvasRenderingContext2D, assets: any, run: Run |
   ctx.scale(0.5, 0.5);
   const p: FillRect = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
 
+  // ── Volumi 3D: lato destro (ombra) e tetto visibile dall'alto ───────
+  const SIDE = 16, ROOF = 28; // px interni = 8 e 14 px mondo
+
+  // Lato destro in ombra profonda
+  p(TW,  0,  SIDE + 3,  TH,  PAL.black);   // drop shadow esterno
+  p(TW,  0,  SIDE,      TH,  '#141618');    // superficie lato
+  p(TW,  0,  3,         TH,  '#262930');    // spigolo illuminato facciata/lato
+
+  // Tetto: ombra + superficie orizzontale
+  p(-4, -ROOF - 4,  TW + SIDE + 8,  ROOF + 4,  PAL.black);
+  p(0,  -ROOF,      TW,              ROOF,      '#23252c'); // fronte tetto
+  p(TW, -ROOF,      SIDE,            ROOF,      '#1a1c21'); // tetto lato dx (più scuro)
+  p(0,  -ROOF,      TW + SIDE,       3,         '#3a3d47'); // bordo anteriore illuminato
+  // Unità AC sul tetto viste dall'alto
+  for (let rx = 12; rx < TW - 12; rx += 32) {
+    p(rx,     -ROOF + 5, 16, 11, '#14161b');
+    p(rx + 1, -ROOF + 6, 14,  9, '#1d1f26');
+    p(rx + 5, -ROOF + 6,  6,  9, '#101217'); // griglie ventilazione
+  }
+  // ─────────────────────────────────────────────────────────────────────
+
   p(-3, -3, TW + 6, TH + 6, PAL.black);
   ctx.drawImage(facade(), 0, 0);
 
