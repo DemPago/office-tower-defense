@@ -87,22 +87,27 @@
   <section id="scr-menu" class="overlay full" hidden>
     <canvas id="menu-bg" aria-hidden="true"></canvas>
 
-    <div id="menu-left">
+    <div id="menu-wrap">
       <div class="menu-brand">
         <span class="brand-label">— OFFICE —</span>
         <h1>TOWER<br><span>DEFENSE</span></h1>
-        <p class="tag">Difendi la tua scrivania<br>dalla gerarchia aziendale.</p>
+        <p class="tag">Difendi la tua scrivania dalla gerarchia aziendale.</p>
       </div>
-      <p id="menu-best"></p>
-      <p id="menu-buoni" class="buoni"></p>
+      <div class="menu-stats-row">
+        <p id="menu-best"></p>
+        <p id="menu-buoni" class="buoni"></p>
+      </div>
+      <p class="menu-pick-label">Scegli il tuo personaggio</p>
+      <div id="hero-list"></div>
+      <div id="hero-preview"></div>
       <button id="btn-play" class="btn big">▶ GIOCA</button>
-      <div id="renderer-toggle" class="renderer-toggle" title="Cambia modalità grafica (ricarica la pagina)">
-        <span class="rt-label">Grafica</span>
-        <button id="rt-2d" class="rt-btn">2D</button>
-        <button id="rt-3d" class="rt-btn">3D</button>
-      </div>
-      <div class="menu-sec-btns">
-        <button id="btn-shop" class="btn">🏢 Ufficio del personale</button>
+      <div class="menu-footer">
+        <div id="renderer-toggle" class="renderer-toggle" title="Cambia modalità grafica (ricarica la pagina)">
+          <span class="rt-label">Grafica</span>
+          <button id="rt-2d" class="rt-btn">2D</button>
+          <button id="rt-3d" class="rt-btn">3D</button>
+        </div>
+        <button id="btn-shop" class="btn">🏢 Personale</button>
         <button id="btn-board" class="btn">🏆 Classifica</button>
         <button id="btn-howto" class="btn ghost">❓ Come si gioca</button>
       </div>
@@ -111,12 +116,6 @@
         <p class="dim">Ti piace? Fallo girare:</p>
         <div id="share-menu" class="share-row"></div>
       </div>
-    </div>
-
-    <div id="menu-right">
-      <p class="dim menu-pick-label">Scegli il tuo personaggio</p>
-      <div id="hero-list"></div>
-      <div id="hero-preview"></div>
     </div>
   </section>
 

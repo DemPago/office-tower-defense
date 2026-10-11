@@ -453,153 +453,86 @@ h2 {
 .card.ally.hire .rar { color: var(--toxic); }
 .card.ally.promo .rar { color: var(--hazard); }
 
-/* ─── Menu principale: layout a due colonne ─────────────────── */
+/* ─── Menu principale: layout centrato monocolonna ─────────── */
 #scr-menu {
-  flex-direction: row;
-  align-items: stretch;
+  flex-direction: column;
+  align-items: center;
   justify-content: flex-start;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 0;
   gap: 0;
-}
-#menu-left {
-  flex: 0 0 min(360px, 42%);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 10px;
-  padding: 28px 20px;
-  background: rgba(7, 7, 8, 0.85);
-  border-right: 3px solid var(--steel);
-  overflow-y: auto;
-  z-index: 1;
-  text-align: center;
   scrollbar-width: none;
 }
-#menu-left::-webkit-scrollbar { display: none; }
-#menu-right {
-  flex: 1;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 10px;
-  padding: 20px 16px;
-  overflow-y: auto;
-  z-index: 1;
-  scrollbar-width: none;
+#scr-menu::-webkit-scrollbar { display: none; }
+#menu-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; max-width: 580px;
+  padding: 10px 16px 16px;
+  gap: 9px;
 }
-#menu-right::-webkit-scrollbar { display: none; }
-
-/* Logo: badge "OFFICE" sopra al titolo Permanent Marker */
+/* Logo compatto */
 .menu-brand {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  margin-bottom: 4px;
 }
 .brand-label {
-  font-family: var(--font);
-  font-size: 7px;
-  color: var(--concrete-hi);
-  letter-spacing: 0.3em;
-  padding: 3px 14px;
-  border: 1px solid var(--steel);
-  background: rgba(42,42,46,0.7);
+  font-family: var(--font); font-size: 7px; color: var(--concrete-hi);
+  letter-spacing: 0.3em; padding: 3px 14px;
+  border: 1px solid var(--steel); background: rgba(42,42,46,0.7);
 }
-.menu-brand h1 {
-  font-size: 34px;
-  transform: rotate(-3deg);
-  margin: 4px 0 0;
-  line-height: 1;
-}
-.menu-brand .tag {
-  font-size: 7px;
-  line-height: 1.7;
-  margin-top: 6px;
-  transform: rotate(0);
-}
-/* separatore decorativo sotto il brand */
+.menu-brand h1 { font-size: 28px; transform: rotate(-3deg); margin: 2px 0 0; line-height: 1; }
+.menu-brand .tag { font-size: 7px; line-height: 1.7; margin-top: 4px; }
 .menu-brand::after {
-  content: '';
-  display: block;
-  width: 70%;
-  height: 2px;
+  content: ''; display: block; width: 70%; height: 2px;
   background: linear-gradient(90deg, transparent, var(--hazard), transparent);
-  margin-top: 10px;
+  margin-top: 8px;
 }
-
-/* Pulsanti secondari impilati, larghezza uniforme */
-.renderer-toggle {
-  display: flex; align-items: center; gap: 6px;
-  width: 100%; max-width: 260px;
-  background: var(--asphalt); border: 2px solid var(--ink);
-  padding: 5px 10px; box-sizing: border-box;
+/* Riga statistiche */
+.menu-stats-row {
+  display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: center;
 }
-.rt-label { font-size: 7px; color: var(--grey); flex: 1; }
-.rt-btn {
-  font-family: var(--font); font-size: 8px; cursor: pointer;
-  padding: 4px 10px; background: var(--char); color: var(--steel-hi);
-  border: 2px solid var(--steel); min-width: 0;
-}
-.rt-btn.active {
-  background: var(--cyan); color: var(--ink);
-  border-color: var(--cyan);
-}
-.rt-btn:hover:not(.active) { background: var(--steel); }
-
-.menu-sec-btns {
-  display: flex; flex-direction: column; gap: 5px;
-  width: 100%; max-width: 260px;
-}
-.menu-sec-btns .btn { min-width: 0; width: 100%; font-size: 8px; padding: 9px 10px; }
-
-/* Selezione personaggio nella colonna destra */
-#menu-right {
-  background: rgba(8, 8, 10, 0.60);
-  backdrop-filter: blur(3px);
-}
-.menu-pick-label { font-size: 7px; color: var(--grey); margin-bottom: 2px; }
+.menu-pick-label { font-size: 7px; color: var(--grey); }
+/* Grid personaggi: 3 colonne, ritratto a figura intera */
 #hero-list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
-  width: 100%; max-width: 380px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  width: 100%;
 }
 .hero {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 5px 3px 4px;
-  background: var(--asphalt);
-  border: 2px solid var(--ink);
-  font-size: 6px; color: var(--white);
-  transition: background .1s, border-color .1s;
+  background: rgba(18,18,22,0.9);
+  border: 2px solid var(--steel);
+  cursor: pointer;
+  transition: border-color .1s, background .1s;
 }
-.hero canvas { width: 54px; height: 54px; image-rendering: pixelated; background: #2a2a30; }
+.hero canvas { width: 42px; height: 70px; image-rendering: pixelated; background: #14141a; }
 .hero span { font-size: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.hero:hover:not(.locked) { background: var(--steel); }
+.hero:hover:not(.locked) { background: var(--asphalt); border-color: var(--concrete-hi); }
 .hero.sel {
   border-color: var(--hazard);
-  background: #2e2818;
-  box-shadow: 0 0 0 2px var(--hazard-dk), inset 0 0 10px rgba(242,183,5,0.1);
+  background: #1e1a0c;
+  box-shadow: 0 0 10px rgba(242,183,5,0.4), inset 0 0 8px rgba(242,183,5,0.07);
 }
 .hero.sel span { color: var(--hazard); }
-.hero.locked { opacity: .45; cursor: help; }
-
-/* Panel di preview del personaggio selezionato */
+.hero.locked { opacity: .4; cursor: help; }
+/* Preview del personaggio selezionato */
 #hero-preview {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  width: 100%; max-width: 380px;
-  padding: 10px;
-  background: rgba(20,20,24,0.9);
+  display: flex; gap: 10px; align-items: flex-start;
+  width: 100%; padding: 10px;
+  background: rgba(14,14,18,0.95);
   border: 2px solid var(--steel);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
   min-height: 80px;
 }
 .preview-canvas {
-  width: 68px; height: 68px;
-  image-rendering: pixelated;
-  flex-shrink: 0;
-  background: #1a1a1e;
-  border: 2px solid var(--steel-hi);
+  width: 84px; height: 140px;
+  image-rendering: pixelated; flex-shrink: 0;
+  background: #0e0e12; border: 2px solid var(--steel-hi);
 }
 .preview-info {
-  flex: 1; min-width: 0;
-  display: flex; flex-direction: column; gap: 4px;
-  text-align: left;
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; text-align: left;
 }
 .preview-name {
   font-family: var(--spray); font-weight: normal;
@@ -612,30 +545,42 @@ h2 {
 .preview-weapon span { color: var(--grey); }
 .preview-pills { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
 .stat-pill {
-  font-size: 6px; padding: 2px 5px;
-  border: 1px solid;
-  white-space: nowrap;
+  font-size: 6px; padding: 2px 5px; border: 1px solid; white-space: nowrap;
 }
 .stat-pill.pos { color: var(--toxic); border-color: rgba(123,211,50,0.4); background: rgba(123,211,50,0.08); }
 .stat-pill.neg { color: var(--red); border-color: rgba(215,38,61,0.4); background: rgba(215,38,61,0.08); }
 .preview-locked { color: var(--grey); font-size: 7px; padding: 20px 10px; text-align: center; line-height: 1.8; }
-
-/* Mobile: colonna singola compatta */
-@media (max-width: 680px) {
-  #scr-menu { flex-direction: column; overflow-y: auto; }
-  #menu-left {
-    flex: none; width: 100%;
-    border-right: none; border-bottom: 2px solid var(--steel);
-    padding: 16px 14px; gap: 8px;
-    justify-content: flex-start;
-  }
-  .menu-brand h1 { font-size: 24px; }
-  .menu-sec-btns { max-width: 100%; }
-  .menu-sec-btns .btn { font-size: 7px; padding: 8px; }
-  #menu-right { flex: none; padding: 12px; }
-  #hero-list { gap: 4px; max-width: 100%; grid-template-columns: repeat(4, 1fr); }
-  .hero canvas { width: 48px; height: 48px; }
-  .hero { padding: 3px 2px; }
+/* Pulsante GIOCA: larghezza piena */
+#btn-play { width: 100%; }
+/* Footer: renderer + bottoni secondari in riga */
+.menu-footer {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; flex-wrap: wrap; justify-content: center;
+}
+.menu-footer .btn { min-width: 0; font-size: 7px; padding: 7px 10px; }
+/* Toggle 2D/3D */
+.renderer-toggle {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--asphalt); border: 2px solid var(--ink);
+  padding: 5px 10px; box-sizing: border-box; flex-shrink: 0;
+}
+.rt-label { font-size: 7px; color: var(--grey); flex: 1; }
+.rt-btn {
+  font-family: var(--font); font-size: 8px; cursor: pointer;
+  padding: 4px 10px; background: var(--char); color: var(--steel-hi);
+  border: 2px solid var(--steel); min-width: 0;
+}
+.rt-btn.active { background: var(--cyan); color: var(--ink); border-color: var(--cyan); }
+.rt-btn:hover:not(.active) { background: var(--steel); }
+/* Mobile: riduci ulteriormente */
+@media (max-width: 520px) {
+  #menu-wrap { padding: 8px 10px 12px; gap: 7px; }
+  .menu-brand h1 { font-size: 22px; }
+  #hero-list { gap: 5px; }
+  .hero canvas { width: 36px; height: 60px; }
+  .preview-canvas { width: 56px; height: 94px; }
+  .menu-footer { gap: 4px; }
+  .menu-footer .btn { font-size: 6px; padding: 6px 7px; }
 }
 
 /* Mitra: potere speciale che compare contro la forma bestiale dei boss */

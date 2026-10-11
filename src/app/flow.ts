@@ -24,11 +24,11 @@ export function createFlow(app: any) {
   function heroPortrait(id: string, locked: boolean) {
     const sp = assets.person(id, 1, 1, locked ? '#141416' : false);
     const c = document.createElement('canvas');
-    c.width = 84;
-    c.height = 84;
+    c.width = sp.img.width * 2;
+    c.height = sp.img.height * 2;
     const g = c.getContext('2d');
     g!.imageSmoothingEnabled = false;
-    g!.drawImage(sp.img, 0, 8, sp.img.width, 42, 0, 0, sp.img.width * 2, 84);
+    g!.drawImage(sp.img, 0, 0, sp.img.width, sp.img.height, 0, 0, c.width, c.height);
     return c;
   }
 
