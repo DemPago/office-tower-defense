@@ -1,6 +1,6 @@
 // Bombe piazzabili all'inizio di ogni quadro.
 // Moltiplicatore: quadro 1-3 = ×3, 4-6 = ×2, 7-9 = ×1.5, 10+ = ×1.
-// Costo: ogni bomba piazzata riduce tutte le stat del 5% (min 5% totale = max 19 bombe).
+// Costo: quadro × 10 oro a bomba (nessuna penalità alle stat).
 import { TOWER } from '../state.js';
 import { dist } from '../util.js';
 import { burst, ring, floatText } from './fx.js';
@@ -8,11 +8,10 @@ import { dealDamage } from './damage.js';
 import { refreshStats } from './economy.js';
 import type { Run } from '../types.js';
 
-const BOMB_RADIUS      = 70;   // raggio detonazione (pixel)
-const BOMB_BASE_SHOTS  = 40;   // danno = stats.dmg × BOMB_BASE_SHOTS × mult
-const BOMB_MIN_DIST    = 60;   // distanza minima tra bombe
-const BOMB_TOWER_CLEAR = 80;   // distanza minima dalla torre
-export const BOMB_MAX  = 19;   // al 20° le stat scenderebbero a 0
+const BOMB_RADIUS      = 70;
+const BOMB_BASE_SHOTS  = 40;
+const BOMB_MIN_DIST    = 60;
+const BOMB_TOWER_CLEAR = 80;
 
 // Quadro che stiamo per iniziare (1-indexed). run.wave = ondate già completate.
 export function nextQuadro(run: Run): number {
@@ -32,8 +31,13 @@ export function bombsForQuadro(run: Run): number {
   return Math.max(1, Math.floor(bombMult(run)));
 }
 
+// Costo in oro di ogni bomba per il quadro corrente.
+export function bombCost(run: Run): number {
+  return nextQuadro(run) * 10;
+}
+
 export function canPlaceBomb(run: Run): boolean {
-  return run.bombPenalty < BOMB_MAX && (run.bombsLeft ?? 0) > 0;
+  return (run.bombsLeft ?? 0) > 0 && run.gold >= bombCost(run);
 }
 
 export function placeBomb(run: Run, x: number, y: number): boolean {
@@ -41,18 +45,16 @@ export function placeBomb(run: Run, x: number, y: number): boolean {
   if (dist({ x, y }, TOWER) < BOMB_TOWER_CLEAR) return false;
   if (run.bombs.some(b => !b.detonated && dist({ x, y }, b) < BOMB_MIN_DIST)) return false;
   run.bombs.push({ x, y, mult: bombMult(run), age: 0, detonated: false });
-  run.bombPenalty++;
+  run.gold -= bombCost(run);
   run.bombsLeft = Math.max(0, (run.bombsLeft ?? 0) - 1);
-  refreshStats(run, run.meta);
   return true;
 }
 
 export function removeBomb(run: Run, idx: number): boolean {
   if (idx < 0 || idx >= run.bombs.length) return false;
+  run.gold += bombCost(run);  // rimborso
   run.bombs.splice(idx, 1);
-  if (run.bombPenalty > 0) run.bombPenalty--;
   run.bombsLeft = Math.min(bombsForQuadro(run), (run.bombsLeft ?? 0) + 1);
-  refreshStats(run, run.meta);
   return true;
 }
 

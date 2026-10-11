@@ -8,9 +8,14 @@ export const WALL = {
   boomMult: 4,     // un kamikaze che esplode contro il muro
 };
 
-// Aspetto in base ai bonus presi (il più "pesante" vince).
-export function wallLook(s: { wallReflect: number; wallHp: number }): string {
+// Materiale del muro: avanza ogni 10 ondate (quadro), le carte di muro possono
+// saltare avanti o rafforzare il materiale corrente.
+export function wallLook(s: { wallReflect: number; wallHp: number }, wave = 1): string {
   if (s.wallReflect > 0) return 'steel';
-  if (s.wallHp >= 0.6) return 'concrete';
-  return 'sandbag';
+  const dept = Math.floor((Math.max(1, wave) - 1) / 10);
+  if (dept === 0) return s.wallHp >= 0.6 ? 'iron' : 'wood';
+  if (dept === 1) return s.wallHp >= 0.6 ? 'iron' : 'tin';
+  if (dept === 2) return 'iron';
+  if (dept === 3) return 'steel';
+  return 'adamantium';
 }

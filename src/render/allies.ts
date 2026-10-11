@@ -37,9 +37,35 @@ export function drawAlly(ctx: CanvasRenderingContext2D, assets: any, ally: Ally,
   const { x, y } = allyPos(ally);
   const drop = 0;
 
-  // postazione di sacchi di sabbia
+  // ombra a terra
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
   ctx.fillRect(x - 12, y, 26, 4);
+
+  // ── Struttura torretta (disegnata PRIMA del personaggio) ──────────────────
+  const tx = Math.round(x), ty = Math.round(y);
+  if (def.aura) {
+    // Maghi: piedistallo magico con incisioni rune
+    const pc = def.aura === 'rate' ? '#1a6a7a' : '#6a1a5a';
+    const pl = def.aura === 'rate' ? '#2de2e6' : '#ff3e8a';
+    ctx.fillStyle = pc; ctx.fillRect(tx - 14, ty - 6, 28, 6);
+    ctx.fillStyle = pl; ctx.fillRect(tx - 14, ty - 6, 28, 2);
+    ctx.fillStyle = pl; ctx.fillRect(tx - 14, ty - 6, 1, 6);
+    ctx.globalAlpha = 0.5 + Math.sin(time * 4) * 0.3;
+    ctx.fillStyle = pl;
+    for (let i = 0; i < 4; i++) ctx.fillRect(tx - 11 + i * 6, ty - 5, 2, 3);
+    ctx.globalAlpha = 1;
+  } else {
+    // Combattenti: pali di legno + traversa + pavimento piattaforma
+    ctx.fillStyle = '#3e2510'; ctx.fillRect(tx - 13, ty - 52, 3, 52); // palo sx scuro
+    ctx.fillStyle = '#6a4220'; ctx.fillRect(tx - 13, ty - 52, 1, 52); // highlight sx
+    ctx.fillStyle = '#3e2510'; ctx.fillRect(tx + 11, ty - 52, 3, 52); // palo dx scuro
+    ctx.fillStyle = '#6a4220'; ctx.fillRect(tx + 11, ty - 52, 1, 52); // highlight dx
+    ctx.fillStyle = '#4e2e14'; ctx.fillRect(tx - 14, ty - 50, 30, 3); // traversa alta
+    ctx.fillStyle = '#7a5228'; ctx.fillRect(tx - 14, ty - 50, 30, 1); // highlight traversa
+    ctx.fillStyle = '#5a3a18'; ctx.fillRect(tx - 13, ty - 26, 28, 4); // pavimento piattaforma
+    ctx.fillStyle = '#8a6230'; ctx.fillRect(tx - 13, ty - 26, 28, 1); // highlight pavimento
+  }
+
   if (def.aura) {
     const pulse = 0.5 + Math.sin(time * 3) * 0.5;
     ctx.fillStyle = def.aura === 'rate' ? `rgba(45,226,230,${0.15 + pulse * 0.2})` : `rgba(255,62,138,${0.15 + pulse * 0.2})`;

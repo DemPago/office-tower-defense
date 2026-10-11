@@ -2,6 +2,14 @@
 import type { Run, Enemy } from '../types.js';
 import { TOWER } from '../state.js';
 import { dist } from '../util.js';
+import { ALLY_SLOTS, ALLY_RING } from '../data/allies.js';
+
+// Raggio entro cui un nemico si ferma ad attaccare un alleato (in pixel mondo).
+const ALLY_BLOCK_R = 26;
+function allyWorldPos(ally: { slot: number }) {
+  const a = ALLY_SLOTS[ally.slot] * Math.PI / 180;
+  return { x: TOWER.x + Math.cos(a) * ALLY_RING, y: TOWER.y - Math.sin(a) * ALLY_RING };
+}
 import { floatText, burst, ring, shake, sfx, banner } from './fx.js';
 import { dealDamage, damageTower } from './damage.js';
 import { blockingSegment, segmentToward, damageWall, reflectChance } from './wall.js';
@@ -59,11 +67,31 @@ export function updateEnemies(run: Run, dt: number) {
         e.lunge = 0.15;
       }
     } else if (d > stopAt) {
-      if (e.boss) e.wallTouching = false; // reset quando si allontana dal muro
-      e.x = nx;
-      e.y = ny;
-      e.anim = (e.anim ?? 0) + dt * (speed / 30);
-      e.moving = true;
+      if (e.boss) e.wallTouching = false;
+      // Alleati vivi nelle vicinanze: il nemico si ferma e li attacca
+      const allyBlock = run.allies.find(a => !a.dead && dist(e, allyWorldPos(a)) < ALLY_BLOCK_R);
+      if (allyBlock) {
+        e.moving = false;
+        e.attackCd -= dt;
+        if (e.attackCd <= 0) {
+          e.attackCd = e.boss ? 1.3 : 1;
+          allyBlock.hp -= e.atk * 1.2;
+          allyBlock.hurt = 0.2;
+          e.lunge = 0.12;
+          if (allyBlock.hp <= 0) {
+            allyBlock.dead = true;
+            allyBlock.hp = 0;
+            const ap = allyWorldPos(allyBlock);
+            floatText(run, ap.x, ap.y - 40, 'CADUTO!', '#d7263d', 9);
+            burst(run, ap.x, ap.y - 20, '#d7263d', 8, 80);
+          }
+        }
+      } else {
+        e.x = nx;
+        e.y = ny;
+        e.anim = (e.anim ?? 0) + dt * (speed / 30);
+        e.moving = true;
+      }
     } else if (e.charge) {
       explode(run, e);
       continue;

@@ -18,7 +18,7 @@ interface WallSeg {
 }
 
 export function drawWall(ctx: CanvasRenderingContext2D, run: Run, time: number) {
-  const look = wallLook(run.stats);
+  const look = wallLook(run.stats, run.wave);
   for (const seg of run.wall) drawSegment(ctx, seg, look, run.stats.wallThorns > 0, time);
 }
 
@@ -43,8 +43,12 @@ function drawSegment(ctx: CanvasRenderingContext2D, seg: WallSeg, look: string, 
   const missing = k > 0.66 ? 0 : k > 0.33 ? 3 : 2;
   list.forEach(([x, y], i) => {
     if (missing && i % missing === 1) { drawRubble(ctx, [[x, y]], look); return; }
-    if (look === 'concrete') concreteBlock(ctx, x, y, k);
+    if (look === 'wood')        woodPlank(ctx, x, y, k);
+    else if (look === 'tin')   tinSheet(ctx, x, y, k);
+    else if (look === 'iron')  ironBlock(ctx, x, y, k);
     else if (look === 'steel') steelPlate(ctx, x, y, k);
+    else if (look === 'adamantium') adamantiumPlate(ctx, x, y, k);
+    else if (look === 'concrete') concreteBlock(ctx, x, y, k);
     else P.sandbag(ctx, x, y);
   });
   if (thorns) barbedWire(ctx, seg, list, time);
@@ -87,8 +91,55 @@ function steelPlate(ctx: CanvasRenderingContext2D, x: number, y: number, k: numb
   if (k < 0.4) P.rect(ctx, x + 2, y + 4, 2, 1.5, 'rgba(138,59,30,0.8)');
 }
 
+function woodPlank(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
+  P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
+  P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#7a4a28');
+  P.rect(ctx, x - 0.5, y - 1, 12, 1.5, '#a06a3a');
+  P.rect(ctx, x - 0.5, y + 5.5, 12, 2,  '#5a3218');
+  P.rect(ctx, x + 5,  y - 1,  0.5, 8.5, '#5a3218');
+  P.rect(ctx, x + 2,  y + 3,   10, 0.5, '#5a3218');
+  if (k < 0.66) { P.rect(ctx, x + 1, y + 1, 2, 0.5, PAL.black); P.rect(ctx, x + 7, y + 4, 3, 0.5, PAL.black); }
+  if (k < 0.4)  P.rect(ctx, x + 4, y + 1.5, 1, 5, PAL.black);
+}
+
+function tinSheet(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
+  P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
+  P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#8a8e94');
+  P.rect(ctx, x - 0.5, y - 1, 12, 1,   '#b0b4ba');
+  for (let i = 0; i < 3; i++) P.rect(ctx, x - 0.5 + i * 4, y - 1, 2, 8.5, '#9a9ea4');
+  P.rect(ctx, x + 10.5, y - 1, 1, 8.5, '#5a5e64');
+  if (k < 0.66) P.rect(ctx, x + 2, y + 3, 4, 2, '#6a6e74');
+  if (k < 0.4)  P.rect(ctx, x + 6, y + 1, 2, 6, '#4a3020');
+}
+
+function ironBlock(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
+  P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
+  P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#48505e');
+  P.rect(ctx, x - 0.5, y - 1, 12, 1,   '#6870a0');
+  P.rect(ctx, x - 0.5, y + 5.5, 12, 2, '#282e38');
+  P.rect(ctx, x + 5.5, y - 1,   1, 8.5,'#282e38');
+  for (const [rx, ry] of [[0.5, 0.5], [9.5, 0.5], [0.5, 5.5], [9.5, 5.5]] as [number,number][])
+    P.rect(ctx, x + rx, y + ry, 1.5, 1.5, '#2de2e6');
+  if (k < 0.66) P.rect(ctx, x + 3, y + 2, 5, 2, '#1a2030');
+  if (k < 0.4)  P.rect(ctx, x + 1, y + 4, 2, 3, '#c03850');
+}
+
+function adamantiumPlate(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
+  P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
+  P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#1a1030');
+  P.rect(ctx, x - 0.5, y - 1, 12, 1,   '#6040b0');
+  P.rect(ctx, x - 0.5, y + 6.5, 12, 1, '#0a0820');
+  P.rect(ctx, x + 5,   y + 1,   1, 5,  '#4020a0');
+  P.rect(ctx, x + 1,   y + 3.5, 9, 1,  '#4020a0');
+  for (const [rx, ry] of [[0.5, 0], [9.5, 0], [0.5, 6], [9.5, 6]] as [number,number][])
+    P.rect(ctx, x + rx, y + ry, 1.5, 1.5, '#9060e0');
+  if (k < 0.66) P.rect(ctx, x + 2, y + 1, 1, 5, '#ff3090');
+  if (k < 0.4)  P.rect(ctx, x + 7, y + 2, 3, 3, '#ff90ff');
+}
+
 function drawRubble(ctx: CanvasRenderingContext2D, list: number[][], look: string) {
-  const col = look === 'concrete' ? '#8f8a80' : look === 'steel' ? '#6b7078' : '#bfa574';
+  const col = look === 'wood' ? '#7a4a28' : look === 'tin' ? '#8a8e94' : look === 'iron' ? '#48505e'
+    : look === 'adamantium' ? '#1a1030' : look === 'concrete' ? '#8f8a80' : look === 'steel' ? '#6b7078' : '#bfa574';
   for (const [x, y] of list) {
     P.stain(ctx, x + 5, y + 5, 6, 2, 'rgba(0,0,0,0.3)');
     P.rect(ctx, x, y + 4, 3, 2, col);

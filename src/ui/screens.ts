@@ -5,7 +5,7 @@ import { META_UPGRADES, levelCost } from '../data/upgrades.js';
 import { ALLY_LEVELS, allyArc } from '../data/allies.js';
 import { HEROES, UNLOCK_WAVE, unlockedHeroes, heroStatsText } from '../data/heroes.js';
 import type { HeroDef } from '../data/heroes.js';
-import { bombMult, nextQuadro, canPlaceBomb, bombsForQuadro, BOMB_MAX } from '../systems/bombs.js';
+import { bombMult, nextQuadro, canPlaceBomb, bombsForQuadro, bombCost } from '../systems/bombs.js';
 import { weaponDef } from '../data/weapons.js';
 import { slotName } from '../systems/allies.js';
 import { fmt } from '../util.js';
@@ -105,17 +105,17 @@ export function showMenu(meta: Meta, portrait: (id: string, locked: boolean) => 
 export function updateBombUI(run: Run) {
   const q = nextQuadro(run);
   const mult = bombMult(run);
-  const pct = run.bombPenalty * 5;
+  const cost = bombCost(run);
   const left = run.bombsLeft ?? bombsForQuadro(run);
   const total = bombsForQuadro(run);
   $('bomb-quadro-label')!.textContent = `QUADRO ${q}`;
   $('bomb-mult-label')!.textContent = `💣 ×${mult}`;
-  $('bomb-penalty-val')!.textContent = pct > 0 ? `−${pct}% a tutte le stat` : 'nessuna';
+  $('bomb-penalty-val')!.textContent = `💰 ${cost} oro a bomba`;
   $('bomb-count-val')!.textContent = `${total - left} / ${total}`;
   const can = canPlaceBomb(run);
   document.querySelector('.bombs-hint')!.textContent = can
     ? `Rimangono ${left} bomb${left === 1 ? 'a' : 'e'} — clicca sulla mappa`
-    : left === 0 ? 'Bombe esaurite per questo quadro' : `Limite stat raggiunto`;
+    : left === 0 ? 'Bombe esaurite per questo quadro' : `Oro insufficiente (serve ${cost} 💰)`;
 }
 
 // Sezione "carte giocabili" nella schermata carte: carte usabili dalla mano.
