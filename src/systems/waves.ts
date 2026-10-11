@@ -120,6 +120,10 @@ export function makeEnemy(def: any, w: number, extra: Record<string, any> = {}) 
   const p   = extra.at || (def.role === 'sniper' ? sniperSpawnPoint() : spawnPoint());
   const wsm = extra.wsm ?? 1;
   const { hp, speed, atk, gold, tierKey, elite, zombie } = scaleEnemyStats(def, w, wsm);
+  // I cecchini restano fermi nel nido: il range copre la distanza dal nido alla torre.
+  const range = def.role === 'sniper' && !extra.at
+    ? Math.hypot(p.x - TOWER.x, p.y - TOWER.y) + 20
+    : def.range;
   return {
     id: Math.random(),
     def,
@@ -139,7 +143,7 @@ export function makeEnemy(def: any, w: number, extra: Record<string, any> = {}) 
     shotCd: def.shotCd || 1,
     healCd: 3,
     atk,
-    range: def.range,
+    range,
     armor: def.armor || 0,
     gold,
     size: WAVE_CONFIG.enemySize,
