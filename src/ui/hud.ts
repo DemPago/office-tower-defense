@@ -69,7 +69,7 @@ function withTip(btn: HTMLElement, content: () => string, onActivate: () => void
 
 const tipTitle = (icon: string, name: string, extra = ''): string => `<b><span>${icon} ${name}</span><span class="tip-extra">${extra}</span></b>`;
 
-export function createHud({ onBuy, onAbility, onSell, onDetonate }: { onBuy: (id: string) => void; onAbility: (id: string) => void; onSell?: (i: number) => void; onDetonate?: () => void }) {
+export function createHud({ onBuy, onAbility, onSell, onDetonate, onUse }: { onBuy: (id: string) => void; onAbility: (id: string) => void; onSell?: (i: number) => void; onDetonate?: () => void; onUse?: (i: number) => void }) {
   let lastRun: Run | null = null;
 
   const upgradeEls: Record<string, { btn: HTMLButtonElement; lv: HTMLElement | null; cost: HTMLElement | null }> = {};
@@ -180,6 +180,14 @@ export function createHud({ onBuy, onAbility, onSell, onDetonate }: { onBuy: (id
       const el = document.createElement('div');
       el.className = 'hc-card' + (def.heavy ? ' heavy' : def.malus ? ' malus' : def.type === 'use' ? ' use' : '');
       el.innerHTML = `<span class="hc-ico">${def.icon}</span><span class="hc-nm">${def.name}</span><span class="hc-desc">${def.desc(pick.m)}</span>`;
+      if (def.type === 'use') {
+        const useBtn = document.createElement('button');
+        useBtn.className = 'hc-use-btn';
+        useBtn.textContent = '▶ Use';
+        useBtn.title = 'Use this card now';
+        useBtn.addEventListener('click', e => { e.stopPropagation(); onUse?.(i); closeHandPanel(); });
+        el.appendChild(useBtn);
+      }
       const sellBtn = document.createElement('button');
       sellBtn.className = 'hc-sell-btn';
       sellBtn.textContent = '💸 Sell';

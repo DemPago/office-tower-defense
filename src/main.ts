@@ -7,7 +7,7 @@ import { loadMeta, saveMeta } from './save.js';
 import { update } from './systems/game.js';
 import { buyUpgrade } from './systems/economy.js';
 import { useAbility } from './systems/abilities.js';
-import { sellCard } from './systems/cards.js';
+import { sellCard, playCard } from './systems/cards.js';
 import { detonateAllMines } from './systems/bombs.js';
 import { loadAssets } from './render/assets.js';
 import { createRenderer } from './render/world.js';
@@ -111,6 +111,7 @@ const hud = createHud({
     if (result) play('buy');
   },
   onDetonate: () => { if (app.run) detonateAllMines(app.run); },
+  onUse: i => { if (app.run) playCard(app.run, app.meta, i); },
 });
 app.tutorial = createTutorial({
   onPause: () => { app.paused = true; },

@@ -170,6 +170,13 @@ button:disabled { cursor: default; }
   cursor: pointer; color: var(--concrete); padding: 3px 5px; white-space: nowrap;
 }
 .hc-sell-btn:hover { color: var(--hazard); border-color: var(--hazard); }
+.hc-use-btn {
+  margin-left: auto; flex-shrink: 0;
+  font-family: var(--font); font-size: 7px;
+  background: var(--cyan); border: 1px solid var(--cyan); border-radius: 2px;
+  cursor: pointer; color: #000; padding: 3px 5px; white-space: nowrap; font-weight: bold;
+}
+.hc-use-btn:hover { background: #fff; border-color: #fff; }
 
 /* ─── Carte giocabili nella fase carte ─────────────────────── */
 #hand-playable {
