@@ -3,16 +3,16 @@ import { BONUS_WAVES, BONUS_GOLD, SUSHI_TYPES } from '../data/sushi.js';
 import { TOWER, SPAWN_RADIUS } from '../state.js';
 import { banner, sfx, floatText } from './fx.js';
 import { offerCards } from './cards.js';
+import { hpScale } from './waves.js';
 import type { Run } from '../types.js';
 
-let _id = 0;
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function makeSushi(type: any) {
+function makeSushi(type: any, wave: number) {
   const a = Math.random() * Math.PI * 2;
   const r = SPAWN_RADIUS * (0.65 + Math.random() * 0.35);
+  const hp = Math.round(type.hp * hpScale(wave));
   return {
-    id: `sushi_${++_id}`,
+    id: Math.random(),
     def: {},
     name: type.name,
     sushi: true,
@@ -21,8 +21,8 @@ function makeSushi(type: any) {
     scale: 1,
     x: TOWER.x + Math.cos(a) * r,
     y: TOWER.y + Math.sin(a) * r,
-    hp: type.hp,
-    maxHp: type.hp,
+    hp,
+    maxHp: hp,
     speed: type.speed,
     elite: false,
     zombie: false,
@@ -58,7 +58,7 @@ export function startBonusWave(run: Run) {
   const queue = [];
   for (let i = 0; i < count; i++) {
     const type = SUSHI_TYPES[Math.floor(Math.random() * SUSHI_TYPES.length)];
-    queue.push({ delay: i === 0 ? 0.5 : gap * (0.7 + Math.random() * 0.6), enemy: () => makeSushi(type) });
+    queue.push({ delay: i === 0 ? 0.5 : gap * (0.7 + Math.random() * 0.6), enemy: () => makeSushi(type, run.wave) });
   }
   run.spawnQueue = queue;
   run.spawnTimer = 0;

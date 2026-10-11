@@ -2,6 +2,8 @@
 import { CARDS, MALUS_CARDS, HEAVY_MALUS_CARDS, RARITY, cardPower, MAX_HAND, findCard } from '../data/cards.js';
 import { refreshStats } from './economy.js';
 import { maxMana } from '../data/abilities.js';
+import { floatText } from './fx.js';
+import { TOWER } from '../state.js';
 import type { Run, Meta, CardDef } from '../types.js';
 
 // Estrae una carta dal mazzo, pesata per rarità.
@@ -96,6 +98,7 @@ export function playCard(run: Run, meta: Meta, handIndex: number): CardDef | fal
   if (run.cards[pick.id] > 0) run.cards[pick.id]--;
   refreshStats(run, meta);
   run.fx.sounds.push('pick');
+  floatText(run, TOWER.x, TOWER.y - 60, `${card.icon} ${card.name}!`, '#2de2e6', 9);
   return card;
 }
 

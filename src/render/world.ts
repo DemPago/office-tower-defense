@@ -116,7 +116,8 @@ export function createRenderer(canvas: HTMLCanvasElement, assets: Assets) {
     ctx.drawImage(cur.canvas, -MARGIN, -MARGIN, AREA.w, AREA.h);
     if (cur.ambient) cur.ambient(ctx, time);
     const zombieWanted = run && (run.phase === 'wave') && isZombieWave(run.wave) ? 1 : 0;
-    zombieK += Math.max(-dt / 2, Math.min(dt / 2, zombieWanted - zombieK));
+    const zRate = zombieWanted > zombieK ? dt / 2 : dt * 2; // entra lento (2s), esce veloce (0.5s)
+    zombieK += Math.max(-zRate, Math.min(zRate, zombieWanted - zombieK));
     if (zombieK > 0) drawZombieWorld(ctx, time, zombieK);
     if (fade > 0 && prevIdx !== null) {
       ctx.globalAlpha = fade;
