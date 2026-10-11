@@ -60,6 +60,7 @@ button:disabled { cursor: default; }
   border-image: var(--stripes) 4;
 }
 #wave { color: var(--hazard); white-space: nowrap; }
+#enemy-count { color: var(--concrete-hi); font-size: 7px; white-space: nowrap; min-width: 2.5em; text-align: right; }
 #hp {
   position: relative;
   flex: 1;
@@ -556,22 +557,29 @@ img.hero-illustrated-preview {
 }
 .hero {
   position: relative;
-  display: flex; flex-direction: column; align-items: stretch;
-  padding: 0;
+  aspect-ratio: 3 / 5;
   background: #0a0a0e;
   border: 2px solid var(--steel);
   cursor: pointer;
   overflow: hidden;
   transition: border-color .15s, box-shadow .15s;
 }
-.hero canvas { width: 100%; height: auto; display: block; image-rendering: auto; }
+/* Img e canvas riempiono tutta la card */
+.hero > img,
+.hero > canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: top center;
+  display: block;
+}
+.hero > canvas { image-rendering: pixelated; }
 /* Nome in overlay sul fondo della card */
 .hero span {
   position: absolute; bottom: 0; left: 0; right: 0;
-  padding: 10px 4px 4px;
+  padding: 12px 4px 4px;
   font-size: 6px; text-align: center;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  background: linear-gradient(transparent, rgba(0,0,0,0.88));
   color: var(--white);
   letter-spacing: 0.05em;
 }

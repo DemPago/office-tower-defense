@@ -109,7 +109,15 @@ export function createHud({ onBuy, onAbility, onSell }: { onBuy: (id: string) =>
     setText($('gold'), fmt(run.gold));
     const hpPct = Math.max(0, run.tower.hp / run.stats.maxHp * 100);
     $('hp-fill')!.style.width = hpPct.toFixed(1) + '%';
-    setText($('hp-text'), `${fmt(Math.ceil(run.tower.hp))}/${fmt(Math.ceil(run.stats.maxHp))}`);
+    setText($('hp-text'), `${fmt(Math.max(0, Math.floor(run.tower.hp)))}/${fmt(Math.ceil(run.stats.maxHp))}`);
+    // Counter nemici rimasti (visibile solo durante l'ondata)
+    const ec = $('enemy-count');
+    if (ec) {
+      const alive = run.enemies.filter(e => !e.dead).length + run.spawnQueue.length;
+      const inWave = run.phase === 'wave' || run.phase === 'bonus-wave';
+      ec.textContent = inWave ? `👾 ${alive}` : '';
+      ec.hidden = !inWave;
+    }
     setText($('btn-speed'), `x${speed}`);
     const mm = maxMana(run);
     $('mp-fill')!.style.width = Math.min(100, run.mana / mm * 100).toFixed(1) + '%';
