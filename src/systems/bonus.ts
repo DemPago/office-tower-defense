@@ -3,6 +3,8 @@ import { BONUS_WAVES, BONUS_GOLD, SUSHI_TYPES } from '../data/sushi.js';
 import { TOWER, SPAWN_RADIUS } from '../state.js';
 import { banner, sfx, floatText } from './fx.js';
 import { offerCards } from './cards.js';
+import { offerAllies } from './allies.js';
+import { REINFORCE_EVERY } from '../data/allies.js';
 import { hpScale, atkScale } from './waves.js';
 import type { Run } from '../types.js';
 
@@ -10,8 +12,9 @@ import type { Run } from '../types.js';
 function makeSushi(type: any, wave: number) {
   const a = Math.random() * Math.PI * 2;
   const r = SPAWN_RADIUS * (0.65 + Math.random() * 0.35);
-  const hp  = Math.round(type.hp  * hpScale(wave));
-  const atk = Math.round(type.atk * atkScale(wave));
+  const sushiWave = Math.min(wave, 20);
+  const hp  = Math.round(type.hp  * hpScale(sushiWave));
+  const atk = Math.round(type.atk * atkScale(sushiWave));
   return {
     id: Math.random(),
     def: {},
@@ -85,6 +88,7 @@ export function endBonusWave(run: Run) {
     banner(run, 'BONUS STAGE COMPLETATO!', 'Hai lo spirito di un samurai — +500.000💰', '#f2b705');
     run.bonusStage = false;
     run.bonusWaveIdx = 0;
-    offerCards(run, { noMalus: true });
+    if (run.wave % REINFORCE_EVERY === 0) offerAllies(run);
+    else offerCards(run, { noMalus: true });
   }
 }

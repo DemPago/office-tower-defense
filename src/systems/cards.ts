@@ -4,6 +4,7 @@ import { refreshStats } from './economy.js';
 import { maxMana } from '../data/abilities.js';
 import { floatText } from './fx.js';
 import { TOWER } from '../state.js';
+import { fmt } from '../util.js';
 import type { Run, Meta, CardDef } from '../types.js';
 
 // Estrae una carta dal mazzo, pesata per rarità.
@@ -116,6 +117,7 @@ export function sellCard(run: Run, meta: Meta, handIndex: number): { hp: number;
   run.tower.hp = Math.min(run.stats.maxHp, run.tower.hp + hp);
   run.mana = Math.min(maxMana(run), run.mana + mana);
   run.fx.sounds.push('pick');
+  floatText(run, TOWER.x, TOWER.y - 60, `${card.icon} venduta! +${fmt(hp)}❤️ +${mana}💧`, '#f2b705', 8);
   return { hp, mana, card };
 }
 

@@ -54,7 +54,8 @@ export function manaCost(run: Run, id: string): number {
 }
 
 export function canUse(run: Run, id: string): boolean {
-  if (run.phase !== 'wave' || run.abilityCd[id] > 0 || run.mana < manaCost(run, id)) return false;
+  if (run.phase !== 'wave' && run.phase !== 'bonus-wave') return false;
+  if (run.abilityCd[id] > 0 || run.mana < manaCost(run, id)) return false;
   if (id === 'sniper') return run.enemies.some(e => !e.dead && dist(e, TOWER) > run.stats.range);
   return run.enemies.length > 0;
 }
