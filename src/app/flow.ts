@@ -172,6 +172,7 @@ export function createFlow(app: any) {
   $('btn-bombs-ok')!.addEventListener('click', () => {
     const { run } = app;
     if (!run || run.phase !== 'bomb-placement') return;
+    run.bombsDone = true;
     run.phase = 'break';
     run.breakTimer = 1.5;
     screens.hideAll();

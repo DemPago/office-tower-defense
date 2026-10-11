@@ -288,6 +288,7 @@ export interface Run {
   bombs: any[];
   bombPenalty: number;
   bombsLeft?: number;
+  bombsDone?: boolean;
   bombsPlacedQuadro?: number;
   shots: Shot[];
   enemyShots: EnemyShot[];

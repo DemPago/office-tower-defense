@@ -1420,6 +1420,45 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       return { x: (v.x + 1) / 2 * OW, y: (1 - v.y) / 2 * OH, behind: v.z > 1 };
     }
 
+    // Aquila di Dem: vola sopra la torre in modalità 3D
+    if ((run as any)?.hero === 'dem') {
+      const flap  = Math.sin(now * 8);
+      const driftX = Math.sin(now * 1.3) * 18 * S;
+      const eagleH = TOWER_H + (95 - Math.cos(now * 2.1) * 6) * S;
+      const { x: ex, y: ey, behind: eb } = project3d(wx(TOWER.x) + driftX, eagleH, wz(TOWER.y));
+      if (!eb) {
+        const ws = (13 + flap * 4) * dpr;
+        const wh = (4  + flap * 3) * dpr;
+        overlayCtx.save();
+        // Ombra sotto l'aquila
+        const { x: shx, y: shy } = project3d(wx(TOWER.x) + driftX, TOWER_H + 0.05, wz(TOWER.y));
+        overlayCtx.globalAlpha = 0.2;
+        overlayCtx.fillStyle = '#0d0d0f';
+        overlayCtx.beginPath();
+        overlayCtx.ellipse(shx, shy, ws * 0.65, 3 * dpr, 0, 0, Math.PI * 2);
+        overlayCtx.fill();
+        overlayCtx.globalAlpha = 1;
+        // Ali
+        overlayCtx.fillStyle = '#4a3820';
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(ex, ey); overlayCtx.lineTo(ex - ws, ey - wh); overlayCtx.lineTo(ex - ws + 4 * dpr, ey + 3 * dpr);
+        overlayCtx.closePath(); overlayCtx.fill();
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(ex, ey); overlayCtx.lineTo(ex + ws, ey - wh); overlayCtx.lineTo(ex + ws - 4 * dpr, ey + 3 * dpr);
+        overlayCtx.closePath(); overlayCtx.fill();
+        // Corpo
+        overlayCtx.fillStyle = '#6a4f2c';
+        overlayCtx.beginPath(); overlayCtx.ellipse(ex, ey + dpr, 4 * dpr, 6 * dpr, 0, 0, Math.PI * 2); overlayCtx.fill();
+        // Testa bianca
+        overlayCtx.fillStyle = '#e8e2d0';
+        overlayCtx.beginPath(); overlayCtx.ellipse(ex, ey - 5 * dpr, 3 * dpr, 3 * dpr, 0, 0, Math.PI * 2); overlayCtx.fill();
+        // Becco giallo
+        overlayCtx.fillStyle = '#f2b705';
+        overlayCtx.fillRect(ex + 2 * dpr, ey - 6 * dpr, 3 * dpr, 2 * dpr);
+        overlayCtx.restore();
+      }
+    }
+
     // Barre HP per boss / elite / alleati danneggiati
     if (run) {
       const BAR_W = 44 * dpr, BAR_H = 5 * dpr;

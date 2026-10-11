@@ -36,10 +36,11 @@ export function update(run: Run, dt: number): void {
       // Prima di ogni ondata non-boss → piazza le bombe; boss = multiplo di 10
       const nextWave = run.wave + 1;
       const isBossWave = nextWave % 10 === 0;
-      if (!isBossWave) {
+      if (!isBossWave && !run.bombsDone) {
         resetBombsLeft(run);
         run.phase = 'bomb-placement';
       } else {
+        run.bombsDone = false;
         startWave(run);
       }
     }
