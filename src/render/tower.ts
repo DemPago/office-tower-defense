@@ -11,6 +11,14 @@ B.x0 = TOWER.x - B.w / 2;
 B.base = TOWER.y + 24;
 B.top = B.base - B.h;
 
+// Dom: il saggio dei consigli — finestra row=0, col=2 (top floor, destra).
+// Coordinate mondo (world px) del punto da cui spara.
+// Finestra interna (2x): x=72, y=18, size 24×20 → world: x=B.x0+36, y=B.top+9
+export const DOM_WIN = {
+  x: TOWER.x + 21,  // bocca del fucile in world px
+  y: TOWER.y - 47,  // altezza finestra in world px
+};
+
 // Il palazzo è disegnato a risoluzione doppia (1 pixel = mezzo pixel del mondo),
 // come i personaggi. Coordinate interne: facciata 120×168, origine in alto a sinistra.
 const TW = B.w * 2, TH = B.h * 2;
@@ -292,6 +300,38 @@ export function drawTower(ctx: CanvasRenderingContext2D, assets: any, run: Run |
       ctx.beginPath();
       CRACKS[k].forEach(([cx, cy], j) => (j ? ctx.lineTo : ctx.moveTo).call(ctx, cx, cy));
       ctx.stroke();
+    }
+  }
+
+  // ── Dom: il saggio dei consigli (finestra row=0, col=2) ──────────────────
+  // Sempre visibile come silhouette; si sporge quando ha appena sparato il cecchino.
+  if (!dead) {
+    const sniperCd = (run as any)?.abilityCd?.sniper ?? 0;
+    const lean = sniperCd > 0 ? 6 : 0;
+    const dw = 72, dy = 18; // top-left finestra in coordinate interne (2x)
+
+    // Capelli bianchi + testa
+    p(dw + 8 + lean, dy + 1,  8, 2, '#d8d0bc');
+    p(dw + 8 + lean, dy + 3,  8, 8, '#c8a878');
+    // Occhiali tondo
+    p(dw + 9  + lean, dy + 5, 3, 2, '#6ab0e0');
+    p(dw + 14 + lean, dy + 5, 3, 2, '#6ab0e0');
+    p(dw + 12 + lean, dy + 5, 2, 1, '#8898b8');  // ponte
+    // Giacca blu navy
+    p(dw + 7  + lean, dy + 11, 10, 7, '#1e2e4e');
+    p(dw + 7  + lean, dy + 11,  4, 2, '#e8e2d0');  // colletto bianco
+    // Fucile: calcio + canna
+    p(dw + 14 + lean, dy +  7,  4, 5, '#3a3840');  // calcio
+    p(dw + 16 + lean, dy +  8, 14, 2, '#5a5860');  // canna
+    p(dw + 29 + lean, dy +  7,  3, 4, '#7a7878');  // bocca
+
+    // Fiamma alla bocca del fucile subito dopo lo sparo
+    if (sniperCd > 0.2) {
+      const fi = (sniperCd - 0.2) / 0.1;
+      ctx.globalAlpha = fi;
+      p(dw + 32 + lean, dy + 5,  7, 6, PAL.white);
+      p(dw + 33 + lean, dy + 6,  5, 4, PAL.hazard);
+      ctx.globalAlpha = 1;
     }
   }
 

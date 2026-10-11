@@ -2,6 +2,7 @@
 import { ABILITIES, maxMana } from '../data/abilities.js';
 import { dealDamage, fire } from './combat.js';
 import { MUZZLE } from './shooting.js';
+import { DOM_WIN } from '../render/tower.js';
 import { banner, burst, shake, sfx } from './fx.js';
 import { TOWER } from '../state.js';
 import { dist } from '../util.js';
@@ -32,7 +33,8 @@ const EFFECTS: Record<string, (run: Run) => void> = {
       .filter(e => !e.dead && dist(e, TOWER) > run.stats.range)
       .sort((a, b) => dist(a, TOWER) - dist(b, TOWER))[0];
     if (!target) return;
-    fire(run, MUZZLE.x, MUZZLE.y, target, {
+    // Il colpo parte dalla finestra di Dom, non dal tetto (MUZZLE)
+    fire(run, DOM_WIN.x, DOM_WIN.y, target, {
       dmg: run.stats.dmg * 5,
       bounces: 0,
       hitIds: new Set(),
@@ -40,7 +42,7 @@ const EFFECTS: Record<string, (run: Run) => void> = {
       effects: { slow: 0, dot: 0, aoeRadius: 0, aoeDmg: 0, charm: 0 },
       kind: 'sniper',
     });
-    run.fx.beams.push({ x1: MUZZLE.x, y1: MUZZLE.y, x2: target.x, y2: target.y - target.size * 0.35, life: 0.08, crit: true });
+    run.fx.beams.push({ x1: DOM_WIN.x, y1: DOM_WIN.y, x2: target.x, y2: target.y - target.size * 0.35, life: 0.08, crit: true, kind: 'sniper' });
     burst(run, target.x, target.y - target.size * 0.3, '#ffffff', 4, 80);
   },
 };

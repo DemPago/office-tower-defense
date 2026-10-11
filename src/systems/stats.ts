@@ -68,7 +68,7 @@ export function computeStats(run: Run, meta: Meta): Stats {
     dmg: bp * (1 + H.dmg) * W.dmg * BASE.dmg * (1 + u.dmg) * (1 + c.dmg) * (1 + m.dmg) * (1 + auraDmg),
     rate: bp * Math.min(12 * W.rate, (1 + H.rate) * W.rate * BASE.rate * (1 + u.rate + c.rate + m.rate + auraRate)),
     allyRateMult: 1 + auraRate,
-    range: bp * Math.min(260, (1 + H.range) * W.range * BASE.range * (1 + u.range + c.range) * (1 + (run.wave || 0) * 0.003)),
+    range: Math.min(260, (1 + H.range) * W.range * BASE.range * (1 + u.range + c.range) * (1 + (run.wave || 0) * 0.003)),
     maxHp: bp * (BASE.hp + u.hpFlat + c.hpFlat) * (1 + c.hp + m.hp) * (1 + H.hp),
     regen: bp * (BASE.regen + u.regen + c.regen) * (1 + H.regen),
     armor: Math.min(0.7, c.armor + H.armor),

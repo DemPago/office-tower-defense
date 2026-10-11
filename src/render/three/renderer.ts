@@ -1330,12 +1330,14 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       const ddx = x2 - x1, ddz = z2 - z1;
       const len = Math.sqrt(ddx * ddx + ddz * ddz);
       if (len < 0.001) { m.visible = false; continue; }
-      m.position.set((x1 + x2) / 2, 0.3, (z1 + z2) / 2);
+      // Il cecchino parte dalla finestra di Dom (~84% dell'altezza torre)
+      const beamY = b.kind === 'sniper' ? TOWER_H * 0.84 : 0.3;
+      m.position.set((x1 + x2) / 2, beamY, (z1 + z2) / 2);
       m.scale.set(1, len, 1);
       m.rotation.set(Math.PI / 2, Math.atan2(ddx, ddz), 0);
       const bmat = m.material as THREE.MeshBasicMaterial;
       bmat.opacity = Math.min(1, b.life / 0.07 + 0.3);
-      bmat.color.setHex(b.crit ? 0xff7b1c : 0xff2a3d);
+      bmat.color.setHex(b.kind === 'sniper' ? 0xffffff : b.crit ? 0xff7b1c : 0xff2a3d);
       bmat.needsUpdate = true;
     }
 
