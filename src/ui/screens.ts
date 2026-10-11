@@ -118,9 +118,10 @@ export function updateBombUI(run: Run) {
   $('bomb-penalty-val')!.textContent = `💰 ${cost} oro a bomba`;
   $('bomb-count-val')!.textContent = `${total - left} / ${total}`;
   const can = canPlaceBomb(run);
-  document.querySelector('.bombs-hint')!.textContent = can
+  const minesNote = (run.minesNext ?? 0) > 0 ? ` · next ${run.minesNext} → 💥 MINE` : '';
+  document.querySelector('.bombs-hint')!.textContent = (can
     ? `${left} bomb${left === 1 ? '' : 's'} remaining — click on the map`
-    : left === 0 ? 'No bombs left for this round' : `Not enough gold (need ${cost} 💰)`;
+    : left === 0 ? 'No bombs left for this round' : `Not enough gold (need ${cost} 💰)`) + minesNote;
 }
 
 // Sezione "carte giocabili" nella schermata carte: carte usabili dalla mano.

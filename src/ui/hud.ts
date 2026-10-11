@@ -11,6 +11,7 @@ import { weaponDef } from '../data/weapons.js';
 import { fmt } from '../util.js';
 import { domUpgradeAdvice } from './dom.js';
 import { findCard } from '../data/cards.js';
+import { hasMines } from '../systems/bombs.js';
 import type { Run } from '../types.js';
 
 const $ = (id: string): HTMLElement | null => document.getElementById(id);
@@ -68,7 +69,7 @@ function withTip(btn: HTMLElement, content: () => string, onActivate: () => void
 
 const tipTitle = (icon: string, name: string, extra = ''): string => `<b><span>${icon} ${name}</span><span class="tip-extra">${extra}</span></b>`;
 
-export function createHud({ onBuy, onAbility, onSell }: { onBuy: (id: string) => void; onAbility: (id: string) => void; onSell?: (i: number) => void }) {
+export function createHud({ onBuy, onAbility, onSell, onDetonate }: { onBuy: (id: string) => void; onAbility: (id: string) => void; onSell?: (i: number) => void; onDetonate?: () => void }) {
   let lastRun: Run | null = null;
 
   const upgradeEls: Record<string, { btn: HTMLButtonElement; lv: HTMLElement | null; cost: HTMLElement | null }> = {};
@@ -102,9 +103,15 @@ export function createHud({ onBuy, onAbility, onSell }: { onBuy: (id: string) =>
     abilityEls[def.id] = { btn, cd: btn.querySelector<HTMLElement>('.cd'), mana: btn.querySelector<HTMLElement>('.mana'), cdnum: btn.querySelector<HTMLElement>('.cdnum') };
   }
 
+  const detonateBtn = $('btn-detonate') as HTMLButtonElement | null;
+  if (detonateBtn && onDetonate) {
+    detonateBtn.addEventListener('click', () => onDetonate());
+  }
+
   function update(run: Run, speed: number): void {
     lastRun = run;
     const narrow = innerWidth <= 520;
+    if (detonateBtn) detonateBtn.hidden = run.phase !== 'wave' || !hasMines(run);
     setText($('wave'), run.wave ? `WAVE ${run.wave}` : 'READY');
     setText($('gold'), fmt(run.gold));
     const hpPct = Math.max(0, run.tower.hp / run.stats.maxHp * 100);

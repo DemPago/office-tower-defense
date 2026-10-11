@@ -49,6 +49,8 @@ export const CARDS: CardDef[] = [
   { id: 'redbull',  icon: '🥤', name: 'Red Bull',              type: 'use', rarity: 'common', max: 3, desc: () => 'Restores 60 mana at the right moment',          mod: () => {}, use: (run: Run) => { run.mana += 60; } },
   { id: 'pizza',    icon: '🍕', name: 'Team Pizza',            type: 'use', rarity: 'rare',   max: 2, desc: () => 'Heals 15% HP and restores 30 mana',             mod: () => {}, use: (run: Run) => { run.tower.hp += run.stats.maxHp * 0.15; run.mana += 30; } },
   { id: 'expenses', icon: '🚕', name: 'Expense Report',        type: 'use', rarity: 'epic',   max: 2, desc: () => 'Collect 20 × wave in gold immediately',         mod: () => {}, use: (run: Run) => { run.gold += 20 * run.wave; } },
+  { id: 'armsdepot', icon: '💣', name: 'Arms Depot',           rarity: 'rare',  max: 3, desc: () => '+2 free bombs per round',                       mod: () => {}, onPick: (run: Run) => { run.extraBombs = (run.extraBombs ?? 0) + 2; } },
+  { id: 'minefield', icon: '💥', name: 'Minefield',            rarity: 'epic',  max: 2, desc: () => 'Next 3 placed bombs become mines (manual detonation)', mod: () => {}, onPick: (run: Run) => { run.minesNext = (run.minesNext ?? 0) + 3; } },
 ];
 
 // Malus pesanti: dopo ogni ondata zombie (7, 17, 27…) le 3 scelte sono TUTTE negative.

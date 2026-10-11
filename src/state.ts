@@ -49,6 +49,8 @@ export function createRun(meta: Meta): Run {
     stats: null,
     enemies: [],
     bombs: [],
+    extraBombs: 0,
+    minesNext: 0,
     shots: [],
     enemyShots: [],
     spawnQueue: [],

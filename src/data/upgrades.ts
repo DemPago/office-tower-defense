@@ -37,6 +37,8 @@ export const UPGRADES: UpgradeDef[] = [
     help: s => `Max HP of the building. +25 per level. Now: ${Math.round(s.maxHp)}.` },
   { id: 'regen', icon: '💚', name: 'Regen',     base: 10, grow: 1.38, mod: (u, L) => { u.regen += 0.8 * L; },
     help: s => `HP recovered per second. +0.8 per level. Now: ${s.regen.toFixed(1)}/s.` },
+  { id: 'mana',  icon: '💧', name: 'Mana',      base: 10, grow: 1.38, mod: (u, L) => { u.manaRegen += 0.5 * L; },
+    help: s => `Mana regen rate. +0.5/s per level. Now: ${s.manaRegen.toFixed(1)}/s.` },
 ];
 
 // Potenziamenti PERMANENTI comprati con i BUONI PASTO (valgono per sempre).

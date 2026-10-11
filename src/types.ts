@@ -291,6 +291,8 @@ export interface Run {
   bombsLeft?: number;
   bombsDone?: boolean;
   bombsPlacedQuadro?: number;
+  extraBombs?: number;
+  minesNext?: number;
   shots: Shot[];
   enemyShots: EnemyShot[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

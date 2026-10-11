@@ -99,7 +99,7 @@ export function computeStats(run: Run, meta: Meta): Stats {
     goldMult:     1 + c.gold + m.gold + H.gold,
     healOnKill:   c.healOnKill,
     manaMult:     Math.max(S.manaMultMin, 1 - c.cdr),
-    manaRegen:    (MANA.regen + c.manaRegen) * (1 + H.manaRegen),
+    manaRegen:    (MANA.regen + u.manaRegen + c.manaRegen) * (1 + H.manaRegen),
     manaMax:      c.manaMax + H.manaMax,
     manaOnKill:   c.manaOnKill,
     wallHp:       c.wallHp,

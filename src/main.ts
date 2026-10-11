@@ -8,6 +8,7 @@ import { update } from './systems/game.js';
 import { buyUpgrade } from './systems/economy.js';
 import { useAbility } from './systems/abilities.js';
 import { sellCard } from './systems/cards.js';
+import { detonateAllMines } from './systems/bombs.js';
 import { loadAssets } from './render/assets.js';
 import { createRenderer } from './render/world.js';
 import { createHud } from './ui/hud.js';
@@ -109,6 +110,7 @@ const hud = createHud({
     const result = sellCard(app.run, app.meta, i);
     if (result) play('buy');
   },
+  onDetonate: () => { if (app.run) detonateAllMines(app.run); },
 });
 app.tutorial = createTutorial({
   onPause: () => { app.paused = true; },

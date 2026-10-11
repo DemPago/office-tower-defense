@@ -19,7 +19,7 @@
 export const ROLES = {
   //              hp  spd  atk  range  gold  extra
   tank:    { hp: 26, speed: 19, atk:  3, range:   0, gold: 4, armor: 0.2, taunt: true },
-  sniper:  { hp:  7, speed: 26, atk:  5, range: 165, gold: 3, shotCd: 1.8 },
+  sniper:  { hp:  7, speed: 26, atk:  3, range: 165, gold: 3, shotCd: 1.8 },
   charger: { hp: 11, speed: 30, atk: 14, range:   0, gold: 3, charge: { dist: 150, mult: 2.3 } },
   special: { hp: 18, speed: 26, atk:  4, range:   0, gold: 4 },
 };
