@@ -309,13 +309,7 @@ h2 {
 }
 .hero-illustrated { animation: heroFloat 3s ease-in-out infinite; }
 
-/* Img illustrata dentro la card eroe */
-.hero img.hero-illustrated {
-  display: block; width: 100%; height: auto;
-  object-fit: cover; object-position: top center;
-}
-
-/* Img illustrata nel preview laterale (landscape crop) */
+/* Preview laterale illustrato (landscape crop) */
 img.hero-illustrated-preview {
   display: block;
   width: 160px; height: 120px;
