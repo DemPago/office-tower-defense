@@ -1098,8 +1098,19 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
         const td = Math.sqrt(tdx * tdx + tdz * tdz) || 1;
         ddx = tdx / td; ddz = tdz / td;
       }
+      // Altezza: i colpi partono dal top della torre e scendono verso il nemico a terra
+      const dxT = s.x - TOWER.x, dyT = s.y - TOWER.y;
+      const distFromTower = Math.sqrt(dxT * dxT + dyT * dyT);
+      let shotH = TOWER_H;
+      if (s.target && !s.target.dead) {
+        const dtx = s.target.x - TOWER.x, dty = s.target.y - TOWER.y;
+        const totalDist = Math.sqrt(dtx * dtx + dty * dty);
+        const prog = totalDist > 1 ? Math.min(1, distFromTower / totalDist) : 1;
+        shotH = TOWER_H * (1 - prog) + 0.38 * prog;
+      }
+
       const head = shotPool.get();
-      head.position.set(sx, 0.35, sz);
+      head.position.set(sx, shotH, sz);
       const kind = s.kind;
       const headColor = kind === 'laser' ? 0x2de2e6 : kind === 'bolt' ? 0x00ffcc
         : kind === 'energy' ? 0xc080ff : kind === 'heart' ? 0xff3e8a
@@ -1112,14 +1123,14 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       if (kind === 'laser' && sany.ox != null) {
         const ox2 = wx(sany.ox), oz2 = wz(sany.oy);
         const lx = sx - ox2, lz = sz - oz2, ll = Math.sqrt(lx * lx + lz * lz) || 0.001;
-        tr.position.set((ox2 + sx) / 2, 0.35, (oz2 + sz) / 2);
+        tr.position.set((ox2 + sx) / 2, shotH, (oz2 + sz) / 2);
         tr.scale.set(1, ll, 1);
         tr.rotation.set(Math.PI / 2, Math.atan2(lx, lz), 0);
         (tr.material as THREE.MeshBasicMaterial).color.setHex(0xff2a3d);
         (tr.material as THREE.MeshBasicMaterial).opacity = 0.55;
       } else {
         const tlen = kind === 'bolt' ? 0.30 : kind === 'xbow' ? 0.38 : 0.22;
-        tr.position.set(sx - ddx * tlen / 2, 0.35, sz - ddz * tlen / 2);
+        tr.position.set(sx - ddx * tlen / 2, shotH, sz - ddz * tlen / 2);
         tr.scale.set(1, tlen, 1);
         tr.rotation.set(Math.PI / 2, Math.atan2(ddx, ddz), 0);
         const trailColor = kind === 'bolt' ? 0x7bd332 : kind === 'energy' ? 0x8040cc
