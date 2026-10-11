@@ -3,14 +3,15 @@ import { BONUS_WAVES, BONUS_GOLD, SUSHI_TYPES } from '../data/sushi.js';
 import { TOWER, SPAWN_RADIUS } from '../state.js';
 import { banner, sfx, floatText } from './fx.js';
 import { offerCards } from './cards.js';
-import { hpScale } from './waves.js';
+import { hpScale, atkScale } from './waves.js';
 import type { Run } from '../types.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function makeSushi(type: any, wave: number) {
   const a = Math.random() * Math.PI * 2;
   const r = SPAWN_RADIUS * (0.65 + Math.random() * 0.35);
-  const hp = Math.round(type.hp * hpScale(wave));
+  const hp  = Math.round(type.hp  * hpScale(wave));
+  const atk = Math.round(type.atk * atkScale(wave));
   return {
     id: Math.random(),
     def: {},
@@ -32,7 +33,7 @@ function makeSushi(type: any, wave: number) {
     charging: false,
     shotCd: 0,
     healCd: 0,
-    atk: type.atk,
+    atk,
     range: 0,
     armor: 0,
     gold: type.gold,

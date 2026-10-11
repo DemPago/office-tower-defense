@@ -111,7 +111,7 @@ export function createHud({ onBuy, onAbility, onSell, onDetonate, onUse }: { onB
   function update(run: Run, speed: number): void {
     lastRun = run;
     const narrow = innerWidth <= 520;
-    if (detonateBtn) detonateBtn.hidden = run.phase !== 'wave' || !hasMines(run);
+    if (detonateBtn) detonateBtn.hidden = (run.phase !== 'wave' && run.phase !== 'bonus-wave') || !hasMines(run);
     setText($('wave'), run.wave ? `WAVE ${run.wave}` : 'READY');
     setText($('gold'), fmt(run.gold));
     const hpPct = Math.max(0, run.tower.hp / run.stats.maxHp * 100);
@@ -192,7 +192,7 @@ export function createHud({ onBuy, onAbility, onSell, onDetonate, onUse }: { onB
       sellBtn.className = 'hc-sell-btn';
       sellBtn.textContent = '💸 Sell';
       sellBtn.title = '+15% HP, +25 mana';
-      sellBtn.addEventListener('click', e => { e.stopPropagation(); onSell?.(i); });
+      sellBtn.addEventListener('click', e => { e.stopPropagation(); onSell?.(i); renderHandPanel(); });
       el.appendChild(sellBtn);
       handPanelList.appendChild(el);
     });
@@ -227,7 +227,6 @@ export function createHud({ onBuy, onAbility, onSell, onDetonate, onUse }: { onB
     const n = run.cardPicks.length;
     btnHand.hidden = n === 0;
     handCount.textContent = String(n);
-    if (handOpen) renderHandPanel();
     if (n === 0) closeHandPanel();
   }
 
