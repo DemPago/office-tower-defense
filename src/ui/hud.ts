@@ -120,7 +120,8 @@ export function createHud({ onBuy, onAbility, onSell, onDetonate, onUse }: { onB
     // Counter nemici rimasti (visibile solo durante l'ondata)
     const ec = $('enemy-count');
     if (ec) {
-      const alive = run.enemies.filter(e => !e.dead).length + run.spawnQueue.length;
+      let alive = run.spawnQueue.length;
+      for (const e of run.enemies) if (!e.dead) alive++;
       const inWave = run.phase === 'wave' || run.phase === 'bonus-wave';
       ec.textContent = inWave ? `👾 ${alive}` : '';
       ec.hidden = !inWave;

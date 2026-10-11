@@ -29,6 +29,7 @@ export function drawDust(ctx: CanvasRenderingContext2D, dust: Array<{x: number; 
 
 // Pattern scanlines (creato una volta sola)
 let _scanPat: CanvasPattern | null = null;
+let _gradeCache: { w: number; h: number; dq: number; g: CanvasGradient } | null = null;
 function scanlinePattern(ctx: CanvasRenderingContext2D) {
   if (_scanPat) return _scanPat;
   const pc = document.createElement('canvas');
@@ -53,12 +54,16 @@ export function drawGrade(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
   ctx.fillStyle = scanlinePattern(ctx)!;
   ctx.fillRect(0, 0, w, h);
 
-  // Vignette più marcata e rettangolare
-  const v = ctx.createRadialGradient(w / 2, h * 0.48, Math.min(w, h) * 0.22, w / 2, h * 0.52, Math.max(w, h) * 0.76);
-  v.addColorStop(0,   'rgba(13,13,15,0)');
-  v.addColorStop(0.6, 'rgba(13,13,15,0.15)');
-  v.addColorStop(1,   `rgba(13,13,15,${(0.82 + danger * 0.1).toFixed(2)})`);
-  ctx.fillStyle = v;
+  // Vignette più marcata e rettangolare (gradient cachato per dimensioni+pericolo)
+  const dq = Math.round(danger * 20);
+  if (!_gradeCache || _gradeCache.w !== w || _gradeCache.h !== h || _gradeCache.dq !== dq) {
+    const g = ctx.createRadialGradient(w / 2, h * 0.48, Math.min(w, h) * 0.22, w / 2, h * 0.52, Math.max(w, h) * 0.76);
+    g.addColorStop(0,   'rgba(13,13,15,0)');
+    g.addColorStop(0.6, 'rgba(13,13,15,0.15)');
+    g.addColorStop(1,   `rgba(13,13,15,${(0.82 + danger * 0.1).toFixed(2)})`);
+    _gradeCache = { w, h, dq, g };
+  }
+  ctx.fillStyle = _gradeCache.g;
   ctx.fillRect(0, 0, w, h);
 }
 

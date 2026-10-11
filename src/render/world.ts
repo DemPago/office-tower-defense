@@ -66,6 +66,7 @@ export function createRenderer(canvas: HTMLCanvasElement, assets: Assets) {
   const dust = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), v: 0.01 + Math.random() * 0.02, a: Math.random() * 6 }));
   let lastTime = performance.now() / 1000;
   let zombieK = 0; // intensità dell'atmosfera zombie (sale e scende piano)
+  const actorsBuf: { y: number; kind: 0 | 1; ref: any }[] = [];
 
   function scene(i: number) {
     if (!scenes.has(i)) {
@@ -153,16 +154,36 @@ export function createRenderer(canvas: HTMLCanvasElement, assets: Assets) {
     }
 
     // Profondità: chi sta più in alto (dietro al palazzo) si disegna prima.
-    const actors: { y: number; draw: () => void; e?: any }[] = run ? [
-      ...run.enemies.map(e => ({ y: e.y, draw: () => drawEnemy(ctx, assets, e), e })),
-      ...run.allies.map(a => ({ y: allyPos(a).y, draw: () => drawAlly(ctx, assets, a, time) })),
-    ].sort((a, b) => a.y - b.y) : [];
-    const behind = actors.filter(a => a.y < TOWER.y + 20);
-    for (const a of behind) a.draw();
+    let bufLen = 0;
+    if (run) {
+      for (const e of run.enemies) {
+        if (bufLen >= actorsBuf.length) actorsBuf.push({ y: 0, kind: 0, ref: null });
+        const a = actorsBuf[bufLen++]; a.y = e.y; a.kind = 0; a.ref = e;
+      }
+      for (const ally of run.allies) {
+        if (bufLen >= actorsBuf.length) actorsBuf.push({ y: 0, kind: 1, ref: null });
+        const a = actorsBuf[bufLen++]; a.y = allyPos(ally).y; a.kind = 1; a.ref = ally;
+      }
+      actorsBuf.length = bufLen;
+      actorsBuf.sort((a, b) => a.y - b.y);
+    }
+    const towerThresh = TOWER.y + 20;
+    let splitIdx = bufLen;
+    for (let i = 0; i < bufLen; i++) { if (actorsBuf[i].y >= towerThresh) { splitIdx = i; break; } }
+    for (let i = 0; i < splitIdx; i++) {
+      const a = actorsBuf[i];
+      if (a.kind === 0) drawEnemy(ctx, assets, a.ref); else drawAlly(ctx, assets, a.ref, time);
+    }
     drawTower(ctx, assets, run, time);
     // Nemici nascosti dietro al palazzo: si vedono in trasparenza
-    for (const a of behind) if (a.e && hiddenByTower(a.e)) drawGhost(ctx, assets, a.e);
-    for (const a of actors) if (a.y >= TOWER.y + 20) a.draw();
+    for (let i = 0; i < splitIdx; i++) {
+      const a = actorsBuf[i];
+      if (a.kind === 0 && hiddenByTower(a.ref)) drawGhost(ctx, assets, a.ref);
+    }
+    for (let i = splitIdx; i < bufLen; i++) {
+      const a = actorsBuf[i];
+      if (a.kind === 0) drawEnemy(ctx, assets, a.ref); else drawAlly(ctx, assets, a.ref, time);
+    }
     updateSmoke(smoke, run, dt);
     drawSmoke(ctx, smoke);
     updateTrails(trails, run, dt);
