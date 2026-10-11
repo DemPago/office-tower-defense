@@ -232,10 +232,10 @@ export function createFlow(app: any) {
     const { run } = app;
     // Effetti per eroe
     if (run.hero === 'tony') {
-      banner(run, 'com\'è?', 'dice Tony', '#f2b705');
+      banner(run, "com'è?", 'Tony says', '#f2b705');
     }
     if (run.hero === 'cirios') {
-      banner(run, '🔵⚪ NAPOLI! ⚪🔵', 'urla Ciro', '#007FBF');
+      banner(run, '🔵⚪ NAPOLI! ⚪🔵', 'Ciro shouts', '#007FBF');
     }
     if (run.hero === 'nando') {
       for (let i = 0; i < 14; i++) {
@@ -286,10 +286,10 @@ export function createFlow(app: any) {
   }
 
   // Condivisione: dal menu un invito generico, a fine partita il proprio risultato.
-  renderShare($('share-menu')!, () => 'Difendi la tua scrivania dalla gerarchia aziendale! 🏢 Prova Office Tower Defense');
+  renderShare($('share-menu')!, () => 'Defend your desk from the corporate hierarchy! 🏢 Try Office Tower Defense');
   renderShare($('share-over')!, () => app.run
-    ? `Sono stato licenziato all'ondata ${app.run.wave} di Office Tower Defense 🏢💥 Riesci a fare meglio?`
-    : 'Prova Office Tower Defense 🏢');
+    ? `I got fired at wave ${app.run.wave} of Office Tower Defense 🏢💥 Think you can do better?`
+    : 'Try Office Tower Defense 🏢');
 
   $('btn-bombs-ok')!.addEventListener('click', () => {
     const { run } = app;

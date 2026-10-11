@@ -56,7 +56,7 @@ export function waveSpeedMult(w: number) {
 function speedLabel(w: number) {
   const pos = cyclePos(w);
   if (pos === 0) return '';
-  const labels = ['LENTISSIMA','LENTA','LENTA','MEDIA','MEDIA','VELOCE','VELOCE','VELOCE','VELOCISSIMA'];
+  const labels = ['VERY SLOW','SLOW','SLOW','MEDIUM','MEDIUM','FAST','FAST','FAST','VERY FAST'];
   return ` — ${labels[pos - 1]}`;
 }
 
@@ -234,14 +234,14 @@ export function startWave(run: Run): void {
   const decade = decadeFor(w);
   sfx(run, boss ? 'boss' : 'wave');
   if (boss) banner(run, boss.name, boss.sub, '#d7263d');
-  else if (focalWave) banner(run, 'FOCAL POINT IN ARRIVO', 'Il riferimento del reparto è furioso!', '#f2b705');
+  else if (focalWave) banner(run, 'FOCAL POINT INCOMING', 'The department reference is furious!', '#f2b705');
   else if (isZombieWave(w)) {
-    banner(run, 'NOTTE DEGLI ZOMBIE', 'I colleghi non sono più loro… più lenti ma più duri a morire', '#7bd332');
+    banner(run, 'ZOMBIE NIGHT', 'Your colleagues are not themselves anymore… slower but harder to kill', '#7bd332');
     sfx(run, 'zombie');
   } else if ((w - 1) % 10 === 0) {
     const names = Object.values(decade.enemies).map(id => (ENEMIES as Record<string, any>)[id].name).join(', ');
-    banner(run, decade.name + (decade.elite ? ' ÉLITE' : ''), `Arrivano: ${names}`, '#ff3e8a');
-  } else banner(run, `ONDATA ${w}${speedLabel(w)}`, `${n} nemici in arrivo`);
+    banner(run, decade.name + (decade.elite ? ' ÉLITE' : ''), `Incoming: ${names}`, '#ff3e8a');
+  } else banner(run, `WAVE ${w}${speedLabel(w)}`, `${n} enemies incoming`);
 }
 
 export function updateSpawns(run: Run, dt: number): void {

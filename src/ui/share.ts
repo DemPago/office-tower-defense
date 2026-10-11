@@ -19,7 +19,7 @@ export function renderShare(container: HTMLElement, text: () => string) {
     a.className = `share ${n.id}`;
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
-    a.title = `Condividi su ${n.label}`;
+    a.title = `Share on ${n.label}`;
     a.innerHTML = `${n.icon}<span class="share-lbl">${n.label}</span>`;
     a.href = n.url(text(), GAME_URL);
     a.addEventListener('pointerdown', () => { a.href = n.url(text(), GAME_URL); }); // testo aggiornato
@@ -28,19 +28,19 @@ export function renderShare(container: HTMLElement, text: () => string) {
   // Copia link (e, sul telefono, il menu di condivisione del sistema)
   const copy = document.createElement('button');
   copy.className = 'share copy';
-  copy.title = 'Copia il link';
-  copy.innerHTML = '🔗<span class="share-lbl">Copia</span>';
+  copy.title = 'Copy link';
+  copy.innerHTML = '🔗<span class="share-lbl">Copy</span>';
   copy.addEventListener('click', async () => {
     if (navigator.share && matchMedia('(pointer: coarse)').matches) {
       try { await navigator.share({ title: 'Office Tower Defense', text: text(), url: GAME_URL }); return; } catch { /* annullato */ }
     }
     try {
       await navigator.clipboard.writeText(text() + ' ' + GAME_URL);
-      copy.innerHTML = '✓<span class="share-lbl">Copiato</span>';
+      copy.innerHTML = '✓<span class="share-lbl">Copied</span>';
     } catch {
-      copy.innerHTML = '✗<span class="share-lbl">Errore</span>';
+      copy.innerHTML = '✗<span class="share-lbl">Error</span>';
     }
-    setTimeout(() => { copy.innerHTML = '🔗<span class="share-lbl">Copia</span>'; }, 1500);
+    setTimeout(() => { copy.innerHTML = '🔗<span class="share-lbl">Copy</span>'; }, 1500);
   });
   container.appendChild(copy);
 }

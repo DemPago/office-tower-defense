@@ -50,35 +50,35 @@ function scoreCard(run: Run, card: CardDef) {
 }
 
 function cardReason(run: Run, card: CardDef) {
-  if (card.malus) return `Carta malus: ${card.desc(1)} — l'oro non vale il malus permanente.`;
+  if (card.malus) return `Malus card: ${card.desc(1)} — the gold doesn't offset the permanent penalty.`;
   const hpPct = run.tower.hp / run.stats.maxHp;
   const wallBroken = run.wall.some((seg: { hp: number }) => seg.hp <= 0);
 
   if (wallBroken && ['concrete', 'barbed', 'steel', 'selfrepair'].includes(card.id))
-    return 'Il muro ha brecce — priorità al rinforzo del perimetro.';
+    return 'The wall has breaches — reinforce the perimeter first.';
   if (hpPct < 0.5 && card.id === 'smart')
-    return 'Vita critica: il restore è urgente prima della prossima ondata.';
+    return 'Critical HP: healing is urgent before the next wave.';
   if (hpPct < 0.7 && card.id === 'ferie')
-    return 'La rigenerazione passiva compensa il danno continuo subito.';
+    return 'Passive regen offsets the continuous damage taken.';
   if (card.id === 'dev')
-    return 'document.querySelectorAll(\'.nemici\').forEach(el => el.remove())';
+    return "document.querySelectorAll('.enemies').forEach(el => el.remove())";
   if (card.id === 'pm')
-    return 'Più target per colpo: O(n) → O(1) colpi per nemico.';
+    return 'Multiple targets per shot: O(n) → O(1) shots per enemy.';
   if (card.id === 'scrum')
-    return 'Danno e velocità in un\'unica carta: coefficiente ottimale.';
+    return 'Damage and fire rate in one card: optimal coefficient.';
   if (card.id === 'rimborso')
-    return `Converte tempo in oro immediato: +${10 * run.wave}💰 ora valgono più dopo.`;
+    return `Converts time into immediate gold: +${10 * run.wave}💰 now buys more than later.`;
   if (card.id === 'replyall' && (run.cards.cc || 0) > 0)
-    return 'Hai già i critici: moltiplicare ora è prioritario.';
+    return 'You already have crits: multiplying them now is the priority.';
   if (card.id === 'sm')
-    return 'I nemici rallentati danno alla torre più frame di fuoco.';
+    return 'Slowed enemies give the tower more frames to fire.';
   if (card.id === 'stagista')
-    return 'Ogni colpo rimbalza: efficienza massima su gruppi fitti.';
+    return 'Every shot bounces: maximum efficiency on dense groups.';
   if (card.rarity === 'epic')
-    return 'Carta epica: la probabilità di rivederla è molto bassa.';
+    return 'Epic card: the odds of seeing it again are very low.';
   if (card.rarity === 'rare')
-    return 'Carta rara: raramente si offre di nuovo — da non perdere.';
-  return 'Il DOM ha calcolato: questa ha il coefficiente di utilità più alto.';
+    return "Rare card: rarely offered again — don't miss it.";
+  return 'The DOM has computed: this has the highest utility coefficient.';
 }
 
 // Ritorna { index, card, reason } con la carta consigliata fra le 3 offerte.

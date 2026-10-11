@@ -29,9 +29,11 @@ const EFFECTS: Record<string, (run: Run) => void> = {
     }
   },
   sniper(run) {
-    const target = run.enemies
-      .filter(e => !e.dead && dist(e, TOWER) > run.stats.range)
-      .sort((a, b) => dist(a, TOWER) - dist(b, TOWER))[0];
+    const outOfRange = run.enemies.filter(e => !e.dead && dist(e, TOWER) > run.stats.range);
+    // Prioritize enemy snipers in their nests; fall back to nearest out-of-range enemy
+    const sniperPool = outOfRange.filter(e => e.role === 'sniper');
+    const pool = sniperPool.length ? sniperPool : outOfRange;
+    const target = pool.sort((a, b) => dist(a, TOWER) - dist(b, TOWER))[0];
     if (!target) return;
     // Il colpo parte dalla finestra di Dom, non dal tetto (MUZZLE)
     fire(run, DOM_WIN.x, DOM_WIN.y, target, {

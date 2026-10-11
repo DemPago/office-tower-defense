@@ -28,7 +28,7 @@ export function allyCovers(ally: Ally, enemy: { x: number; y: number }): boolean
 }
 
 const MAX_LEVEL = ALLY_LEVELS.length;
-const SLOT_NAMES = { 0: 'Est', 45: 'Nord-Est', 90: 'Nord', 135: 'Nord-Ovest', 180: 'Ovest', 225: 'Sud-Ovest', 270: 'Sud', 315: 'Sud-Est' };
+const SLOT_NAMES = { 0: 'East', 45: 'North-East', 90: 'North', 135: 'North-West', 180: 'West', 225: 'South-West', 270: 'South', 315: 'South-East' };
 
 export function slotName(slot: number): string {
   return (SLOT_NAMES as Record<number, string>)[ALLY_SLOTS[slot]] || '';
@@ -87,8 +87,8 @@ export function pickAlly(run: Run, meta: Meta, index: number): boolean {
   const pos = allyPos(ally);
   const hired = choice.kind === 'hire';
   banner(run, `${def.icon} ${def.name.toUpperCase()}`,
-    hired ? `Assunto! Difende il lato ${slotName(ally.slot)}` : `Promosso a ${ALLY_LEVELS[ally.level - 1]}!`, '#f2b705');
-  floatText(run, pos.x, pos.y - 44, hired ? 'ASSUNTO!' : 'PROMOSSO!', '#f2b705', 9);
+    hired ? `Hired! Defends the ${slotName(ally.slot)} side` : `Promoted to ${ALLY_LEVELS[ally.level - 1]}!`, '#f2b705');
+  floatText(run, pos.x, pos.y - 44, hired ? 'HIRED!' : 'PROMOTED!', '#f2b705', 9);
   ring(run, pos.x, pos.y - 10, 26, '#f2b705');
   run.allyChoices = null;
   sfx(run, 'pick');

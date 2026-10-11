@@ -2,22 +2,22 @@
 // con una spiegazione. Parte da solo alla prima partita (meta.tutorialDone) e si può
 // rivedere dal menu ("Come si gioca").
 const STEPS = [
-  { target: '#cv', box: 'tower', title: 'Benvenuto in ufficio!',
-    text: 'Questo è il tuo palazzo. Il tuo personaggio sul tetto spara DA SOLO ai nemici dentro il cerchio tratteggiato.' },
-  { target: '#cv', box: 'yard', title: 'Il muro e il cortile',
-    text: 'I nemici arrivano da tutte le direzioni. Il muro di sacchi li ferma finché non lo sfondano; i cecchini lo bucano da lontano. Se entrano nel cortile, i tuoi colleghi perdono vita.' },
-  { target: '#hp', title: 'La vita del palazzo',
-    text: 'Se arriva a zero, sei licenziato! Si ricarica piano da sola.' },
-  { target: '#upgrades', title: 'Potenziamenti con l’oro 💰',
-    text: 'Ogni nemico eliminato dà oro: spendilo qui per danno, velocità, gittata, vita… Passa col mouse (o tieni premuto) su un pulsante per sapere cosa fa.' },
-  { target: '#mp', title: 'Il mana 💧',
-    text: 'La barra viola è il mana: si ricarica da solo, piano. Serve per i poteri.' },
-  { target: '#abilities', title: 'I poteri',
-    text: 'Bomba, caffè, riunione, audit: costano mana e si usano con un clic o coi tasti 1-4. Tienili per quando sei in difficoltà!' },
-  { target: '#top', title: 'Velocità e pausa',
-    text: 'In alto puoi accelerare il gioco (x2, x3), mettere in pausa (Spazio), togliere i suoni e andare a schermo intero.' },
-  { title: 'Come si va avanti',
-    text: 'Dopo ogni ondata scegli 1 carta su 3. Ogni 5 ondate arrivano i colleghi di rinforzo, ogni 10 un boss (che torna come animale gigante!). Buon lavoro!' },
+  { target: '#cv', box: 'tower', title: 'Welcome to the office!',
+    text: 'This is your building. Your character on the roof shoots AUTOMATICALLY at enemies inside the dashed circle.' },
+  { target: '#cv', box: 'yard', title: 'The wall and the yard',
+    text: 'Enemies come from every direction. The sandbag wall stops them until it is broken through; snipers can shoot through it from a distance. If enemies enter the yard, your colleagues lose HP.' },
+  { target: '#hp', title: 'Building HP',
+    text: 'If it reaches zero, you are fired! It slowly regenerates on its own.' },
+  { target: '#upgrades', title: 'Upgrades with gold 💰',
+    text: 'Every enemy killed drops gold — spend it here to boost damage, fire rate, range, HP… Hover (or long-press) a button to see what it does.' },
+  { target: '#mp', title: 'Mana 💧',
+    text: 'The purple bar is mana: it slowly recharges on its own. You need it to use abilities.' },
+  { target: '#abilities', title: 'Abilities',
+    text: 'Bomb, coffee, meeting, audit — they cost mana and can be used with a click or keys 1–4. Save them for when things get rough!' },
+  { target: '#top', title: 'Speed and pause',
+    text: 'At the top you can speed up the game (x2, x3), pause (Space), mute sounds, or go fullscreen.' },
+  { title: 'How to advance',
+    text: 'After every wave choose 1 card out of 3. Every 5 waves you get a free colleague, every 10 a boss (who returns as a giant animal!). Good luck!' },
 ];
 
 export function createTutorial({ onPause, onResume, onDone }: { onPause: () => void; onResume: () => void; onDone: () => void }) {
@@ -31,8 +31,8 @@ export function createTutorial({ onPause, onResume, onDone }: { onPause: () => v
       <b class="tut-title"></b>
       <p class="tut-text"></p>
       <div class="tut-buttons">
-        <button class="btn small tut-skip">Salta</button>
-        <button class="btn tut-next">Avanti ▶</button>
+        <button class="btn small tut-skip">Skip</button>
+        <button class="btn tut-next">Next ▶</button>
       </div>
     </div>`;
   document.body.appendChild(root);
@@ -57,7 +57,7 @@ export function createTutorial({ onPause, onResume, onDone }: { onPause: () => v
     root.querySelector('.tut-step')!.textContent = `${i + 1} / ${STEPS.length}`;
     root.querySelector('.tut-title')!.textContent = step.title;
     root.querySelector('.tut-text')!.textContent = step.text;
-    root.querySelector('.tut-next')!.textContent = i === STEPS.length - 1 ? 'Si comincia! ▶' : 'Avanti ▶';
+    root.querySelector('.tut-next')!.textContent = i === STEPS.length - 1 ? "Let's go! ▶" : 'Next ▶';
     const r = rectFor(step);
     if (r) {
       const pad = 6;

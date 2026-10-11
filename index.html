@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -17,80 +17,77 @@
 <body>
 <div id="app">
 
-  <!-- Barra in alto -->
   <header id="top">
-    <span id="wave">PRONTI</span>
-    <div id="hp" title="Vita del palazzo"><div id="hp-fill"></div><span id="hp-text"></span></div>
-    <div id="mp" title="Mana: serve per i poteri, si ricarica da solo"><div id="mp-fill"></div><span id="mp-text"></span></div>
+    <span id="wave">READY</span>
+    <div id="hp" title="Building HP"><div id="hp-fill"></div><span id="hp-text"></span></div>
+    <div id="mp" title="Mana: powers abilities, recharges over time"><div id="mp-fill"></div><span id="mp-text"></span></div>
     <span id="gold-box">💰 <span id="gold">0</span></span>
-    <span id="enemy-count" title="Nemici rimasti"></span>
-    <button id="btn-speed" title="Velocità di gioco">x1</button>
-    <button id="btn-pause" title="Pausa (Spazio)">⏸</button>
-    <button id="btn-sound" title="Suoni on/off (M)">🔊</button>
-    <button id="btn-full" title="Schermo intero (F)">⛶</button>
+    <span id="enemy-count" title="Enemies left"></span>
+    <button id="btn-speed" title="Game speed">x1</button>
+    <button id="btn-pause" title="Pause (Space)">⏸</button>
+    <button id="btn-sound" title="Sound on/off (M)">🔊</button>
+    <button id="btn-full" title="Fullscreen (F)">⛶</button>
   </header>
 
-  <!-- Campo di gioco -->
   <main id="stage">
     <canvas id="cv"></canvas>
 
     <section id="scr-cards" class="overlay" hidden>
-      <h2 id="cards-title">Ondata superata!</h2>
-      <p id="cards-sub">Scegli un potenziamento</p>
+      <h2 id="cards-title">Wave cleared!</h2>
+      <p id="cards-sub">Choose an upgrade</p>
       <div id="hand-playable" hidden>
-        <p class="hand-play-title">🃏 CARTE IN MANO</p>
+        <p class="hand-play-title">🃏 HAND CARDS</p>
         <div id="hand-play-list"></div>
       </div>
       <div id="dom-wizard" hidden>
         <div id="dom-cloud">
-          <b>Sono DOM il saggio</b>
-          <span>ti consiglio:<br><span id="dom-card-name"></span></span>
+          <b>I'm DOM the Wise</b>
+          <span>I suggest:<br><span id="dom-card-name"></span></span>
           <span id="dom-text"></span>
         </div>
         <div class="dom-figure">🧙</div>
       </div>
       <div id="cards-list"></div>
-      <button id="btn-reroll" class="btn small">🎲 Rilancia</button>
+      <button id="btn-reroll" class="btn small">🎲 Reroll</button>
     </section>
 
     <section id="scr-bombs" class="overlay bombs-overlay" hidden>
       <div class="bombs-panel">
-        <p class="bombs-quadro" id="bomb-quadro-label">QUADRO 1</p>
+        <p class="bombs-quadro" id="bomb-quadro-label">ROUND 1</p>
         <div class="bombs-steps">
           <div class="bs-step active">
             <span class="bs-num">1</span>
-            <span class="bs-lbl">BOMBE</span>
+            <span class="bs-lbl">BOMBS</span>
           </div>
           <div class="bs-sep">▶</div>
           <div class="bs-step">
             <span class="bs-num">2</span>
-            <span class="bs-lbl">ONDATA</span>
+            <span class="bs-lbl">WAVE</span>
           </div>
         </div>
         <p class="bombs-mult" id="bomb-mult-label">💣 ×3</p>
-        <p class="bombs-hint">Clicca sulla mappa per piazzare le bombe</p>
-        <p class="bombs-stat" id="bomb-stat-label">Stat penalità: <span id="bomb-penalty-val">0%</span></p>
-        <p class="bombs-placed" id="bomb-placed-label">Piazzate: <span id="bomb-count-val">0</span> / 19</p>
+        <p class="bombs-hint">Click on the map to place bombs</p>
+        <p class="bombs-stat" id="bomb-stat-label">Penalty: <span id="bomb-penalty-val">0%</span></p>
+        <p class="bombs-placed" id="bomb-placed-label">Placed: <span id="bomb-count-val">0</span> / 19</p>
         <div class="bombs-btns">
-          <button id="btn-bombs-remove" class="btn ghost small">↩ Rimuovi ultima</button>
-          <button id="btn-bombs-ok" class="btn big">▶ INIZIA QUADRO</button>
+          <button id="btn-bombs-remove" class="btn ghost small">↩ Remove last</button>
+          <button id="btn-bombs-ok" class="btn big">▶ START ROUND</button>
         </div>
       </div>
     </section>
+
     <section id="scr-pause" class="overlay" hidden>
-      <h2>PAUSA</h2>
-      <button id="btn-resume" class="btn">▶ Riprendi</button>
-      <button id="btn-surrender" class="btn" hidden>🏳️ Arrenditi</button>
-      <button id="btn-quit" class="btn ghost">Abbandona</button>
+      <h2>PAUSE</h2>
+      <button id="btn-resume" class="btn">▶ Resume</button>
+      <button id="btn-surrender" class="btn" hidden>🏳️ Surrender</button>
+      <button id="btn-quit" class="btn ghost">Quit</button>
     </section>
   </main>
 
-  <!-- Pannello in basso -->
   <footer id="panel">
-    <!-- Pannello carte in mano (si apre sopra il footer) -->
     <div id="hand-panel" hidden>
       <div class="hand-panel-hdr">
-        <span>🃏 CARTE IN MANO</span>
+        <span>🃏 HAND CARDS</span>
         <button id="btn-hand-close">✕</button>
       </div>
       <div id="hand-panel-list"></div>
@@ -98,7 +95,7 @@
     <div id="stats-line"></div>
     <div id="upgrades"></div>
     <div id="panel-bottom">
-      <button id="btn-hand" hidden title="Carte in mano">
+      <button id="btn-hand" hidden title="Hand cards">
         🃏
         <span id="hand-count">0</span>
       </button>
@@ -106,7 +103,6 @@
     </div>
   </footer>
 
-  <!-- Schermate a tutto schermo -->
   <section id="scr-menu" class="overlay full" hidden>
     <canvas id="menu-bg" aria-hidden="true"></canvas>
 
@@ -114,7 +110,7 @@
       <div class="menu-brand">
         <span class="brand-label">— OFFICE —</span>
         <h1>TOWER<br><span>DEFENSE</span></h1>
-        <p class="tag">Difendi la tua scrivania dalla gerarchia aziendale.</p>
+        <p class="tag">Defend your desk against the corporate hierarchy.</p>
       </div>
       <div class="menu-stats-row">
         <p id="menu-best"></p>
@@ -122,30 +118,30 @@
       </div>
       <div id="hero-list"></div>
       <div id="hero-info"></div>
-      <button id="btn-play" class="btn big">▶ GIOCA</button>
+      <button id="btn-play" class="btn big">▶ PLAY</button>
       <div class="menu-nav-grid">
         <button id="btn-shop" class="menu-nav-card">
           <span class="mnc-ico">🏢</span>
-          <span class="mnc-title">Personale</span>
-          <span class="mnc-sub">Bonus permanenti per tutte le partite</span>
+          <span class="mnc-title">HR Office</span>
+          <span class="mnc-sub">Permanent bonuses for all runs</span>
         </button>
         <button id="btn-board" class="menu-nav-card">
           <span class="mnc-ico">🏆</span>
-          <span class="mnc-title">Classifica</span>
-          <span class="mnc-sub">Record globale dei sopravvissuti</span>
+          <span class="mnc-title">Leaderboard</span>
+          <span class="mnc-sub">Global survivor rankings</span>
         </button>
         <button id="btn-howto" class="menu-nav-card ghost">
           <span class="mnc-ico">❓</span>
-          <span class="mnc-title">Come si gioca</span>
-          <span class="mnc-sub">Regole, armi e colleghi</span>
+          <span class="mnc-title">How to play</span>
+          <span class="mnc-sub">Rules, weapons & coworkers</span>
         </button>
       </div>
       <div class="support">
-        <a id="kofi" class="kofi-button" href="https://ko-fi.com/dem420156" target="_blank" rel="noopener noreferrer">☕ Offrimi un caffè</a>
-        <p class="dim">Ti piace? Fallo girare:</p>
+        <a id="kofi" class="kofi-button" href="https://ko-fi.com/dem420156" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee</a>
+        <p class="dim">Like it? Share it:</p>
         <div id="share-menu" class="share-row"></div>
-        <div id="renderer-toggle" class="renderer-toggle" title="Cambia modalità grafica (ricarica la pagina)">
-          <span class="rt-label">Grafica</span>
+        <div id="renderer-toggle" class="renderer-toggle" title="Switch render mode (reloads page)">
+          <span class="rt-label">Render</span>
           <button id="rt-2d" class="rt-btn">2D</button>
           <button id="rt-3d" class="rt-btn">3D</button>
         </div>
@@ -154,55 +150,53 @@
   </section>
 
   <section id="scr-shop" class="overlay full" hidden>
-    <h2>Ufficio del<br>personale</h2>
-    <p>Bonus permanenti, valgono per tutte le partite.</p>
+    <h2>HR<br>Office</h2>
+    <p>Permanent bonuses that carry over to every run.</p>
     <p id="shop-buoni" class="buoni"></p>
     <div id="shop-list"></div>
-    <button id="btn-shop-back" class="btn ghost">← Indietro</button>
+    <button id="btn-shop-back" class="btn ghost">← Back</button>
   </section>
 
   <section id="scr-over" class="overlay full" hidden>
-    <h2>LICENZIATO!</h2>
-    <p id="over-record" class="record" hidden>🏆 NUOVO RECORD!</p>
+    <h2>FIRED!</h2>
+    <p id="over-record" class="record" hidden>🏆 NEW RECORD!</p>
     <p id="over-wave"></p>
     <p id="over-stats" class="dim"></p>
     <p id="over-reward" class="buoni"></p>
 
-    <!-- Badge romano sbloccato in questa run -->
     <div id="over-badge" hidden>
       <canvas id="badge-canvas" width="200" height="200"></canvas>
       <p id="badge-name" class="badge-name"></p>
       <p id="badge-role" class="badge-role"></p>
-      <button id="btn-badge-share" class="btn ghost small">⬇ Salva / Condividi</button>
+      <button id="btn-badge-share" class="btn ghost small">⬇ Save / Share</button>
     </div>
 
-    <!-- Iniziali stile cabinato: frecce o tastiera, Invio per confermare -->
     <div id="initials-box">
-      <p class="dim">Lascia le tue iniziali</p>
+      <p class="dim">Enter your initials</p>
       <div id="initials">
         <div class="slot"><button class="up">▲</button><span class="ch">A</span><button class="down">▼</button></div>
         <div class="slot"><button class="up">▲</button><span class="ch">A</span><button class="down">▼</button></div>
         <div class="slot"><button class="up">▲</button><span class="ch">A</span><button class="down">▼</button></div>
       </div>
-      <button id="btn-save-score" class="btn big">SALVA</button>
-      <button id="btn-skip-score" class="link">salta</button>
+      <button id="btn-save-score" class="btn big">SAVE</button>
+      <button id="btn-skip-score" class="link">skip</button>
     </div>
 
     <div id="over-after" hidden>
       <p id="over-rank" class="record"></p>
       <ol id="over-board" class="board"></ol>
-      <p class="dim">Sfida i colleghi:</p>
+      <p class="dim">Challenge your coworkers:</p>
       <div id="share-over" class="share-row"></div>
-      <button id="btn-retry" class="btn big">↻ Riprova</button>
+      <button id="btn-retry" class="btn big">↻ Try again</button>
       <button id="btn-over-menu" class="btn ghost">Menu</button>
     </div>
   </section>
 
   <section id="scr-board" class="overlay full" hidden>
-    <h2>CLASSIFICA</h2>
+    <h2>LEADERBOARD</h2>
     <p id="board-source" class="dim"></p>
     <ol id="board-list" class="board"></ol>
-    <button id="btn-board-back" class="btn ghost">← Indietro</button>
+    <button id="btn-board-back" class="btn ghost">← Back</button>
   </section>
 
 </div>

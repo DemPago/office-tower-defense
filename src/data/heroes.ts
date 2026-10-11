@@ -63,8 +63,8 @@ export function unlockNextHero(meta: Meta): HeroDef | null {
 }
 
 const STAT_LABELS: Record<string, string> = {
-  dmg: 'danno', rate: 'velocità di fuoco', hp: 'vita', regen: 'rigenerazione', range: 'gittata',
-  manaRegen: 'ricarica del mana', crit: 'critici', armor: 'armatura', gold: 'oro', manaMax: 'mana massimo',
+  dmg: 'damage', rate: 'fire rate', hp: 'HP', regen: 'regen', range: 'range',
+  manaRegen: 'mana regen', crit: 'crit', armor: 'armor', gold: 'gold', manaMax: 'max mana',
 };
 
 // Testo delle statistiche per il menu, es. "+15% velocità di fuoco, -15% vita".

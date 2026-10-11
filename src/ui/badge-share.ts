@@ -91,7 +91,7 @@ export function drawBadgeCanvas(b: BadgeDef, heroName: string, wave: number): HT
   // ── Numero ondata
   g.font = 'bold 11px monospace';
   g.fillStyle = '#888880';
-  g.fillText(`ONDATA ${wave}`, cx, cy + 66);
+  g.fillText(`WAVE ${wave}`, cx, cy + 66);
 
   // ── Striscia inferiore — branding
   g.fillStyle = 'rgba(0,0,0,0.7)';
@@ -122,7 +122,7 @@ export function downloadBadge(b: BadgeDef, heroName: string, wave: number) {
 // Condivide il badge usando il Web Share API (se disponibile) o scarica.
 export async function shareBadge(b: BadgeDef, heroName: string, wave: number) {
   const c = drawBadgeCanvas(b, heroName, wave);
-  const text = `Ho sbloccato ${b.name} — ${b.role} — all'ondata ${wave} di Office Tower Defense! ${GAME_URL}`;
+  const text = `I unlocked ${b.name} — ${b.role} — at wave ${wave} of Office Tower Defense! ${GAME_URL}`;
 
   if (navigator.share && navigator.canShare) {
     try {

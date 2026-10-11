@@ -48,7 +48,7 @@ export function updateEnemies(run: Run, dt: number) {
     // Kamikaze: vicino alla torre parte la carica
     if (e.charge && !e.charging && d < e.charge.dist) {
       e.charging = true;
-      floatText(run, e.x, e.y - e.size - 6, 'CARICA!', '#ff7b1c', 8);
+      floatText(run, e.x, e.y - e.size - 6, 'CHARGE!', '#ff7b1c', 8);
       sfx(run, 'charge');
     }
     const speed = e.speed * (e.slowT > 0 ? 1 - e.slowF : 1) * (e.charging ? e.charge!.mult : 1);
@@ -93,7 +93,7 @@ export function updateEnemies(run: Run, dt: number) {
             allyBlock.dead = true;
             allyBlock.hp = 0;
             const ap = allyWorldPos(allyBlock);
-            floatText(run, ap.x, ap.y - 40, 'CADUTO!', '#d7263d', 9);
+            floatText(run, ap.x, ap.y - 40, 'DOWN!', '#d7263d', 9);
             burst(run, ap.x, ap.y - 20, '#d7263d', 8, 80);
           }
         }
@@ -127,6 +127,8 @@ export function updateEnemies(run: Run, dt: number) {
               slow: e.weaponSlow,
               seg: target, from: e });
           }
+          // Snipers advance 15px per shot fired — gradually enter the tower's range
+          if (e.role === 'sniper') e.range = Math.max(80, e.range - 15);
           e.lunge = 0.12;
         } else {
           damageTower(run, e.atk);
@@ -166,7 +168,7 @@ function bossMood(run: Run, e: Enemy) {
   if (!e.enraged && e.hp < e.maxHp * ENRAGE_HP_FRAC) {
     e.enraged = true;
     e.speed *= ENRAGE_SPEED_MULT;
-    floatText(run, e.x, e.y - e.size - 12, 'INFURIATO!', '#d7263d', 11);
+    floatText(run, e.x, e.y - e.size - 12, 'ENRAGED!', '#d7263d', 11);
     shake(run, 6);
     sfx(run, 'enrage');
   }

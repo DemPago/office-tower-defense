@@ -75,14 +75,14 @@ export function update(run: Run, dt: number): void {
   if (run.phase === 'wave' && !run.spawnQueue.length && !run.enemies.length) {
     const bonus = 5 + run.wave * 2;
     run.gold += bonus;
-    floatText(run, TOWER.x, TOWER.y - 90, `Ondata superata! +${bonus}💰`, '#7bd332', 9);
+    floatText(run, TOWER.x, TOWER.y - 90, `Wave cleared! +${bonus}💰`, '#7bd332', 9);
     run.enemyShots = [];
     run.shots = [];
     restAllies(run);
     // Ogni 10 ondate (nuovo macro-stage) il muro torna integro, anche le brecce.
     if (run.wave % 10 === 0) {
       fullRepairWall(run);
-      banner(run, `SETTORE ${run.wave / 10 + 1}`, 'Muro ripristinato — nuovo quadro in arrivo!', '#2de2e6');
+      banner(run, `SECTOR ${run.wave / 10 + 1}`, 'Wall restored — new round incoming!', '#2de2e6');
     } else {
       repairWall(run); // solo i tratti ancora in piedi si riparano
     }
@@ -97,7 +97,7 @@ export function update(run: Run, dt: number): void {
       const hero = unlockNextHero(run.meta);
       if (hero) {
         run.newHero = hero.id;
-        banner(run, `NUOVO PERSONAGGIO: ${hero.name.toUpperCase()}!`, 'Lo trovi nel menu iniziale', '#ff3e8a');
+        banner(run, `NEW CHARACTER: ${hero.name.toUpperCase()}!`, 'Find them in the main menu', '#ff3e8a');
       }
     }
     // Bonus stage dopo ogni boss: parte prima delle carte.
@@ -107,7 +107,7 @@ export function update(run: Run, dt: number): void {
       run.bonusWaveIdx = 0;
       run.phase = 'bonus-break';
       run.bonusBreakTimer = 1.5;
-      banner(run, 'BONUS STAGE!', 'Un assalto sushi sta per iniziare...', '#ff9f1c');
+      banner(run, 'BONUS STAGE!', 'A sushi attack is about to begin...', '#ff9f1c');
       return;
     }
     // Ogni tot ondate arrivano i rinforzi; ondate zombie → 3 malus pesanti; altrimenti carta normale.

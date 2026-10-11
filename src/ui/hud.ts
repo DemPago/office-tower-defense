@@ -79,7 +79,7 @@ export function createHud({ onBuy, onAbility, onSell }: { onBuy: (id: string) =>
     withTip(btn, () => {
       if (!lastRun) return '';
       const L = lastRun.upgrades[def.id], cost = upgradeCost(lastRun, def.id);
-      const next = cost === null ? 'Livello massimo' : `Prossimo livello: ${fmt(cost)} 💰`;
+      const next = cost === null ? 'Max level' : `Next level: ${fmt(cost)} 💰`;
       return `${tipTitle(def.icon, def.name, `Lv ${L}`)}<p>${def.help(lastRun.stats)}</p><p class="tip-cost">${next}</p>`;
     }, () => onBuy(def.id));
     $('upgrades')!.appendChild(btn);
@@ -94,8 +94,8 @@ export function createHud({ onBuy, onAbility, onSell }: { onBuy: (id: string) =>
     withTip(btn, () => {
       const cost = lastRun ? manaCost(lastRun, def.id) : def.mana;
       const have = lastRun ? Math.floor(lastRun.mana) : 0;
-      const price = (def as any).special ? 'Gratis' : `Costo: ${cost} mana (ne hai ${have})`;
-      return `${tipTitle(def.icon, def.name, `tasto ${def.key}`)}<p>${def.help}</p><p class="tip-cost">${price}</p>`;
+      const price = (def as any).special ? 'Free' : `Cost: ${cost} mana (you have ${have})`;
+      return `${tipTitle(def.icon, def.name, `key ${def.key}`)}<p>${def.help}</p><p class="tip-cost">${price}</p>`;
     }, () => onAbility(def.id));
     $('abilities')!.appendChild(btn);
     if ((def as any).special) { btn.classList.add('special'); btn.hidden = true; }
@@ -105,7 +105,7 @@ export function createHud({ onBuy, onAbility, onSell }: { onBuy: (id: string) =>
   function update(run: Run, speed: number): void {
     lastRun = run;
     const narrow = innerWidth <= 520;
-    setText($('wave'), run.wave ? `${narrow ? 'OND.' : 'ONDATA'} ${run.wave}` : 'PRONTI');
+    setText($('wave'), run.wave ? `WAVE ${run.wave}` : 'READY');
     setText($('gold'), fmt(run.gold));
     const hpPct = Math.max(0, run.tower.hp / run.stats.maxHp * 100);
     $('hp-fill')!.style.width = hpPct.toFixed(1) + '%';
@@ -124,7 +124,7 @@ export function createHud({ onBuy, onAbility, onSell }: { onBuy: (id: string) =>
     setText($('mp-text'), `${Math.floor(run.mana)}/${mm} 💧`);
     // riga con le statistiche della torre
     const s = run.stats;
-    setText($('stats-line'), `${weaponDef(run.weapon!).icon} ⚔️ Danno ${fmt(s.dmg)} a colpo · ⚡ ${s.rate.toFixed(1)} colpi/s · 📡 Gittata ${Math.round(s.range)} · 💧 +${s.manaRegen.toFixed(1)} mana/s`);
+    setText($('stats-line'), `${weaponDef(run.weapon!).icon} ⚔️ ${fmt(s.dmg)} dmg/shot · ⚡ ${s.rate.toFixed(1)} shots/s · 📡 ${Math.round(s.range)} range · 💧 +${s.manaRegen.toFixed(1)} mana/s`);
 
     const recUpgrade = run.phase !== 'over' ? domUpgradeAdvice(run) : null;
     for (const def of UPGRADES) {
@@ -175,8 +175,8 @@ export function createHud({ onBuy, onAbility, onSell }: { onBuy: (id: string) =>
       el.innerHTML = `<span class="hc-ico">${def.icon}</span><span class="hc-nm">${def.name}</span><span class="hc-desc">${def.desc(pick.m)}</span>`;
       const sellBtn = document.createElement('button');
       sellBtn.className = 'hc-sell-btn';
-      sellBtn.textContent = '💸 Vendi';
-      sellBtn.title = '+15% vita, +25 mana';
+      sellBtn.textContent = '💸 Sell';
+      sellBtn.title = '+15% HP, +25 mana';
       sellBtn.addEventListener('click', e => { e.stopPropagation(); onSell?.(i); });
       el.appendChild(sellBtn);
       handPanelList.appendChild(el);

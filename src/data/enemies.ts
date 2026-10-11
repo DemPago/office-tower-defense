@@ -64,48 +64,48 @@ function enemy(name: string, look: string, role: keyof typeof ROLES, extra: Reco
 }
 
 export const ENEMIES = {
-  // 1-10 Open Space
-  impiegato:     enemy('Impiegato',      'impiegato',     'tank'),
-  stagista:      enemy('Stagista',       'stagista',      'sniper'),
-  rider:         enemy('Fattorino',      'rider',         'charger'),
-  hr:            enemy('Resp. HR',       'hr',            'special', { heal: 0.12 }),
-  // 11-20 Amministrazione
-  contabile:     enemy('Contabile',      'contabile',     'tank', { armor: 0.35 }),
-  avvocato:      enemy('Avvocato',       'avvocato',      'sniper'),
-  consulente:    enemy('Consulente',     'consulente',    'charger'),
-  funzionario:   enemy('Funzionario',    'funzionario',   'special', { split: 'impiegato' }),
-  // 21-30 Reparto IT
-  ingegnere:     enemy('Ingegnere',      'ingegnere',     'tank'),
-  sistemista:    enemy('Sistemista',     'sistemista',    'sniper'),
-  tecnico:       enemy('Tecnico',        'tecnico',       'charger'),
+  // 1-10 Open Floor
+  impiegato:     enemy('Office Drone',   'impiegato',     'tank'),
+  stagista:      enemy('Intern',         'stagista',      'sniper'),
+  rider:         enemy('Courier',        'rider',         'charger'),
+  hr:            enemy('HR Manager',     'hr',            'special', { heal: 0.12 }),
+  // 11-20 Administration
+  contabile:     enemy('Accountant',     'contabile',     'tank', { armor: 0.35 }),
+  avvocato:      enemy('Lawyer',         'avvocato',      'sniper'),
+  consulente:    enemy('Consultant',     'consulente',    'charger'),
+  funzionario:   enemy('Officer',        'funzionario',   'special', { split: 'impiegato' }),
+  // 21-30 IT Department
+  ingegnere:     enemy('Engineer',       'ingegnere',     'tank'),
+  sistemista:    enemy('Sysadmin',       'sistemista',    'sniper'),
+  tecnico:       enemy('Technician',     'tecnico',       'charger'),
   devops:        enemy('DevOps',         'devops',        'special', { heal: 0.14 }),
-  // 31-40 Commerciale
-  magazziniere:  enemy('Magazziniere',   'magazziniere',  'tank'),
+  // 31-40 Sales & Logistics
+  magazziniere:  enemy('Warehouse Guy',  'magazziniere',  'tank'),
   marketing:     enemy('Marketing',      'marketing',     'sniper'),
-  venditore:     enemy('Venditore',      'venditore',     'charger'),
-  capovendite:   enemy('Capo Vendite',   'capovendite',   'special', { split: 'venditore' }),
-  // 41-50 Sicurezza
-  buttafuori:    enemy('Buttafuori',     'buttafuori',    'tank', { armor: 0.3 }),
-  vigilante:     enemy('Vigilante',      'vigilante',     'sniper'),
-  guardia:       enemy('Guardia',        'guardia',       'charger'),
-  caposquadra:   enemy('Caposquadra',    'caposquadra',   'special', { split: 'guardia' }),
-  // 51-60 Piani Alti
-  vicedirettore: enemy('Vicedirettore',  'vicedirettore', 'tank', { armor: 0.3 }),
-  segretaria:    enemy('Segretaria',     'segretaria',    'sniper'),
-  assistente:    enemy('Assistente',     'assistente',    'charger'),
-  portavoce:     enemy('Portavoce',      'portavoce',     'special', { heal: 0.15 }),
+  venditore:     enemy('Sales Rep',      'venditore',     'charger'),
+  capovendite:   enemy('Sales Lead',     'capovendite',   'special', { split: 'venditore' }),
+  // 41-50 Security
+  buttafuori:    enemy('Bouncer',        'buttafuori',    'tank', { armor: 0.3 }),
+  vigilante:     enemy('Security Guard', 'vigilante',     'sniper'),
+  guardia:       enemy('Guard',          'guardia',       'charger'),
+  caposquadra:   enemy('Squad Leader',   'caposquadra',   'special', { split: 'guardia' }),
+  // 51-60 Executive Floor
+  vicedirettore: enemy('Deputy Director','vicedirettore', 'tank', { armor: 0.3 }),
+  segretaria:    enemy('Exec. Secretary','segretaria',    'sniper'),
+  assistente:    enemy('Assistant',      'assistente',    'charger'),
+  portavoce:     enemy('Spokesperson',   'portavoce',     'special', { heal: 0.15 }),
 };
 
 // Ogni 10 ondate cambia reparto: un nemico per ruolo. Dopo l'ondata 60 si ricomincia
 // dal primo reparto con i nemici in versione ÉLITE (occhi rossi, più veloci).
 // I reparti più avanzati hanno nemici un po' più robusti (vedi makeEnemy).
 export const DECADES = [
-  { name: 'OPEN SPACE',      enemies: { tank: 'impiegato', sniper: 'stagista', charger: 'rider', special: 'hr' } },
-  { name: 'AMMINISTRAZIONE', enemies: { tank: 'contabile', sniper: 'avvocato', charger: 'consulente', special: 'funzionario' } },
-  { name: 'REPARTO IT',      enemies: { tank: 'ingegnere', sniper: 'sistemista', charger: 'tecnico', special: 'devops' } },
-  { name: 'COMMERCIALE',     enemies: { tank: 'magazziniere', sniper: 'marketing', charger: 'venditore', special: 'capovendite' } },
-  { name: 'SICUREZZA',       enemies: { tank: 'buttafuori', sniper: 'vigilante', charger: 'guardia', special: 'caposquadra' } },
-  { name: 'PIANI ALTI',      enemies: { tank: 'vicedirettore', sniper: 'segretaria', charger: 'assistente', special: 'portavoce' } },
+  { name: 'OPEN FLOOR',      enemies: { tank: 'impiegato', sniper: 'stagista', charger: 'rider', special: 'hr' } },
+  { name: 'ADMINISTRATION',  enemies: { tank: 'contabile', sniper: 'avvocato', charger: 'consulente', special: 'funzionario' } },
+  { name: 'IT DEPARTMENT',   enemies: { tank: 'ingegnere', sniper: 'sistemista', charger: 'tecnico', special: 'devops' } },
+  { name: 'SALES & LOGISTICS',enemies: { tank: 'magazziniere', sniper: 'marketing', charger: 'venditore', special: 'capovendite' } },
+  { name: 'SECURITY',        enemies: { tank: 'buttafuori', sniper: 'vigilante', charger: 'guardia', special: 'caposquadra' } },
+  { name: 'EXECUTIVE FLOOR', enemies: { tank: 'vicedirettore', sniper: 'segretaria', charger: 'assistente', special: 'portavoce' } },
 ];
 
 // Ondate zombie: la settima di ogni reparto (7, 17, 27…). I nemici diventano zombie:

@@ -19,16 +19,16 @@ export const WEAPONS = {
 };
 
 export const BOSSES = [
-  { wave: 10,  name: 'TEAM LEADER',          sub: 'Il tiranno delle riunioni', look: 'teamleader', weapon: 'mazza',         hpFactor: 30,  atkFactor: 1.5, speed: 18, scale: 3,   aura: '#d7263d', animal: 'pitbull', escort: 4 },
-  { wave: 20,  name: 'CAPO AREA',            sub: 'Solo acqua minerale',       look: 'capoarea',   weapon: 'palla_ferrata', hpFactor: 40,  atkFactor: 1.5, speed: 18, scale: 3,   aura: '#a67c00', animal: 'toro',    escort: 3 },
-  { wave: 30,  name: 'DIR. DIPARTIMENTO',    sub: 'Poltrona da 4000€',         look: 'direttore',  weapon: 'spada',         hpFactor: 50,  atkFactor: 1.0, speed: 16, scale: 3,   aura: '#7a0f1c', trail: 'smoke',  animal: 'lupo',    escort: 5 },
-  { wave: 40,  name: 'LEADERSHIP TEAM',      sub: 'Arrivano in Tesla',         look: 'leadership', weapon: 'pistola',       hpFactor: 60,  atkFactor: 0.5, speed: 22, scale: 2,   aura: '#f2b705', group: 4,        animal: 'gorilla', escort: 2 },
-  { wave: 50,  name: 'DIRETTORE GENERALE',   sub: 'Bonus > stipendio',         look: 'dg',         weapon: 'fucile',        hpFactor: 70,  atkFactor: 2.5, speed: 16, scale: 3,   aura: '#f2b705', trail: 'smoke',  animal: 'orso',    escort: 3 },
-  { wave: 60,  name: 'CONSIGLIO DI AMM.',    sub: 'Solo grafici a torta',      look: 'consiglio',  weapon: 'arco',          hpFactor: 80,  atkFactor: 0.4, speed: 22, scale: 1.5, aura: '#2f4f8f', group: 10,       animal: 'corvo',   escort: 6 },
-  { wave: 70,  name: 'CEO',                  sub: '"Disruption & Synergy"',    look: 'ceo',        weapon: 'laser',         hpFactor: 90,  atkFactor: 1.5, speed: 15, scale: 3,   aura: '#2de2e6', trail: 'code',   animal: 'serpente',escort: 4 },
-  { wave: 80,  name: 'IL GRANDE SOCIO',      sub: '51% delle quote',           look: 'socio',      weapon: 'fiocina',       hpFactor: 100, atkFactor: 5.0, speed: 14, scale: 3.5, aura: '#5d275d', trail: 'smoke',  animal: 'leone',   escort: 4 },
-  { wave: 90,  name: 'DOC BROWN',            sub: 'Torna dal futuro',          look: 'docbrown',   weapon: 'balestra',      hpFactor: 110, atkFactor: 6.0, speed: 26, scale: 3,   aura: '#2de2e6', trail: 'sparks', animal: 'ratto',   escort: 8 },
-  { wave: 100, name: 'DIRETTORE GALATTICO',  sub: 'Il capo di tutti i capi',   look: 'galattico',  weapon: 'laser',         hpFactor: 130, atkFactor: 2.0, speed: 14, scale: 3.5, aura: '#ff3e8a', trail: 'stars',  animal: 'drago',   escort: 3 },
+  { wave: 10,  name: 'TEAM LEADER',       sub: 'Meeting tyrant',          look: 'teamleader', weapon: 'mazza',         hpFactor: 30,  atkFactor: 1.5, speed: 18, scale: 3,   aura: '#d7263d', animal: 'pitbull', escort: 4 },
+  { wave: 20,  name: 'AREA MANAGER',      sub: 'Sparkling water only',    look: 'capoarea',   weapon: 'palla_ferrata', hpFactor: 40,  atkFactor: 1.5, speed: 18, scale: 3,   aura: '#a67c00', animal: 'toro',    escort: 3 },
+  { wave: 30,  name: 'DEPT. DIRECTOR',    sub: '€4000 ergonomic chair',   look: 'direttore',  weapon: 'spada',         hpFactor: 50,  atkFactor: 1.0, speed: 16, scale: 3,   aura: '#7a0f1c', trail: 'smoke',  animal: 'lupo',    escort: 5 },
+  { wave: 40,  name: 'LEADERSHIP TEAM',   sub: 'They arrive in a Tesla',  look: 'leadership', weapon: 'pistola',       hpFactor: 60,  atkFactor: 0.5, speed: 22, scale: 2,   aura: '#f2b705', group: 4,        animal: 'gorilla', escort: 2 },
+  { wave: 50,  name: 'GENERAL DIRECTOR',  sub: 'Bonus > salary',          look: 'dg',         weapon: 'fucile',        hpFactor: 70,  atkFactor: 2.5, speed: 16, scale: 3,   aura: '#f2b705', trail: 'smoke',  animal: 'orso',    escort: 3 },
+  { wave: 60,  name: 'BOARD OF DIR.',     sub: 'Pie charts only',         look: 'consiglio',  weapon: 'arco',          hpFactor: 80,  atkFactor: 0.4, speed: 22, scale: 1.5, aura: '#2f4f8f', group: 10,       animal: 'corvo',   escort: 6 },
+  { wave: 70,  name: 'CEO',               sub: '"Disruption & Synergy"',  look: 'ceo',        weapon: 'laser',         hpFactor: 90,  atkFactor: 1.5, speed: 15, scale: 3,   aura: '#2de2e6', trail: 'code',   animal: 'serpente',escort: 4 },
+  { wave: 80,  name: 'THE BIG PARTNER',   sub: '51% of shares',           look: 'socio',      weapon: 'fiocina',       hpFactor: 100, atkFactor: 5.0, speed: 14, scale: 3.5, aura: '#5d275d', trail: 'smoke',  animal: 'leone',   escort: 4 },
+  { wave: 90,  name: 'DOC BROWN',         sub: 'Back from the future',    look: 'docbrown',   weapon: 'balestra',      hpFactor: 110, atkFactor: 6.0, speed: 26, scale: 3,   aura: '#2de2e6', trail: 'sparks', animal: 'ratto',   escort: 8 },
+  { wave: 100, name: 'GALACTIC DIRECTOR', sub: 'The boss of all bosses',  look: 'galattico',  weapon: 'laser',         hpFactor: 130, atkFactor: 2.0, speed: 14, scale: 3.5, aura: '#ff3e8a', trail: 'stars',  animal: 'drago',   escort: 3 },
 ];
 
 // Dopo l'ondata 100 i boss ricominciano dal primo, con un "+" nel nome.

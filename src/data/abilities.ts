@@ -25,14 +25,14 @@ export function maxMana(run: Run): number {
 }
 
 export const ABILITIES: AbilityDef[] = [
-  { id: 'bomb',    key: '1', icon: '💣', short: 'Bomba',    name: 'Bomba di carta',   desc: 'Danno enorme a tutti i nemici', mana: 45, cd: 10,
-    help: 'Colpisce TUTTI i nemici in campo con 12 volte il danno della torre. Ottima quando arriva un gruppo.' },
-  { id: 'coffee',  key: '2', icon: '☕', short: 'Caffè',    name: 'Caffè bollente',   desc: 'Rallenta tutti del 60% per 5 s', mana: 25, cd: 15,
-    help: 'Tutti i nemici rallentano del 60% per 5 secondi: utile contro i kamikaze in carica.' },
-  { id: 'meeting', key: '3', icon: '📅', short: 'Riunione', name: 'Riunione urgente', desc: 'Blocca tutti per 3 s', mana: 35, cd: 12,
-    help: 'Tutti i nemici si fermano per 3 secondi (i boss solo 1,2). Salva il cortile quando entrano gli intrusi.' },
-  { id: 'audit',   key: '4', icon: '🔍', short: 'Audit',    name: 'Audit fiscale',    desc: 'Dimezza la vita dei nemici', mana: 60, cd: 10,
-    help: "Toglie metà della vita a tutti i nemici (ai boss il 15%), ignorando l'armatura. Perfetto contro i tank." },
-  { id: 'sniper',  key: '5', icon: '🎯', short: 'Cecchino', name: 'Colpo di precisione', desc: 'Colpo da cecchino a un nemico fuori gittata', mana: 1, cd: 0.3,
-    help: 'Spara un colpo potente (5× danno) al nemico più vicino oltre la gittata normale. Costa solo 1 mana — utile quando i boss si avvicinano ancora lontani.' },
+  { id: 'bomb',    key: '1', icon: '💣', short: 'Bomb',    name: 'Paper Bomb',        desc: 'Massive damage to all enemies', mana: 45, cd: 10,
+    help: 'Hits ALL enemies on screen with 12× tower damage. Best when a group arrives at once.' },
+  { id: 'coffee',  key: '2', icon: '☕', short: 'Coffee',  name: 'Hot Coffee',        desc: 'Slows everyone by 60% for 5s', mana: 25, cd: 15,
+    help: 'All enemies slow by 60% for 5 seconds. Great against charging kamikaze enemies.' },
+  { id: 'meeting', key: '3', icon: '📅', short: 'Meeting', name: 'Urgent Meeting',    desc: 'Stuns everyone for 3s', mana: 35, cd: 12,
+    help: 'All enemies freeze for 3 seconds (bosses only 1.2s). Saves the yard when intruders break through.' },
+  { id: 'audit',   key: '4', icon: '🔍', short: 'Audit',   name: 'Tax Audit',         desc: 'Halves enemy HP', mana: 60, cd: 10,
+    help: 'Removes half the HP from all enemies (bosses only 15%), ignoring armor. Perfect against tanks.' },
+  { id: 'sniper',  key: '5', icon: '🎯', short: 'Sniper',  name: 'Precision Shot',    desc: 'Sniper shot at an enemy outside range', mana: 1, cd: 0.3,
+    help: 'Fires a powerful shot (5× damage) at the nearest enemy beyond normal range. Costs only 1 mana — useful when bosses are still far away.' },
 ];
