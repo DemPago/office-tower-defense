@@ -12,6 +12,7 @@ import * as datacenter from './scenes/datacenter.js';
 import * as mall from './scenes/mall.js';
 import * as industrial from './scenes/industrial.js';
 import * as rooftop from './scenes/rooftop.js';
+import * as roma from './scenes/roma.js';
 
 export { MARGIN, AREA, SCENE_RES };
 
@@ -23,6 +24,7 @@ export const SCENES = [
   { name: 'Centro commerciale', ...mall, italian: { nasoni: 3, kebab: 2 } },
   { name: 'Zona industriale', ...industrial, italian: { nasoni: 2, kebab: 1 } },
   { name: 'Tetto del grattacielo', ...rooftop },
+  { name: 'Piazza di Roma', ...roma, italian: { nasoni: 8, kebab: 2 } },
 ];
 
 export function sceneIndexForWave(wave: number) {
