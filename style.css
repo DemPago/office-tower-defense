@@ -470,6 +470,8 @@ h2 {
   width: 100%; max-width: 580px;
   padding: 10px 16px 16px;
   gap: 9px;
+  background: rgba(7,7,8,0.80);
+  backdrop-filter: blur(4px);
 }
 /* Logo compatto */
 .menu-brand {
