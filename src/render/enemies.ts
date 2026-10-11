@@ -109,9 +109,11 @@ function drawSushiEnemy(ctx: CanvasRenderingContext2D, e: EnemyExt) {
   ctx.globalAlpha = 1;
   if (e.hp < e.maxHp) {
     const bw = Math.round(s * 0.9), bx = Math.round(e.x - bw / 2), by = Math.round(e.y - s - 4);
+    const k = e.hp / e.maxHp;
+    const barCol = k > 0.5 ? '#22cc44' : k > 0.2 ? '#f2b705' : '#ff6b8a';
     ctx.fillStyle = '#1a1a1a'; ctx.fillRect(bx - 1, by - 1, bw + 2, 4);
-    ctx.fillStyle = '#d7263d'; ctx.fillRect(bx, by, bw, 2);
-    ctx.fillStyle = '#ff6b8a'; ctx.fillRect(bx, by, Math.max(1, Math.round(bw * e.hp / e.maxHp)), 2);
+    ctx.fillStyle = '#3a1a1a'; ctx.fillRect(bx, by, bw, 2);
+    ctx.fillStyle = barCol; ctx.fillRect(bx, by, Math.max(1, Math.round(bw * k)), 2);
   }
 }
 
@@ -198,12 +200,14 @@ export function drawEnemy(ctx: CanvasRenderingContext2D, assets: Assets, e: Enem
   }
   if (e.hp < e.maxHp && !e.boss) {
     const bw = Math.round(s * 0.7), bx = Math.round(e.x - bw / 2), by = y - 2;
+    const k = e.hp / e.maxHp;
+    const barCol = k > 0.5 ? PAL.toxic : k > 0.2 ? PAL.hazard : PAL.red;
     ctx.fillStyle = PAL.black;
     ctx.fillRect(bx - 1, by - 1, bw + 2, 4);
     ctx.fillStyle = PAL.blood;
     ctx.fillRect(bx, by, bw, 2);
-    ctx.fillStyle = PAL.red;
-    ctx.fillRect(bx, by, Math.max(1, Math.round(bw * e.hp / e.maxHp)), 2);
+    ctx.fillStyle = barCol;
+    ctx.fillRect(bx, by, Math.max(1, Math.round(bw * k)), 2);
   }
   // Tier badge: piccolo indicatore visivo del livello del nemico
   if (!e.boss && e.tier) {

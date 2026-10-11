@@ -55,12 +55,14 @@ export function drawBossBar(ctx: CanvasRenderingContext2D, run: Run, W: number):
   const w = Math.min(W - 40, 420), x = (W - w) / 2, y = 14;
   ctx.fillStyle = PAL.black;
   ctx.fillRect(x - 3, y - 3, w + 6, 14);
+  const bossK = max > 0 ? hp / max : 0;
+  const bossCol = bossK > 0.5 ? PAL.toxic : bossK > 0.2 ? PAL.hazard : PAL.red;
   ctx.fillStyle = PAL.blood;
   ctx.fillRect(x, y, w, 8);
-  ctx.fillStyle = PAL.red;
-  ctx.fillRect(x, y, Math.round(w * hp / max), 8);
+  ctx.fillStyle = bossCol;
+  ctx.fillRect(x, y, Math.round(w * bossK), 8);
   ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.fillRect(x, y, Math.round(w * hp / max), 2);
+  ctx.fillRect(x, y, Math.round(w * bossK), 2);
   ctx.font = `12px ${SPRAY}`;
   ctx.textAlign = 'center';
   ctx.strokeStyle = PAL.black;
