@@ -84,38 +84,36 @@ export function createFlow(app: any) {
   }
 
   // Ritratto per i card della griglia (portrait 2×) o per il preview (landscape)
-  function heroPortrait(id: string, locked: boolean, forPreview = false) {
+  function heroPortrait(id: string, locked: boolean, forPreview = false): HTMLElement {
+    if (!locked && ILLUSTRATED.has(id)) {
+      // <img> nativo: nessuna perdita di qualità, il browser scala correttamente
+      const img = document.createElement('img');
+      img.src = `${import.meta.env.BASE_URL}heroes/${id}.jpg`;
+      img.alt = id;
+      img.classList.add('hero-illustrated');
+      if (forPreview) img.classList.add('hero-illustrated-preview');
+      return img;
+    }
+
+    // Pixel art: canvas con animazione idle walk a ~5fps
     const cw = forPreview ? 320 : 80;
     const ch = forPreview ? 240 : 136;
     const c = document.createElement('canvas');
     c.width = cw; c.height = ch;
-
-    if (!locked && ILLUSTRATED.has(id)) {
-      // Immagine illustrata: carica e ridisegna, poi CSS gestisce il float
-      const g = c.getContext('2d')!;
-      g.fillStyle = '#0e0e12';
-      g.fillRect(0, 0, cw, ch);
-      const img = new Image();
-      img.src = `${import.meta.env.BASE_URL}heroes/${id}.jpg`;
-      img.onload = () => { g.clearRect(0, 0, cw, ch); drawIllustration(g, img, cw, ch); };
-      c.classList.add('hero-illustrated');
-    } else {
-      // Pixel art: animazione idle — ciclo dei 4 frame di camminata a ~5fps
-      let frame = 0;
-      const WALK = [1, 0, 1, 2]; // sequenza: neutro→sx→neutro→dx (meno aggressivo)
-      let lastT = 0;
-      drawPixelPortrait(c, id, locked, WALK[0]);
-      const tick = (t: number) => {
-        if (!c.isConnected) return; // canvas rimosso dal DOM → stop
-        if (t - lastT > 200) {     // 5fps
-          frame = (frame + 1) % WALK.length;
-          drawPixelPortrait(c, id, locked, WALK[frame]);
-          lastT = t;
-        }
-        requestAnimationFrame(tick);
-      };
+    let frame = 0;
+    const WALK = [1, 0, 1, 2];
+    let lastT = 0;
+    drawPixelPortrait(c, id, locked, WALK[0]);
+    const tick = (t: number) => {
+      if (!c.isConnected) return;
+      if (t - lastT > 200) {
+        frame = (frame + 1) % WALK.length;
+        drawPixelPortrait(c, id, locked, WALK[frame]);
+        lastT = t;
+      }
       requestAnimationFrame(tick);
-    }
+    };
+    requestAnimationFrame(tick);
     return c;
   }
 

@@ -45,7 +45,7 @@ export function hideAll() {
 }
 
 // Popola #hero-preview con ritratto + info strutturate.
-function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, forPreview?: boolean) => HTMLCanvasElement, robSprite: () => HTMLCanvasElement, locked: boolean) {
+function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, forPreview?: boolean) => HTMLElement, robSprite: () => HTMLCanvasElement, locked: boolean) {
   const box = $('hero-preview');
   if (!box) return;
   if (locked) {
@@ -64,7 +64,7 @@ function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, f
 
   box.innerHTML = '';
   const cv = portrait(h.id, false, true);
-  cv.className = 'preview-canvas';
+  cv.classList.add('preview-canvas');
   box.appendChild(cv);
 
   const info = document.createElement('div');
@@ -90,7 +90,7 @@ function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, f
 }
 
 // portrait(id, locked) restituisce un canvas col ritratto; onHero(id) quando ne scegli uno.
-export function showMenu(meta: Meta, portrait: (id: string, locked: boolean, forPreview?: boolean) => HTMLCanvasElement, robSprite: () => HTMLCanvasElement, onHero: (id: string) => void) {
+export function showMenu(meta: Meta, portrait: (id: string, locked: boolean, forPreview?: boolean) => HTMLElement, robSprite: () => HTMLCanvasElement, onHero: (id: string) => void) {
   $('menu-best')!.textContent = meta.best ? `Record: ondata ${meta.best}` : 'Nessuna partita ancora';
   $('menu-buoni')!.textContent = `🎫 ${fmt(meta.buoni)} buoni pasto`;
   const have = unlockedHeroes(meta);
