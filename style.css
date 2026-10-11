@@ -521,7 +521,17 @@ h2 {
 .menu-stats-row {
   display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: center;
 }
-.menu-pick-label { font-size: 7px; color: var(--grey); }
+/* Banner illustrazione di gruppo */
+#hero-banner {
+  width: 100%; border-radius: 6px; overflow: hidden;
+  border: 2px solid var(--hazard);
+  box-shadow: 0 0 16px rgba(242,183,5,0.25);
+}
+#hero-banner-img {
+  display: block; width: 100%; height: auto;
+  image-rendering: auto;
+}
+
 /* Grid personaggi: 3 colonne, ritratto a figura intera */
 #hero-list {
   display: grid;

@@ -96,7 +96,7 @@ export function createFlow(app: any) {
       g.fillStyle = '#0e0e12';
       g.fillRect(0, 0, cw, ch);
       const img = new Image();
-      img.src = `/heroes/${id}.jpg`;
+      img.src = `${import.meta.env.BASE_URL}heroes/${id}.jpg`;
       img.onload = () => { g.clearRect(0, 0, cw, ch); drawIllustration(g, img, cw, ch); };
       c.classList.add('hero-illustrated');
     } else {
