@@ -53,7 +53,13 @@ export function offerAllies(run: Run): void {
   const slot = freeSlot(run);
   const promos = shuffle(run.allies.filter(a => a.level < MAX_LEVEL))
     .map(a => ({ kind: 'promote', def: allyDef(a.id), ally: a }));
-  const hirePool = ALLIES.filter(a => a.id !== 'rob'); // Rob è esclusivo di Clara, non va nel pool
+  // Rob è esclusivo di Clara; max 1 alleato aura (agile/scrum) per offerta
+  const alreadyHasAura = run.allies.some(a => allyDef(a.id)?.aura);
+  const hirePool = ALLIES.filter(a => {
+    if (a.id === 'rob') return false;
+    if (a.aura && alreadyHasAura) return false; // non offrire un secondo aura se già ne hai uno
+    return true;
+  });
   const hires = slot < 0 ? [] : shuffle([...hirePool]).map(def => ({ kind: 'hire', def, slot }));
   const choices = [...hires.slice(0, promos.length ? 2 : 3), ...promos.slice(0, 1)];
   // se mancano carte (es. postazioni piene) si riempie con altre promozioni
@@ -112,13 +118,15 @@ export function updateAllies(run: Run, dt: number): void {
     const def = allyDef(ally.id);
     if (!def) continue;
     if (def.aura) {
-      // I maghi "lanciano" il loro bonus sul palazzo ogni tanto, così si vede che lavorano.
       ally.pulse = (ally.pulse || 0) - dt;
       if (ally.pulse <= 0) {
-        ally.pulse = 3;
+        ally.pulse = 1.5;
         const pos = allyPos(ally);
-        ring(run, pos.x, pos.y - 12, 22, AURA_COLOR[def.aura]);
-        ring(run, TOWER.x, TOWER.y - 40, 46, AURA_COLOR[def.aura]);
+        const col = AURA_COLOR[def.aura];
+        ring(run, pos.x, pos.y - 12, 18, col);
+        ring(run, TOWER.x, TOWER.y - 40, 50, col);
+        const label = def.aura === 'rate' ? '+⚡' : '+⚔️';
+        floatText(run, pos.x, pos.y - 30, label, col, 7);
       }
       continue;
     }
