@@ -26,12 +26,12 @@ export interface AllyDef {
 export const REINFORCE_EVERY = 5;
 
 export const ALLIES: AllyDef[] = [
-  { id: 'pm',    icon: '📊', name: 'Project Manager', look: 'pm',    kind: 'laser', dmg: 0.3, rate: 2.2, range: 210,                    desc: 'Laser rapido a lunga gittata' },
-  { id: 'sm',    icon: '🎯', name: 'Service Manager', look: 'sm',    kind: 'bolt',  dmg: 0.9, rate: 0.6, range: 190, slow: 0.4,          desc: 'Balestra: colpi forti che rallentano' },
-  { id: 'dev',   icon: '💻', name: 'Dev',             look: 'dev',   kind: 'pc',    dmg: 0.6, rate: 0.5, range: 170, aoe: 42,            desc: 'Lancia PC che esplodono ad area' },
-  { id: 'agile', icon: '🏃', name: 'Mago Agile',      look: 'agile', aura: 'rate',  auraPer: 0.10,                                       desc: '+10% velocità di fuoco a tutti, per livello' },
-  { id: 'scrum', icon: '📋', name: 'Mago Scrum',      look: 'scrum', aura: 'dmg',   auraPer: 0.12,                                       desc: '+12% danno a tutti, per livello' },
-  { id: 'rob',   icon: '⚔️', name: 'Rob',             look: 'rob',   kind: 'bolt',  dmg: 1.5, rate: 0.4, range: 110,                    desc: 'Scagnozzo di Clara. Spada devastante a corto raggio.' },
+  { id: 'pm',    icon: '📊', name: 'Project Manager', look: 'pm',    kind: 'laser', dmg: 0.3, rate: 2.2, range: 210,                    desc: 'Fast laser, long range. Clicks slides instead of shooting — effect is the same.' },
+  { id: 'sm',    icon: '🎯', name: 'Service Manager', look: 'sm',    kind: 'bolt',  dmg: 0.9, rate: 0.6, range: 190, slow: 0.4,          desc: 'Crossbow: heavy shots that slow enemies. Escalates every ticket.' },
+  { id: 'dev',   icon: '💻', name: 'Dev',             look: 'dev',   kind: 'pc',    dmg: 0.6, rate: 0.5, range: 170, aoe: 42,            desc: 'Throws laptops. They explode on impact. It works in prod.' },
+  { id: 'agile', icon: '🏃', name: 'Agile Coach',     look: 'agile', aura: 'rate',  auraPer: 0.10,                                       desc: '+10% fire rate for everyone, per level. Runs a lot of meetings about running.' },
+  { id: 'scrum', icon: '📋', name: 'Scrum Master',    look: 'scrum', aura: 'dmg',   auraPer: 0.12,                                       desc: '+12% damage for everyone, per level. Manages the board. Never the bullets.' },
+  { id: 'rob',   icon: '⚔️', name: 'Rob',             look: 'rob',   kind: 'bolt',  dmg: 1.5, rate: 0.4, range: 110,                    desc: "Clara's muscle. Sword at close range. Doesn't ask questions." },
 ];
 
 export const ALLY_LEVELS = ['Junior', 'Middle', 'Professional', 'Senior', '👑 King'];

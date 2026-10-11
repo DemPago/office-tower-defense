@@ -28,20 +28,20 @@ export interface WeaponDef {
 }
 
 export const WEAPONS: WeaponDef[] = [
-  { id: 'pistol',   icon: '🔫', name: 'Pistola',         kind: 'tower',  dmg: 0.88, rate: 1,    range: 1.05,
-    desc: 'Equilibrata: colpi rapidi a un bersaglio alla volta.' },
-  { id: 'crossbow', icon: '🏹', name: 'Balestra',        kind: 'xbow',   dmg: 1.95,  rate: 0.42, range: 1.1, pierce: 2, pierceDmg: 0.2,
-    desc: 'Lenta e potente: il dardo trapassa i nemici in fila (perdendo forza).' },
-  { id: 'laser',    icon: '🔴', name: 'Laser',           kind: 'laser',  dmg: 0.28, rate: 3.6,  range: 1.05,
-    desc: 'Raggio istantaneo e velocissimo: non sbaglia mai, ogni colpo è debole.' },
-  { id: 'sonic',    icon: '🔊', name: 'Onda sonica',     kind: 'wave',   dmg: 2.2,  rate: 0.45, range: 1.05,
-    desc: "Un'onda colpisce TUTTI i nemici nella gittata, dividendo il danno tra loro." },
-  { id: 'energy',   icon: '⚡', name: 'Onda energetica', kind: 'energy', dmg: 1.35, rate: 0.55, range: 1.05, splash: 0.35, splashR: 34,
-    desc: 'Una sfera di energia lenta che esplode sul bersaglio, ferendo anche chi è vicino.' },
-  { id: 'daggers',  icon: '🗡️', name: 'Pugnali',         kind: 'dagger', dmg: 1.05, rate: 1,    range: 1.05, fan: 3,
-    desc: 'Lancia 3 pugnali a ventaglio su 3 nemici diversi (il danno si divide).' },
-  { id: 'hearts',   icon: '💖', name: 'Lancio di cuori', kind: 'heart',  dmg: 0.68,  rate: 1.1,  range: 1.05, charm: 1.2,
-    desc: 'I nemici colpiti si innamorano e restano fermi per un attimo (i boss meno), ma il danno è più basso.' },
+  { id: 'pistol',   icon: '🔫', name: 'Pistol',        kind: 'tower',  dmg: 0.88, rate: 1,    range: 1.05,
+    desc: 'Balanced. Rapid single-target fire — reliable at any range.' },
+  { id: 'crossbow', icon: '🏹', name: 'Crossbow',      kind: 'xbow',   dmg: 1.95,  rate: 0.42, range: 1.1, pierce: 2, pierceDmg: 0.2,
+    desc: 'Slow and brutal. The bolt pierces through a line of enemies, losing power with each.' },
+  { id: 'laser',    icon: '🔴', name: 'Laser',         kind: 'laser',  dmg: 0.28, rate: 3.6,  range: 1.05,
+    desc: 'Instant. Never misses. Each shot is weak — the volume is the point.' },
+  { id: 'sonic',    icon: '🔊', name: 'Sonic Wave',    kind: 'wave',   dmg: 2.2,  rate: 0.45, range: 1.05,
+    desc: 'A wave that hits EVERY enemy in range at once. Damage splits between them.' },
+  { id: 'energy',   icon: '⚡', name: 'Energy Orb',   kind: 'energy', dmg: 1.35, rate: 0.55, range: 1.05, splash: 0.35, splashR: 34,
+    desc: 'A slow orb that detonates on impact, dealing splash damage to nearby enemies.' },
+  { id: 'daggers',  icon: '🗡️', name: 'Daggers',       kind: 'dagger', dmg: 1.05, rate: 1,    range: 1.05, fan: 3,
+    desc: 'Throws 3 daggers in a spread, each hitting a different target. Damage splits.' },
+  { id: 'hearts',   icon: '💖', name: 'Heart Toss',   kind: 'heart',  dmg: 0.68,  rate: 1.1,  range: 1.05, charm: 1.2,
+    desc: 'Targets fall in love and freeze briefly. Bosses resist. Damage is low — the crowd control is the weapon.' },
 ];
 
 export function weaponDef(id: string): WeaponDef {

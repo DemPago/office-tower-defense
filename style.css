@@ -540,22 +540,32 @@ h2 {
   width: 100%;
 }
 .hero {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 5px 3px 4px;
-  background: rgba(18,18,22,0.9);
+  position: relative;
+  display: flex; flex-direction: column; align-items: stretch;
+  padding: 0;
+  background: #0a0a0e;
   border: 2px solid var(--steel);
   cursor: pointer;
-  transition: border-color .1s, background .1s;
+  overflow: hidden;
+  transition: border-color .15s, box-shadow .15s;
 }
-.hero canvas { width: 70px; height: 119px; image-rendering: auto; }
-.hero span { font-size: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.hero:hover:not(.locked) { background: var(--asphalt); border-color: var(--concrete-hi); }
+.hero canvas { width: 100%; height: auto; display: block; image-rendering: auto; }
+/* Nome in overlay sul fondo della card */
+.hero span {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 10px 4px 4px;
+  font-size: 6px; text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  color: var(--white);
+  letter-spacing: 0.05em;
+}
+.hero:hover:not(.locked) { border-color: var(--concrete-hi); box-shadow: 0 0 6px rgba(255,255,255,0.1); }
 .hero.sel {
   border-color: var(--hazard);
-  background: #1e1a0c;
-  box-shadow: 0 0 10px rgba(242,183,5,0.4), inset 0 0 8px rgba(242,183,5,0.07);
+  box-shadow: 0 0 14px rgba(242,183,5,0.5), inset 0 0 0 1px rgba(242,183,5,0.15);
 }
-.hero.sel span { color: var(--hazard); }
+.hero.sel span { color: var(--hazard); font-weight: bold; }
 .hero.locked { opacity: .4; cursor: help; }
 /* Preview del personaggio selezionato */
 #hero-preview {
@@ -618,7 +628,7 @@ h2 {
   #menu-wrap { padding: 8px 10px 12px; gap: 7px; }
   .menu-brand h1 { font-size: 22px; }
   #hero-list { gap: 5px; }
-  .hero canvas { width: 36px; height: 60px; }
+  .hero canvas { width: 100%; height: auto; }
   .preview-canvas { width: 56px; height: 94px; }
   .menu-footer { gap: 4px; }
   .menu-footer .btn { font-size: 6px; padding: 6px 7px; }
