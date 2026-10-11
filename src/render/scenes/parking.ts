@@ -6,13 +6,13 @@ import { AREA, LANE, free, inYard, scatter, many } from './common.js';
 
 export function build(g: CanvasRenderingContext2D, rnd: () => number, data?: any, opts?: { skipCars?: boolean }) {
   P.rect(g, AREA.x, AREA.y, AREA.w, AREA.h, PAL.asphalt);
-  P.noise(g, AREA, many(60000), [PAL.asphalt2, PAL.asphaltHi, PAL.black, '#38383d'], rnd);
-  P.noise(g, AREA, many(4000), ['#55555c', '#1c1c20'], rnd, 1); // sassolini nell'asfalto
+  P.noise(g, AREA, many(60000), [PAL.asphalt2, PAL.asphaltHi, PAL.black, '#4a3c28'], rnd);
+  P.noise(g, AREA, many(4000), ['#6a5a40', '#2a2018'], rnd, 1); // sassolini nell'asfalto
   for (let i = 0; i < many(22); i++) {
     const x = AREA.x + rnd() * AREA.w, y = AREA.y + rnd() * AREA.h, w = 30 + rnd() * 60, h = 20 + rnd() * 40;
-    P.rect(g, x - 0.5, y - 0.5, w + 1, h + 1, '#1a1a1d');
-    P.rect(g, x, y, w, h, '#303035');
-    P.noise(g, { x, y, w, h }, Math.round(w * h / 3), ['#3a3a40', '#2a2a2e'], rnd);
+    P.rect(g, x - 0.5, y - 0.5, w + 1, h + 1, '#201810');
+    P.rect(g, x, y, w, h, '#3a3020');
+    P.noise(g, { x, y, w, h }, Math.round(w * h / 3), ['#453828', '#2e2418'], rnd);
   }
   // Strade di accesso con la riga gialla
   P.rect(g, TOWER.x - LANE, AREA.y, LANE * 2, AREA.h, PAL.road);

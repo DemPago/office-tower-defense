@@ -1,7 +1,7 @@
 // Palette grunge (la stessa usata in style.css) e font.
 export const PAL = {
   black: '#0d0d0f', ink: '#141416',
-  asphalt: '#2a2a2e', asphalt2: '#323237', asphaltHi: '#44444b', road: '#222226',
+  asphalt: '#3a3228', asphalt2: '#453928', asphaltHi: '#5c5040', road: '#2c2018',
   concrete: '#6e6a64', concreteHi: '#8f8a80', concreteDk: '#4a4743',
   rust: '#8a3b1e', rustHi: '#b8592a', brick: '#6d2e1f', brickHi: '#86402a',
   sand: '#9c8457', sandHi: '#bfa574', wood: '#6b4a2b', woodHi: '#8b6a3e',

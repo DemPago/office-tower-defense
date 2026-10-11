@@ -156,14 +156,14 @@ function buildScene() {
 
   // Terreno grande (riempie i bordi isometrici)
   const groundGeo = new THREE.PlaneGeometry(100, 100);
-  const groundMat = new THREE.MeshLambertMaterial({ color: 0x2a2535 });
+  const groundMat = new THREE.MeshLambertMaterial({ color: 0x28200c });
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
   ground.name = 'ground';
   sc.add(ground);
 
   // Griglia dell'area di gioco
-  const grid = new THREE.GridHelper(WORLD.w * S, 20, 0x3a3555, 0x302a48);
+  const grid = new THREE.GridHelper(WORLD.w * S, 20, 0x4a3c28, 0x302418);
   grid.position.y = 0.003; sc.add(grid);
 
   // Cortile
@@ -993,7 +993,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       ambLight.color.set(ZOMBIE_PALETTE.amb).lerp(new THREE.Color(DEPT_PALETTE[dept].amb), 1 - zombieK);
       sunLight.color.set(ZOMBIE_PALETTE.sun).lerp(new THREE.Color(DEPT_PALETTE[dept].sun), 1 - zombieK);
       (groundMesh.material as THREE.MeshLambertMaterial).color
-        .lerpColors(new THREE.Color(pal.fog), new THREE.Color(0x2a2535), 0.55);
+        .lerpColors(new THREE.Color(pal.fog), new THREE.Color(0x28200c), 0.40);
     }
 
     // ── Camera: orbita lenta nel menu, shake durante il gioco ────────────────
