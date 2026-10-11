@@ -802,7 +802,24 @@ img.hero-illustrated-preview {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   min-width: 240px;
 }
-.bombs-quadro { font-family: var(--spray); font-size: 11px; color: var(--grey); margin: 0; }
+.bombs-quadro { font-family: var(--spray); font-size: 11px; color: var(--grey); margin: 0; letter-spacing: 0.1em; }
+/* Step indicator */
+.bombs-steps {
+  display: flex; align-items: center; gap: 10px;
+  margin: 4px 0 2px;
+}
+.bs-step { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.bs-num {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--steel);
+  font-size: 9px; color: var(--grey);
+  background: var(--char);
+}
+.bs-lbl { font-size: 5px; color: var(--grey); letter-spacing: 0.05em; }
+.bs-step.active .bs-num { border-color: var(--hazard); background: var(--hazard); color: var(--ink); }
+.bs-step.active .bs-lbl { color: var(--hazard); }
+.bs-sep { color: var(--steel); font-size: 7px; padding-bottom: 14px; }
 .bombs-mult   { font-family: var(--spray); font-size: 28px; color: var(--hazard); margin: 0; line-height: 1; }
 .bombs-hint   { font-size: 8px; color: var(--grey); margin: 0; }
 .bombs-stat   { font-size: 8px; color: var(--white); margin: 0; }
