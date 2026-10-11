@@ -23,7 +23,7 @@ export function createFlow(app: any) {
   const { meta, assets } = app;
 
   // Personaggi con illustrazione Gemini disponibile
-  const ILLUSTRATED = new Set(['peppe','dem','nando','tony','vanessa','clara','pesce']);
+  const ILLUSTRATED = new Set(['peppe','dem','nando','tony','vanessa','clara','pesce','frank','cirios']);
 
   // Disegna il fallback pixel art con outline e sfondo drammatico
   function drawPixelPortrait(c: HTMLCanvasElement, id: string, locked: boolean, frame = 1) {
