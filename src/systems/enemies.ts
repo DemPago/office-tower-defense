@@ -3,17 +3,28 @@ import type { Run, Enemy } from '../types.js';
 import { TOWER } from '../state.js';
 import { dist } from '../util.js';
 import { ALLY_SLOTS, ALLY_RING } from '../data/allies.js';
-
-// Raggio entro cui un nemico si ferma ad attaccare un alleato (in pixel mondo).
-const ALLY_BLOCK_R = 26;
-function allyWorldPos(ally: { slot: number }) {
-  const a = ALLY_SLOTS[ally.slot] * Math.PI / 180;
-  return { x: TOWER.x + Math.cos(a) * ALLY_RING, y: TOWER.y - Math.sin(a) * ALLY_RING };
-}
 import { floatText, burst, ring, shake, sfx, banner } from './fx.js';
 import { dealDamage, damageTower } from './damage.js';
 import { blockingSegment, segmentToward, damageWall, reflectChance } from './wall.js';
 import { WALL } from '../data/wall.js';
+
+const ALLY_BLOCK_R = 26;       // raggio entro cui un nemico aggredisce un alleato
+const ATTACK_CD_NORMAL = 1;    // secondi tra un attacco e l'altro (unità normali)
+const ATTACK_CD_BOSS = 1.3;    // secondi tra un attacco e l'altro (boss)
+const ENRAGE_HP_FRAC = 0.5;    // frazione di HP a cui il boss si infuria
+const ENRAGE_SPEED_MULT = 1.3; // moltiplicatore velocità quando il boss è infuriato
+const AOE_WALL_R = 55;         // raggio splash della palla ferrata sui muri
+const AOE_WALL_DMG = 0.6;      // frazione danno splash rispetto all'attacco base
+const HEAL_RADIUS = 60;        // raggio guarigione dei curatori
+const HEAL_CD = 3;             // secondi tra una cura e l'altra
+const ALLY_ATK_MULT = 1.2;     // danno extra che i nemici fanno agli alleati
+const REFLECT_DMG_MULT = 3;    // moltiplicatore danno del riflesso (lastra d'acciaio)
+const LASER_DMG_MULT = 1.5;    // moltiplicatore danno laser nemico
+
+function allyWorldPos(ally: { slot: number }) {
+  const a = ALLY_SLOTS[ally.slot] * Math.PI / 180;
+  return { x: TOWER.x + Math.cos(a) * ALLY_RING, y: TOWER.y - Math.sin(a) * ALLY_RING };
+}
 
 export function updateEnemies(run: Run, dt: number) {
   for (const e of run.enemies) {
@@ -61,7 +72,7 @@ export function updateEnemies(run: Run, dt: number) {
       }
       e.attackCd -= dt;
       if (e.attackCd <= 0) {
-        e.attackCd = e.boss ? 1.3 : 1;
+        e.attackCd = e.boss ? ATTACK_CD_BOSS : ATTACK_CD_NORMAL;
         // Il boss sfonda il tratto di muro in un colpo solo
         damageWall(run, wallSeg, e.boss ? wallSeg.maxHp * 2 : e.atk, e);
         e.lunge = 0.15;
@@ -74,8 +85,8 @@ export function updateEnemies(run: Run, dt: number) {
         e.moving = false;
         e.attackCd -= dt;
         if (e.attackCd <= 0) {
-          e.attackCd = e.boss ? 1.3 : 1;
-          allyBlock.hp -= e.atk * 1.2;
+          e.attackCd = e.boss ? ATTACK_CD_BOSS : ATTACK_CD_NORMAL;
+          allyBlock.hp -= e.atk * ALLY_ATK_MULT;
           allyBlock.hurt = 0.2;
           e.lunge = 0.12;
           if (allyBlock.hp <= 0) {
@@ -99,15 +110,15 @@ export function updateEnemies(run: Run, dt: number) {
       e.moving = false;
       e.attackCd -= dt;
       if (e.attackCd <= 0) {
-        e.attackCd = e.shotCd || (e.boss ? 1.3 : 1);
+        e.attackCd = e.shotCd || (e.boss ? ATTACK_CD_BOSS : ATTACK_CD_NORMAL);
         if (e.range > 0) {
           // se tra lui e il palazzo c'è un tratto di muro in piedi, spara al muro (breccia)
           const seg = segmentToward(run, e);
           const target = seg && seg.hp > 0 ? seg : null;
           if (e.weaponBeam) {
             // laser: colpo istantaneo — non ha proiettile, danneggia subito
-            if (target) damageWall(run, target, e.atk * (e.weaponPierce ? 1 : 1) * 1.5, e);
-            else damageTower(run, e.atk * 1.5);
+            if (target) damageWall(run, target, e.atk * LASER_DMG_MULT, e);
+            else damageTower(run, e.atk * LASER_DMG_MULT);
             ring(run, e.x, e.y - e.size * 0.5, 22, '#2de2e6');
           } else {
             run.enemyShots.push({ x: e.x, y: e.y - e.size * 0.3, dmg: e.atk, speed: 210,
@@ -133,8 +144,8 @@ export function updateEnemies(run: Run, dt: number) {
 function aoeWallHit(run: Run, e: Enemy) {
   let hit = false;
   for (const seg of run.wall) {
-    if (seg.hp > 0 && dist(seg, e) < 55) {
-      damageWall(run, seg, e.atk * 0.6, e);
+    if (seg.hp > 0 && dist(seg, e) < AOE_WALL_R) {
+      damageWall(run, seg, e.atk * AOE_WALL_DMG, e);
       hit = true;
     }
   }
@@ -152,9 +163,9 @@ function bossMood(run: Run, e: Enemy) {
     burst(run, e.x + (step ? 6 : -6), e.y, '#8a8d93', 4, 40); // polvere
   }
   e.lastStep = step;
-  if (!e.enraged && e.hp < e.maxHp * 0.5) {
+  if (!e.enraged && e.hp < e.maxHp * ENRAGE_HP_FRAC) {
     e.enraged = true;
-    e.speed *= 1.3;
+    e.speed *= ENRAGE_SPEED_MULT;
     floatText(run, e.x, e.y - e.size - 12, 'INFURIATO!', '#d7263d', 11);
     shake(run, 6);
     sfx(run, 'enrage');
@@ -178,15 +189,15 @@ function explode(run: Run, e: Enemy, hitTower = true) {
 function healNearby(run: Run, healer: Enemy, dt: number) {
   healer.healCd = (healer.healCd ?? 0) - dt;
   if (healer.healCd > 0) return;
-  healer.healCd = 3;
+  healer.healCd = HEAL_CD;
   let healed = false;
   for (const o of run.enemies) {
-    if (o.dead || o.boss || o.hp >= o.maxHp || dist(o, healer) > 60) continue;
+    if (o.dead || o.boss || o.hp >= o.maxHp || dist(o, healer) > HEAL_RADIUS) continue;
     o.hp = Math.min(o.maxHp, o.hp + o.maxHp * healer.def.heal);
     healed = true;
   }
   if (healed) {
-    ring(run, healer.x, healer.y - 10, 60, '#7bd332');
+    ring(run, healer.x, healer.y - 10, HEAL_RADIUS, '#7bd332');
     floatText(run, healer.x, healer.y - healer.size - 6, '+', '#7bd332', 10);
   }
 }
@@ -204,7 +215,7 @@ export function updateEnemyShots(run: Run, dt: number) {
       }
       if (Math.random() < reflectChance(run) && s.from && !s.from.dead) {
         // lastre d'acciaio: il colpo torna indietro su chi l'ha sparato
-        dealDamage(run, s.from, s.dmg * 3);
+        dealDamage(run, s.from, s.dmg * REFLECT_DMG_MULT);
         burst(run, s.x, s.y, '#c0c4cc', 5, 70);
         continue;
       }
