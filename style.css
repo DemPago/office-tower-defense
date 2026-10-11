@@ -301,6 +301,23 @@ h2 {
 .help { color: var(--grey); margin-top: 8px; opacity: .8; }
 .buoni { color: var(--toxic); }
 .record { color: var(--pink); font-family: var(--spray); font-size: 18px; }
+/* Animazione float per ritratti illustrati */
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+.hero-illustrated { animation: heroFloat 3s ease-in-out infinite; }
+
+/* Rob — compagno di Clara nel preview */
+.rob-wrap {
+  display: flex; align-items: center; gap: 5px;
+  margin-top: 6px; padding: 4px 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(192,196,204,0.2);
+}
+.rob-mini { width: 28px; height: 48px; image-rendering: pixelated; }
+.rob-label { font-size: 6px; color: var(--grey); font-style: italic; }
+
 /* Badge romano nel game over */
 #over-badge {
   display: flex; flex-direction: column; align-items: center; gap: 4px;

@@ -26,8 +26,8 @@ export function createFlow(app: any) {
   const ILLUSTRATED = new Set(['peppe','dem','nando','tony','vanessa','clara','pesce']);
 
   // Disegna il fallback pixel art con outline e sfondo drammatico
-  function drawPixelPortrait(c: HTMLCanvasElement, id: string, locked: boolean) {
-    const sp = assets.person(id, 1, 1, locked ? '#141416' : false);
+  function drawPixelPortrait(c: HTMLCanvasElement, id: string, locked: boolean, frame = 1) {
+    const sp = assets.person(id, frame, 1, locked ? '#141416' : false);
     const sw = sp.img.width, sh = sp.img.height;
     const srcOff = document.createElement('canvas');
     srcOff.width = sw; srcOff.height = sh;
@@ -85,33 +85,77 @@ export function createFlow(app: any) {
 
   // Ritratto per i card della griglia (portrait 2×) o per il preview (landscape)
   function heroPortrait(id: string, locked: boolean, forPreview = false) {
-    // Dimensioni: preview landscape 320×240, card portrait 80×136
     const cw = forPreview ? 320 : 80;
     const ch = forPreview ? 240 : 136;
     const c = document.createElement('canvas');
     c.width = cw; c.height = ch;
 
     if (!locked && ILLUSTRATED.has(id)) {
-      // Sfondo scuro istantaneo, poi immagine quando carica
+      // Immagine illustrata: carica e ridisegna, poi CSS gestisce il float
       const g = c.getContext('2d')!;
       g.fillStyle = '#0e0e12';
       g.fillRect(0, 0, cw, ch);
       const img = new Image();
       img.src = `/heroes/${id}.jpg`;
-      img.onload = () => {
-        g.clearRect(0, 0, cw, ch);
-        drawIllustration(g, img, cw, ch);
-      };
+      img.onload = () => { g.clearRect(0, 0, cw, ch); drawIllustration(g, img, cw, ch); };
+      c.classList.add('hero-illustrated');
     } else {
-      drawPixelPortrait(c, id, locked);
+      // Pixel art: animazione idle — ciclo dei 4 frame di camminata a ~5fps
+      let frame = 0;
+      const WALK = [1, 0, 1, 2]; // sequenza: neutro→sx→neutro→dx (meno aggressivo)
+      let lastT = 0;
+      drawPixelPortrait(c, id, locked, WALK[0]);
+      const tick = (t: number) => {
+        if (!c.isConnected) return; // canvas rimosso dal DOM → stop
+        if (t - lastT > 200) {     // 5fps
+          frame = (frame + 1) % WALK.length;
+          drawPixelPortrait(c, id, locked, WALK[frame]);
+          lastT = t;
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
     }
+    return c;
+  }
+
+  // Piccolo sprite di Rob da affiancare al preview di Clara
+  function robMiniSprite(): HTMLCanvasElement {
+    const sp = assets.person('rob', 1, 1, false);
+    const sw = sp.img.width, sh = sp.img.height;
+    const c = document.createElement('canvas');
+    c.width = sw; c.height = sh;
+    const g = c.getContext('2d')!;
+    g.imageSmoothingEnabled = false;
+    // Sfondo coordinato
+    g.fillStyle = '#0a0810';
+    g.fillRect(0, 0, sw, sh);
+    g.drawImage(sp.img, 0, 0);
+    c.classList.add('rob-mini');
+    // Animazione idle per Rob
+    let frame = 0;
+    const WALK = [1, 0, 1, 2];
+    let lastT = 0;
+    const tick = (t: number) => {
+      if (!c.isConnected) return;
+      if (t - lastT > 220) {
+        frame = (frame + 1) % WALK.length;
+        const sp2 = assets.person('rob', WALK[frame], 1, false);
+        g.clearRect(0, 0, sw, sh);
+        g.fillStyle = '#0a0810'; g.fillRect(0, 0, sw, sh);
+        g.drawImage(sp2.img, 0, 0);
+        lastT = t;
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
     return c;
   }
 
   let menuAnim: { stop: () => void } | null = null;
 
   function showMenu() {
-    screens.showMenu(meta, heroPortrait, id => {
+    screens.showMenu(meta, heroPortrait, robMiniSprite, id => {
       meta.hero = id;
       saveMeta(meta);
       play('pick');

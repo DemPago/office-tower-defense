@@ -45,7 +45,7 @@ export function hideAll() {
 }
 
 // Popola #hero-preview con ritratto + info strutturate.
-function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, forPreview?: boolean) => HTMLCanvasElement, locked: boolean) {
+function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, forPreview?: boolean) => HTMLCanvasElement, robSprite: () => HTMLCanvasElement, locked: boolean) {
   const box = $('hero-preview');
   if (!box) return;
   if (locked) {
@@ -63,7 +63,7 @@ function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, f
   }).join('');
 
   box.innerHTML = '';
-  const cv = portrait(h.id, false, true); // forPreview=true → canvas landscape 320×240
+  const cv = portrait(h.id, false, true);
   cv.className = 'preview-canvas';
   box.appendChild(cv);
 
@@ -74,11 +74,23 @@ function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, f
     <p class="preview-desc">${h.desc}</p>
     <p class="preview-weapon">${w.icon} <b>${w.name}</b><br><span>${w.desc}</span></p>
     <div class="preview-pills">${pills}</div>`;
+  // Clara: mostra Rob come compagno con badge "CON ROB"
+  if (h.id === 'clara') {
+    const robWrap = document.createElement('div');
+    robWrap.className = 'rob-wrap';
+    const robCv = robSprite();
+    robWrap.appendChild(robCv);
+    const robLabel = document.createElement('span');
+    robLabel.className = 'rob-label';
+    robLabel.textContent = 'con Rob';
+    robWrap.appendChild(robLabel);
+    info.appendChild(robWrap);
+  }
   box.appendChild(info);
 }
 
 // portrait(id, locked) restituisce un canvas col ritratto; onHero(id) quando ne scegli uno.
-export function showMenu(meta: Meta, portrait: (id: string, locked: boolean) => HTMLCanvasElement, onHero: (id: string) => void) {
+export function showMenu(meta: Meta, portrait: (id: string, locked: boolean, forPreview?: boolean) => HTMLCanvasElement, robSprite: () => HTMLCanvasElement, onHero: (id: string) => void) {
   $('menu-best')!.textContent = meta.best ? `Record: ondata ${meta.best}` : 'Nessuna partita ancora';
   $('menu-buoni')!.textContent = `🎫 ${fmt(meta.buoni)} buoni pasto`;
   const have = unlockedHeroes(meta);
@@ -94,12 +106,12 @@ export function showMenu(meta: Meta, portrait: (id: string, locked: boolean) => 
     const name = document.createElement('span');
     name.textContent = locked ? '🔒' : `${weaponDef(h.weapon).icon} ${h.name}`;
     btn.appendChild(name);
-    btn.addEventListener('pointerenter', () => updateHeroPreview(h, portrait, locked));
-    btn.addEventListener('click', () => { if (!locked) onHero(h.id); else updateHeroPreview(h, portrait, locked); });
+    btn.addEventListener('pointerenter', () => updateHeroPreview(h, portrait, robSprite, locked));
+    btn.addEventListener('click', () => { if (!locked) onHero(h.id); else updateHeroPreview(h, portrait, robSprite, locked); });
     list.appendChild(btn);
   }
   const sel = HEROES.find((h: HeroDef) => h.id === current)!;
-  updateHeroPreview(sel, portrait, false);
+  updateHeroPreview(sel, portrait, robSprite, false);
   show('scr-menu');
 }
 

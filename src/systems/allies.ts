@@ -53,7 +53,8 @@ export function offerAllies(run: Run): void {
   const slot = freeSlot(run);
   const promos = shuffle(run.allies.filter(a => a.level < MAX_LEVEL))
     .map(a => ({ kind: 'promote', def: allyDef(a.id), ally: a }));
-  const hires = slot < 0 ? [] : shuffle([...ALLIES]).map(def => ({ kind: 'hire', def, slot }));
+  const hirePool = ALLIES.filter(a => a.id !== 'rob'); // Rob è esclusivo di Clara, non va nel pool
+  const hires = slot < 0 ? [] : shuffle([...hirePool]).map(def => ({ kind: 'hire', def, slot }));
   const choices = [...hires.slice(0, promos.length ? 2 : 3), ...promos.slice(0, 1)];
   // se mancano carte (es. postazioni piene) si riempie con altre promozioni
   for (const p of promos.slice(1)) if (choices.length < 3) choices.push(p);
