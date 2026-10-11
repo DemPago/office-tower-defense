@@ -44,9 +44,9 @@ export function hideAll() {
   show(null);
 }
 
-// Popola #hero-preview con ritratto + info strutturate.
-function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, forPreview?: boolean) => HTMLElement, robSprite: () => HTMLCanvasElement, locked: boolean) {
-  const box = $('hero-preview');
+// Popola #hero-info con nome, arma e statistiche del personaggio selezionato.
+function updateHeroPreview(h: HeroDef, _portrait: (id: string, locked: boolean, forPreview?: boolean) => HTMLElement, robSprite: () => HTMLCanvasElement, locked: boolean) {
+  const box = $('hero-info');
   if (!box) return;
   if (locked) {
     box.innerHTML = `<p class="preview-locked">🔒 Si sblocca completando tutti i livelli (ondata ${UNLOCK_WAVE})</p>`;
@@ -62,19 +62,11 @@ function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, f
     return `<span class="stat-pill ${v > 0 ? 'pos' : 'neg'}">${n} ${label}</span>`;
   }).join('');
 
-  box.innerHTML = '';
-  const cv = portrait(h.id, false, true);
-  cv.classList.add('preview-canvas');
-  box.appendChild(cv);
-
-  const info = document.createElement('div');
-  info.className = 'preview-info';
-  info.innerHTML = `
+  box.innerHTML = `
     <p class="preview-name">${h.name}</p>
-    <p class="preview-desc">${h.desc}</p>
-    <p class="preview-weapon">${w.icon} <b>${w.name}</b><br><span>${w.desc}</span></p>
+    <p class="preview-weapon">${w.icon} <b>${w.name}</b> <span>— ${h.desc}</span></p>
     <div class="preview-pills">${pills}</div>`;
-  // Clara: mostra Rob come compagno con badge "CON ROB"
+  // Clara: aggiunge badge Rob inline
   if (h.id === 'clara') {
     const robWrap = document.createElement('div');
     robWrap.className = 'rob-wrap';
@@ -84,9 +76,8 @@ function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, f
     robLabel.className = 'rob-label';
     robLabel.textContent = 'con Rob';
     robWrap.appendChild(robLabel);
-    info.appendChild(robWrap);
+    box.appendChild(robWrap);
   }
-  box.appendChild(info);
 }
 
 // portrait(id, locked) restituisce un canvas col ritratto; onHero(id) quando ne scegli uno.
