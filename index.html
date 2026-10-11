@@ -115,20 +115,32 @@
       <div id="hero-list"></div>
       <div id="hero-preview"></div>
       <button id="btn-play" class="btn big">▶ GIOCA</button>
-      <div class="menu-footer">
-        <div id="renderer-toggle" class="renderer-toggle" title="Cambia modalità grafica (ricarica la pagina)">
-          <span class="rt-label">Grafica</span>
-          <button id="rt-2d" class="rt-btn">2D</button>
-          <button id="rt-3d" class="rt-btn">3D</button>
-        </div>
-        <button id="btn-shop" class="btn">🏢 Personale</button>
-        <button id="btn-board" class="btn">🏆 Classifica</button>
-        <button id="btn-howto" class="btn ghost">❓ Come si gioca</button>
+      <div class="menu-nav-grid">
+        <button id="btn-shop" class="menu-nav-card">
+          <span class="mnc-ico">🏢</span>
+          <span class="mnc-title">Personale</span>
+          <span class="mnc-sub">Bonus permanenti per tutte le partite</span>
+        </button>
+        <button id="btn-board" class="menu-nav-card">
+          <span class="mnc-ico">🏆</span>
+          <span class="mnc-title">Classifica</span>
+          <span class="mnc-sub">Record globale dei sopravvissuti</span>
+        </button>
+        <button id="btn-howto" class="menu-nav-card ghost">
+          <span class="mnc-ico">❓</span>
+          <span class="mnc-title">Come si gioca</span>
+          <span class="mnc-sub">Regole, armi e colleghi</span>
+        </button>
       </div>
       <div class="support">
         <a id="kofi" class="kofi-button" href="https://ko-fi.com/dem420156" target="_blank" rel="noopener noreferrer">☕ Offrimi un caffè</a>
         <p class="dim">Ti piace? Fallo girare:</p>
         <div id="share-menu" class="share-row"></div>
+        <div id="renderer-toggle" class="renderer-toggle" title="Cambia modalità grafica (ricarica la pagina)">
+          <span class="rt-label">Grafica</span>
+          <button id="rt-2d" class="rt-btn">2D</button>
+          <button id="rt-3d" class="rt-btn">3D</button>
+        </div>
       </div>
     </div>
   </section>

@@ -641,13 +641,28 @@ img.hero-illustrated-preview {
 .preview-locked { color: var(--grey); font-size: 7px; padding: 20px 10px; text-align: center; line-height: 1.8; }
 /* Pulsante GIOCA: larghezza piena */
 #btn-play { width: 100%; }
-/* Footer: renderer + bottoni secondari in riga */
-.menu-footer {
-  display: flex; align-items: center; gap: 6px;
-  width: 100%; flex-wrap: wrap; justify-content: center;
+/* Grid navigazione secondaria (Personale / Classifica / Come si gioca) */
+.menu-nav-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 6px; width: 100%;
 }
-.menu-footer .btn { min-width: 0; font-size: 7px; padding: 7px 10px; }
-/* Toggle 2D/3D */
+.menu-nav-card {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 10px 6px 9px;
+  background: var(--asphalt2);
+  border: 2px solid var(--steel);
+  font-family: var(--font); cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.menu-nav-card:hover   { background: var(--steel); border-color: var(--concrete-hi); }
+.menu-nav-card:active  { transform: translateY(1px); }
+.menu-nav-card.ghost   { border-color: var(--steel); opacity: .8; }
+.menu-nav-card.ghost:hover { opacity: 1; }
+.mnc-ico   { font-size: 24px; line-height: 1.1; }
+.mnc-title { font-size: 7px; color: var(--white); margin-top: 1px; }
+.mnc-sub   { font-size: 5px; color: var(--grey); text-align: center; line-height: 1.5; }
+
+/* Toggle 2D/3D — ora nella sezione support in fondo */
 .renderer-toggle {
   display: flex; align-items: center; gap: 6px;
   background: var(--asphalt); border: 2px solid var(--ink);
@@ -668,8 +683,10 @@ img.hero-illustrated-preview {
   #hero-list { gap: 5px; }
   .hero canvas { width: 100%; height: auto; }
   .preview-canvas { width: 56px; height: 94px; }
-  .menu-footer { gap: 4px; }
-  .menu-footer .btn { font-size: 6px; padding: 6px 7px; }
+  .menu-nav-grid { gap: 4px; }
+  .mnc-ico { font-size: 20px; }
+  .mnc-title { font-size: 6px; }
+  .mnc-sub { font-size: 4px; }
 }
 
 /* Mitra: potere speciale che compare contro la forma bestiale dei boss */
@@ -701,31 +718,40 @@ img.hero-illustrated-preview {
 }
 
 /* Ko-fi e condivisione */
-.support { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 6px; }
+.support {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  width: 100%;
+  padding-top: 4px;
+  border-top: 1px solid var(--steel);
+}
 .kofi-button {
   display: inline-block;
-  padding: 9px 16px;
+  padding: 10px 22px;
   background: #ff5e5b; color: #fff; text-decoration: none;
-  font-size: 9px;
+  font-size: 10px; letter-spacing: 0.02em;
   border: 2px solid var(--ink);
   box-shadow: inset -2px -2px 0 rgba(0,0,0,.3), inset 2px 2px 0 rgba(255,255,255,.2);
+  transition: background .15s;
+  width: 100%; text-align: center; box-sizing: border-box;
 }
 .kofi-button:hover { background: #ff7a77; }
-.share-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.share-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 .share {
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font); font-size: 11px; color: #fff; text-decoration: none;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  width: 40px; padding: 6px 2px 5px;
+  font-family: var(--font); font-size: 13px; color: #fff; text-decoration: none;
   border: 2px solid var(--ink);
   box-shadow: inset -2px -2px 0 rgba(0,0,0,.3), inset 2px 2px 0 rgba(255,255,255,.15);
+  transition: filter .12s;
 }
+.share-lbl { font-size: 4px; color: rgba(255,255,255,0.75); letter-spacing: 0.02em; }
 .share.whatsapp { background: #25a35a; }
 .share.telegram { background: #2a8ad6; }
 .share.x { background: #141416; }
 .share.facebook { background: #3a5ba0; }
-.share.linkedin { background: #1a6aa8; font-size: 9px; }
+.share.linkedin { background: #1a6aa8; font-size: 10px; }
 .share.copy { background: var(--steel-hi); }
-.share:hover { filter: brightness(1.2); }
+.share:hover { filter: brightness(1.25); }
 
 /* Scelta dell'arma nel menu */
 #weapon-pick { display: flex; flex-direction: column; align-items: center; gap: 6px; }

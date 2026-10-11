@@ -20,7 +20,7 @@ export function renderShare(container: HTMLElement, text: () => string) {
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
     a.title = `Condividi su ${n.label}`;
-    a.textContent = n.icon;
+    a.innerHTML = `${n.icon}<span class="share-lbl">${n.label}</span>`;
     a.href = n.url(text(), GAME_URL);
     a.addEventListener('pointerdown', () => { a.href = n.url(text(), GAME_URL); }); // testo aggiornato
     container.appendChild(a);
@@ -29,18 +29,18 @@ export function renderShare(container: HTMLElement, text: () => string) {
   const copy = document.createElement('button');
   copy.className = 'share copy';
   copy.title = 'Copia il link';
-  copy.textContent = '🔗';
+  copy.innerHTML = '🔗<span class="share-lbl">Copia</span>';
   copy.addEventListener('click', async () => {
     if (navigator.share && matchMedia('(pointer: coarse)').matches) {
       try { await navigator.share({ title: 'Office Tower Defense', text: text(), url: GAME_URL }); return; } catch { /* annullato */ }
     }
     try {
       await navigator.clipboard.writeText(text() + ' ' + GAME_URL);
-      copy.textContent = '✓';
+      copy.innerHTML = '✓<span class="share-lbl">Copiato</span>';
     } catch {
-      copy.textContent = '✗';
+      copy.innerHTML = '✗<span class="share-lbl">Errore</span>';
     }
-    setTimeout(() => { copy.textContent = '🔗'; }, 1500);
+    setTimeout(() => { copy.innerHTML = '🔗<span class="share-lbl">Copia</span>'; }, 1500);
   });
   container.appendChild(copy);
 }
