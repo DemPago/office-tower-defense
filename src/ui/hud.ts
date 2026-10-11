@@ -156,36 +156,64 @@ export function createHud({ onBuy, onAbility, onSell }: { onBuy: (id: string) =>
   }
 
   // ── Pannello mano ───────────────────────────────────────────────
-  const handEl = document.getElementById('hand')!;
-  let lastHandHash = '';
+  const btnHand = $('btn-hand')!;
+  const handCount = $('hand-count')!;
+  const handPanel = $('hand-panel')!;
+  const handPanelList = $('hand-panel-list')!;
+  let handOpen = false;
+  let currentRun: Run | null = null;
 
-  function updateHand(run: Run | null): void {
-    if (!run || run.phase === 'over') { handEl.hidden = true; return; }
-    const hash = run.cardPicks.map(p => p.id).join(',') + '|' + run.cardPicks.length;
-    if (hash === lastHandHash) return;
-    lastHandHash = hash;
-    handEl.innerHTML = '';
-    if (!run.cardPicks.length) { handEl.hidden = true; return; }
-    handEl.hidden = false;
-    const lbl = document.createElement('span');
-    lbl.className = 'hand-label';
-    lbl.textContent = 'MANO:';
-    handEl.appendChild(lbl);
+  function renderHandPanel(): void {
+    const run = currentRun;
+    handPanelList.innerHTML = '';
+    if (!run || !run.cardPicks.length) { closeHandPanel(); return; }
     run.cardPicks.forEach((pick, i) => {
       const def = findCard(pick.id);
       if (!def) return;
       const el = document.createElement('div');
-      el.className = 'hc' + (def.type === 'use' ? ' use' : '') + (def.heavy ? ' heavy' : def.malus ? ' malus' : '');
-      el.title = `${def.name}: ${def.desc(pick.m)}\nVendi: +15% vita, +25 mana`;
-      el.innerHTML = `<span class="ico">${def.icon}</span><span class="nm">${def.name}</span>`;
+      el.className = 'hc-card' + (def.heavy ? ' heavy' : def.malus ? ' malus' : def.type === 'use' ? ' use' : '');
+      el.innerHTML = `<span class="hc-ico">${def.icon}</span><span class="hc-nm">${def.name}</span><span class="hc-desc">${def.desc(pick.m)}</span>`;
       const sellBtn = document.createElement('button');
-      sellBtn.className = 'hc-sell';
-      sellBtn.textContent = '💸';
-      sellBtn.title = 'Vendi: +15% vita, +25 mana';
+      sellBtn.className = 'hc-sell-btn';
+      sellBtn.textContent = '💸 Vendi';
+      sellBtn.title = '+15% vita, +25 mana';
       sellBtn.addEventListener('click', e => { e.stopPropagation(); onSell?.(i); });
       el.appendChild(sellBtn);
-      handEl.appendChild(el);
+      handPanelList.appendChild(el);
     });
+  }
+
+  function openHandPanel(): void {
+    handOpen = true;
+    handPanel.hidden = false;
+    renderHandPanel();
+  }
+
+  function closeHandPanel(): void {
+    handOpen = false;
+    handPanel.hidden = true;
+  }
+
+  btnHand.addEventListener('click', () => {
+    if (handOpen) closeHandPanel(); else openHandPanel();
+  });
+  $('btn-hand-close')!.addEventListener('click', closeHandPanel);
+
+  // chiude il pannello cliccando fuori
+  document.addEventListener('pointerdown', (e: PointerEvent) => {
+    if (!handOpen) return;
+    const t = e.target as Node;
+    if (!handPanel.contains(t) && t !== btnHand && !btnHand.contains(t)) closeHandPanel();
+  }, true);
+
+  function updateHand(run: Run | null): void {
+    currentRun = run;
+    if (!run || run.phase === 'over') { btnHand.hidden = true; closeHandPanel(); return; }
+    const n = run.cardPicks.length;
+    btnHand.hidden = n === 0;
+    handCount.textContent = String(n);
+    if (handOpen) renderHandPanel();
+    if (n === 0) closeHandPanel();
   }
 
   const _origUpdate = update;

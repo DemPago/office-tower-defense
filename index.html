@@ -74,14 +74,25 @@
     </section>
   </main>
 
-  <!-- Mano delle carte (max 5) -->
-  <div id="hand" hidden></div>
-
   <!-- Pannello in basso -->
   <footer id="panel">
+    <!-- Pannello carte in mano (si apre sopra il footer) -->
+    <div id="hand-panel" hidden>
+      <div class="hand-panel-hdr">
+        <span>🃏 CARTE IN MANO</span>
+        <button id="btn-hand-close">✕</button>
+      </div>
+      <div id="hand-panel-list"></div>
+    </div>
     <div id="stats-line"></div>
     <div id="upgrades"></div>
-    <div id="abilities"></div>
+    <div id="panel-bottom">
+      <button id="btn-hand" hidden title="Carte in mano">
+        🃏
+        <span id="hand-count">0</span>
+      </button>
+      <div id="abilities"></div>
+    </div>
   </footer>
 
   <!-- Schermate a tutto schermo -->

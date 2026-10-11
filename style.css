@@ -100,50 +100,76 @@ button:disabled { cursor: default; }
 #stage { position: relative; flex: 1; min-height: 0; }
 #cv { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 
-/* ─── Mano delle carte ──────────────────────────────────────── */
-#hand {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 6px;
-  background: var(--char);
-  border-top: 2px solid var(--asphalt);
-  overflow-x: auto;
-  scrollbar-width: none;
+/* ─── Pulsante mano + pannello carte ────────────────────────── */
+#panel-bottom { display: flex; align-items: stretch; gap: 4px; }
+#abilities    { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; flex: 1; }
+
+#btn-hand {
   flex-shrink: 0;
+  width: 52px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: var(--asphalt2);
+  border: 2px solid var(--cyan);
+  border-radius: 3px;
+  font-family: var(--font); font-size: 8px; color: var(--cyan);
+  cursor: pointer; line-height: 1;
+  touch-action: none;
 }
-#hand::-webkit-scrollbar { display: none; }
-#hand .hand-label {
-  font-size: 6px;
-  color: var(--grey);
-  white-space: nowrap;
-  margin-right: 2px;
-  flex-shrink: 0;
+#btn-hand:hover { background: var(--steel); }
+#btn-hand:active { transform: translateY(1px); }
+#hand-count {
+  display: inline-block;
+  background: var(--cyan); color: var(--ink);
+  border-radius: 8px; padding: 1px 4px;
+  font-size: 7px; line-height: 1.4;
+  min-width: 14px; text-align: center;
 }
-.hc {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+
+/* Pannello che appare sopra il footer */
+#hand-panel {
+  position: absolute; bottom: 100%; left: 0; right: 0;
+  background: #1a1c22;
+  border-top: 2px solid var(--cyan);
+  border-bottom: none;
+  padding: 8px 10px 6px;
+  z-index: 40;
+}
+.hand-panel-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 7px; color: var(--cyan);
+}
+#btn-hand-close {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font); font-size: 9px; color: var(--grey);
+  padding: 0 2px; line-height: 1;
+}
+#btn-hand-close:hover { color: var(--white); }
+#hand-panel-list {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.hc-card {
+  display: flex; align-items: center; gap: 6px;
   background: var(--asphalt);
   border: 1px solid var(--steel);
   border-radius: 3px;
-  padding: 2px 3px;
-  min-width: 36px;
-  max-width: 52px;
-  flex-shrink: 0;
-  gap: 1px;
-  cursor: default;
+  padding: 5px 8px;
+  font-family: var(--font); font-size: 6px; color: var(--white);
+  min-width: 140px; max-width: 220px;
 }
-.hc .ico { font-size: 14px; line-height: 1.1; }
-.hc .nm  { font-size: 5px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50px; }
-.hc.malus  { border-color: var(--red); }
-.hc.heavy  { border-color: var(--red); background: rgba(215,38,61,0.18); }
-.hc.use    { border-color: var(--cyan); }
-.hc-sell {
-  font-size: 8px; line-height: 1; background: none; border: none; cursor: pointer;
-  padding: 0; color: var(--concrete); margin-top: 1px;
+.hc-card.malus { border-color: var(--red); }
+.hc-card.heavy { border-color: var(--red); background: rgba(215,38,61,0.18); }
+.hc-card.use   { border-color: var(--cyan); }
+.hc-ico  { font-size: 20px; flex-shrink: 0; }
+.hc-nm   { font-size: 6px; color: var(--white); font-weight: bold; }
+.hc-desc { font-size: 5px; color: var(--grey); line-height: 1.4; margin-top: 1px; }
+.hc-sell-btn {
+  margin-left: auto; flex-shrink: 0;
+  font-family: var(--font); font-size: 7px;
+  background: var(--asphalt2); border: 1px solid var(--steel); border-radius: 2px;
+  cursor: pointer; color: var(--concrete); padding: 3px 5px; white-space: nowrap;
 }
-.hc-sell:hover { color: var(--hazard); }
+.hc-sell-btn:hover { color: var(--hazard); border-color: var(--hazard); }
 
 /* ─── Carte giocabili nella fase carte ─────────────────────── */
 #hand-playable {
@@ -173,15 +199,10 @@ button:disabled { cursor: default; }
   white-space: nowrap;
 }
 .hc-play-btn:hover { background: #7ff6f9; }
-.hc-sell-btn {
-  font-family: var(--font); font-size: 8px;
-  background: none; border: none; cursor: pointer;
-  color: var(--concrete); padding: 2px;
-}
-.hc-sell-btn:hover { color: var(--hazard); }
 
 /* ─── Pannello in basso ─────────────────────────────────────── */
 #panel {
+  position: relative;
   padding-inline: max(6px, calc((100vw - 560px) / 2)) !important;
   background: var(--steel);
   border-top: 4px solid transparent;
@@ -191,7 +212,6 @@ button:disabled { cursor: default; }
   gap: 6px;
 }
 #upgrades { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
-#abilities { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
 
 .upg {
   background: var(--asphalt);
@@ -487,6 +507,7 @@ img.hero-illustrated-preview {
   #tip b { font-size: 11px; }
   #top { padding-inline: max(8px, calc((100vw / 1.35 - 560px) / 2)); }
   #panel { padding-inline: max(6px, calc((100vw / 1.35 - 560px) / 2)) !important; }
+  #hand-panel { padding-inline: max(10px, calc((100vw / 1.35 - 560px) / 2 + 4px)) !important; }
 }
 .card.ally.hire .rar { color: var(--toxic); }
 .card.ally.promo .rar { color: var(--hazard); }
