@@ -1,7 +1,8 @@
 // Sprite dei personaggi: generati via codice da render/people.js e messi in cache.
 // Ogni sprite ha un contorno nero di 1 pixel ed esiste in versione normale e
 // tutta bianca (per il lampo quando un personaggio viene colpito).
-import { LOOKS, GRID, WORLD_PER_PX, drawPerson, zombify } from './people.js';
+import { LOOKS } from './looks.js';
+import { GRID, WORLD_PER_PX, drawPerson, zombify } from './people.js';
 import { AGRID, drawAnimal } from './animals.js';
 import { ANIMALS } from '../data/animals.js';
 

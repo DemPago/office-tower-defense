@@ -2,758 +2,35 @@
 // Stessa firma pubblica di world.ts: createThreeRenderer(canvas, assets) → { resize, draw, screenRect, screenToWorld }
 //
 // Attivato con ?3d nell'URL.
+// Suddiviso in:
+//   utils.ts   — costanti, cache texture, pool, helper
+//   tower.ts   — buildTower()
+//   envs.ts    — buildScene() + buildXxxEnv() per ogni dipartimento
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { TOWER, YARD, WORLD } from '../../state.js';
-import { WALL } from '../../data/wall.js';
 import { allyPos } from '../../systems/allies.js';
 import { ALLY_SLOTS, allyArc } from '../../data/allies.js';
 import { isZombieWave } from '../../data/enemies.js';
 import { SCENES, sceneIndexForWave, buildScene as build2DScene } from '../scenery.js';
 import type { Run } from '../../types.js';
+import {
+  modelCache, Assets,
+  S, wx, wz, TOWER_H, WALL_H, SHOT_R,
+  DEPT_PALETTE, ZOMBIE_PALETTE,
+  cacheTex, textTex, applySprite,
+  SpritePool, MeshPool,
+  zStage, hexToRgba,
+} from './utils.js';
+import { buildTower } from './tower.js';
+import {
+  buildScene,
+  buildParkingEnv, buildArchiveEnv, buildDatacenterEnv,
+  buildMallEnv, buildIndustrialEnv, buildRooftopEnv,
+} from './envs.js';
+import { drawOverlay3d, type SceneTitle } from './overlay3d.js';
 
-// Cache globale modelli GLTF (popolata asincrona, condivisa da tutte le build fn)
-const modelCache = new Map<string, THREE.Group>();
-
-// ─── Asset ───────────────────────────────────────────────────────────────────
-interface Spr { img: HTMLCanvasElement | HTMLImageElement; w: number; h: number; k: number; }
-interface Assets {
-  person: (id: string, frame: number, scale?: number, tint?: boolean) => Spr;
-  animal: (id: string, frame: number, scale?: number, tint?: boolean) => Spr;
-}
-
-// ─── Scala ───────────────────────────────────────────────────────────────────
-const S  = 1 / 32;
-const wx = (x: number) => (x - WORLD.w / 2) * S;
-const wz = (y: number) => (y - WORLD.h / 2) * S;
-const wy = (h: number) => h * S;
-const TOWER_H = 2.8;
-const WALL_H  = 0.30;
-const SHOT_R  = 0.13;
-
-// ─── Palette per reparto (fog + ambient) ──────────────────────────────────────
-const DEPT_PALETTE = [
-  { fog: 0x1a1510, amb: 0xfff0d8, sun: 0xffd080 }, // Open Space (caldo beige)
-  { fog: 0x0f1520, amb: 0xd0e0ff, sun: 0xa0c0ff }, // Amministrazione (freddo blu)
-  { fog: 0x0a1a14, amb: 0xc0ffd0, sun: 0x60eeaa }, // IT (verde acqua)
-  { fog: 0x1a0f08, amb: 0xffd0b0, sun: 0xff9944 }, // Commerciale (arancio)
-  { fog: 0x14080a, amb: 0xffb0c0, sun: 0xff4466 }, // Sicurezza (rosso)
-  { fog: 0x14120a, amb: 0xfff0a0, sun: 0xffd700 }, // Piani Alti (oro)
-];
-const ZOMBIE_PALETTE = { fog: 0x081408, amb: 0xb0ffb0, sun: 0x40cc60 };
-
-// ─── Texture cache ────────────────────────────────────────────────────────────
-const imgToTex = new WeakMap<HTMLCanvasElement | HTMLImageElement, THREE.CanvasTexture>();
-function cacheTex(img: HTMLCanvasElement | HTMLImageElement): THREE.CanvasTexture {
-  if (!imgToTex.has(img)) {
-    const t = new THREE.CanvasTexture(img as HTMLCanvasElement);
-    t.magFilter = THREE.NearestFilter;
-    t.minFilter = THREE.NearestFilter;
-    imgToTex.set(img, t);
-  }
-  return imgToTex.get(img)!;
-}
-
-// Cache per floating text (chiave = "text|color|size")
-const textTexCache = new Map<string, THREE.CanvasTexture>();
-function textTex(text: string, color: string, size: number): THREE.CanvasTexture {
-  const key = `${text}|${color}|${size}`;
-  if (!textTexCache.has(key)) {
-    const c = document.createElement('canvas');
-    c.width = 128; c.height = 48;
-    const ctx = c.getContext('2d')!;
-    ctx.clearRect(0, 0, 128, 48);
-    ctx.font = `bold ${size * 3}px "Press Start 2P", monospace`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#000';
-    ctx.fillText(text, 65, 25);
-    ctx.fillStyle = color;
-    ctx.fillText(text, 64, 24);
-    const t = new THREE.CanvasTexture(c);
-    t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter;
-    textTexCache.set(key, t);
-    // Max 200 voci in cache
-    if (textTexCache.size > 200) {
-      const first = textTexCache.keys().next().value!;
-      textTexCache.get(first)?.dispose();
-      textTexCache.delete(first);
-    }
-  }
-  return textTexCache.get(key)!;
-}
-
-// ─── Pool di Sprite ───────────────────────────────────────────────────────────
-class SpritePool {
-  private pool: THREE.Sprite[] = [];
-  private active: THREE.Sprite[] = [];
-  constructor(private scene: THREE.Scene) {}
-  get(): THREE.Sprite {
-    const sp = this.pool.pop() ?? (() => {
-      const s = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false }));
-      this.scene.add(s); return s;
-    })();
-    sp.visible = true; this.active.push(sp); return sp;
-  }
-  reset() { for (const sp of this.active) { sp.visible = false; this.pool.push(sp); } this.active.length = 0; }
-}
-
-// ─── Pool di Mesh ─────────────────────────────────────────────────────────────
-class MeshPool {
-  private pool: THREE.Mesh[] = [];
-  private active: THREE.Mesh[] = [];
-  constructor(private scene: THREE.Scene, private factory: () => THREE.Mesh) {}
-  get(): THREE.Mesh {
-    const m = this.pool.pop() ?? (() => { const n = this.factory(); this.scene.add(n); return n; })();
-    m.visible = true; this.active.push(m); return m;
-  }
-  reset() { for (const m of this.active) { m.visible = false; this.pool.push(m); } this.active.length = 0; }
-}
-
-// ─── Helper: applica sprite canvas a uno THREE.Sprite ────────────────────────
-function applySprite(sp: THREE.Sprite, spr: Spr, worldX: number, worldY: number, yOff = 0, tint = 0xffffff): void {
-  const mat = sp.material as THREE.SpriteMaterial;
-  const t = cacheTex(spr.img);
-  if (mat.map !== t) { mat.map = t; mat.needsUpdate = true; }
-  const h = wy(spr.h) * 0.9, w = wy(spr.w) * 0.9;
-  sp.scale.set(w, h, 1);
-  sp.position.set(wx(worldX), h / 2 + yOff, wz(worldY));
-  mat.color.setHex(tint);
-  mat.opacity = 1;
-}
-
-// ─── Zombie stage ─────────────────────────────────────────────────────────────
-const zStage = (e: { hp: number; maxHp: number }) =>
-  Math.max(0, Math.min(3, Math.floor((1 - e.hp / e.maxHp) * 4)));
-
-// Converte un colore hex (#rrggbb) in rgba() per i gradienti dell'overlay canvas
-function hexToRgba(hex: string, alpha: number): string {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha.toFixed(2)})`;
-}
-
-// ─── Scena base ───────────────────────────────────────────────────────────────
-function buildScene() {
-  const sc = new THREE.Scene();
-  sc.background = new THREE.Color(0x18140c);
-  // Nebbia lontana: non scurisce il mondo vicino
-  sc.fog = new THREE.Fog(0x18140c, 45, 70);
-
-  const ambLight = new THREE.AmbientLight(0xfff8f0, 1.1);
-  ambLight.name = 'amb';
-  sc.add(ambLight);
-  const sunLight = new THREE.DirectionalLight(0xffe4b5, 1.4);
-  sunLight.position.set(-6, 18, -4);
-  sunLight.name = 'sun';
-  sc.add(sunLight);
-  const fill = new THREE.DirectionalLight(0x8899cc, 0.3);
-  fill.position.set(4, -4, 6);
-  sc.add(fill);
-
-  // Terreno grande (riempie i bordi isometrici)
-  const groundGeo = new THREE.PlaneGeometry(100, 100);
-  const groundMat = new THREE.MeshLambertMaterial({ color: 0x28200c });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  ground.name = 'ground';
-  sc.add(ground);
-
-  // Griglia dell'area di gioco
-  const grid = new THREE.GridHelper(WORLD.w * S, 20, 0x4a3c28, 0x302418);
-  grid.position.y = 0.003; sc.add(grid);
-
-  // Cortile
-  const yardMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(YARD.w * S + 0.2, YARD.h * S + 0.2),
-    new THREE.MeshLambertMaterial({ color: 0x1e1c2e }),
-  );
-  yardMesh.rotation.x = -Math.PI / 2;
-  yardMesh.position.set(wx(YARD.x + YARD.w / 2), 0.002, wz(YARD.y + YARD.h / 2));
-  sc.add(yardMesh);
-
-  return sc;
-}
-
-// ─── Torre ────────────────────────────────────────────────────────────────────
-interface TowerResult { group: THREE.Group; litWins: THREE.Mesh[]; antLight: THREE.Mesh; signMat: THREE.MeshStandardMaterial; drawSign: (broken: boolean) => void; }
-
-function buildTower(): TowerResult {
-  const g = new THREE.Group();
-  const W = TOWER.radius * 2 * S * 0.85;
-  const H = TOWER_H;
-  const FLOORS = 4;
-  const floorH = H / FLOORS;
-  const halfW = W / 2;
-
-  // Corpo principale
-  const bodyMat = new THREE.MeshLambertMaterial({ color: 0x9e8c7a });
-  const body = new THREE.Mesh(new THREE.BoxGeometry(W, H, W), bodyMat);
-  body.position.y = H / 2; body.name = 'body'; g.add(body);
-
-  // Cornici orizzontali tra i piani
-  const bandMat = new THREE.MeshLambertMaterial({ color: 0x7a6a5e });
-  for (let f = 1; f < FLOORS; f++) {
-    const band = new THREE.Mesh(new THREE.BoxGeometry(W + 0.06, 0.055, W + 0.06), bandMat);
-    band.position.y = f * floorH;
-    g.add(band);
-  }
-
-  // Finestre — pattern LDL/XLL/LBD/DLX su tutte le 4 facce
-  const WIN_PATTERN = 'LDL' + 'XLL' + 'LBD' + 'DLX';
-  const litWins: THREE.Mesh[] = [];
-  const frameMat = new THREE.MeshLambertMaterial({ color: 0xb0a090 });
-  const darkMat  = new THREE.MeshLambertMaterial({ color: 0x1a2530 });
-  const FACE_ROTS = [0, Math.PI, Math.PI / 2, -Math.PI / 2];
-  const colOffsets = [-W * 0.27, 0, W * 0.27];
-
-  for (let fi = 0; fi < 4; fi++) {
-    const fy = FACE_ROTS[fi];
-    for (let row = 0; row < FLOORS; row++) {
-      for (let ci = 0; ci < 3; ci++) {
-        const kind = WIN_PATTERN[row * 3 + ci];
-        const yPos  = floorH * 0.32 + row * floorH;
-        const colOff = colOffsets[ci];
-        // telaio
-        const frame = new THREE.Mesh(new THREE.BoxGeometry(W * 0.22, floorH * 0.55, 0.015), frameMat);
-        frame.rotation.y = fy;
-        if (fi < 2) { frame.position.set(colOff, yPos, fi === 0 ? halfW + 0.005 : -(halfW + 0.005)); }
-        else        { frame.position.set(fi === 2 ? halfW + 0.005 : -(halfW + 0.005), yPos, colOff); }
-        g.add(frame);
-        // vetro
-        let winMesh: THREE.Mesh;
-        if (kind === 'L') {
-          const litMat = new THREE.MeshStandardMaterial({ color: 0x9aaa60, emissive: 0xaacc44, emissiveIntensity: 0.65, roughness: 0.9 });
-          winMesh = new THREE.Mesh(new THREE.BoxGeometry(W * 0.18, floorH * 0.44, 0.018), litMat);
-          winMesh.name = `win_L_${fi}_${row}_${ci}`;
-          litWins.push(winMesh);
-        } else {
-          winMesh = new THREE.Mesh(new THREE.BoxGeometry(W * 0.18, floorH * 0.44, 0.018), darkMat);
-        }
-        winMesh.rotation.y = fy;
-        winMesh.position.copy(frame.position);
-        const nudge = 0.009;
-        if (fi === 0) winMesh.position.z += nudge;
-        else if (fi === 1) winMesh.position.z -= nudge;
-        else if (fi === 2) winMesh.position.x += nudge;
-        else winMesh.position.x -= nudge;
-        g.add(winMesh);
-      }
-    }
-  }
-
-  // Insegna "UFFICIO" al neon (fronte) — canvas ridisegnata dopo caricamento font
-  const signCanvas = document.createElement('canvas');
-  signCanvas.width = 512; signCanvas.height = 96;
-  const signTex = new THREE.CanvasTexture(signCanvas);
-  const signMat = new THREE.MeshStandardMaterial({ map: signTex, emissive: new THREE.Color(0xff2a8a), emissiveIntensity: 0.8, roughness: 1 });
-  function drawSign(broken: boolean) {
-    const sc = signCanvas.getContext('2d')!;
-    sc.fillStyle = '#06060a';
-    sc.fillRect(0, 0, 512, 96);
-    sc.font = 'bold 48px monospace';
-    sc.textAlign = 'center';
-    sc.textBaseline = 'middle';
-    const letters = 'UFFICIO'.split('');
-    letters.forEach((ch, i) => {
-      sc.fillStyle = (broken && i === 4) ? '#4a1830' : '#ff2a8a';
-      sc.shadowColor = '#ff2a8a';
-      sc.shadowBlur = (broken && i === 4) ? 0 : 12;
-      sc.fillText(ch, 36 + i * 64, 52);
-    });
-    sc.shadowBlur = 0;
-    signTex.needsUpdate = true;
-  }
-  drawSign(false);
-  // Ridisegna dopo che i font sono pronti
-  document.fonts.ready.then(() => drawSign(false));
-  const sign = new THREE.Mesh(new THREE.BoxGeometry(W * 0.80, floorH * 0.38, 0.03), signMat);
-  sign.position.set(0, H - floorH * 0.28, halfW + 0.018);
-  g.add(sign);
-
-  // Ingresso: saracinesca + strisce pericolo
-  const doorMat = new THREE.MeshLambertMaterial({ color: 0x50545e });
-  const door = new THREE.Mesh(new THREE.BoxGeometry(W * 0.32, floorH * 0.65, 0.02), doorMat);
-  door.position.set(0, floorH * 0.32, halfW + 0.012);
-  g.add(door);
-  const hazMat = new THREE.MeshLambertMaterial({ color: 0xf2b705 });
-  const haz = new THREE.Mesh(new THREE.BoxGeometry(W * 0.38, 0.055, 0.025), hazMat);
-  haz.position.set(0, floorH * 0.65, halfW + 0.014);
-  g.add(haz);
-
-  // Tetto con aggetto
-  const roofMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(W + 0.22, 0.14, W + 0.22),
-    new THREE.MeshLambertMaterial({ color: 0x4a3e38 }),
-  );
-  roofMesh.position.set(0, H + 0.07, 0);
-  g.add(roofMesh);
-
-  // Parapetto tetto
-  const parMat = new THREE.MeshLambertMaterial({ color: 0x7a6a5e });
-  const parH = 0.20, parT = 0.07, half = (W + 0.22) / 2;
-  const parDefs: [number, number, number, number][] = [
-    [0, half, W + 0.22, parT],
-    [0, -half, W + 0.22, parT],
-    [half, 0, parT, W + 0.22],
-    [-half, 0, parT, W + 0.22],
-  ];
-  for (const [px, pz, pw, pd] of parDefs) {
-    const par = new THREE.Mesh(new THREE.BoxGeometry(pw, parH, pd), parMat);
-    par.position.set(px, H + 0.14 + parH / 2, pz);
-    g.add(par);
-  }
-
-  // Antenna + luce rossa lampeggiante
-  const antMat = new THREE.MeshLambertMaterial({ color: 0x555560 });
-  const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.55, 6), antMat);
-  ant.position.set(W * 0.28, H + 0.14 + parH + 0.28, W * 0.28);
-  g.add(ant);
-  const antLightMat = new THREE.MeshStandardMaterial({ color: 0xff2020, emissive: 0xff2020, emissiveIntensity: 1.0 });
-  const antLight = new THREE.Mesh(new THREE.SphereGeometry(0.028, 6, 4), antLightMat);
-  antLight.position.set(W * 0.28, H + 0.14 + parH + 0.58, W * 0.28);
-  antLight.name = 'antLight';
-  g.add(antLight);
-
-  g.position.set(wx(TOWER.x), 0, wz(TOWER.y));
-  return { group: g, litWins, antLight, signMat, drawSign };
-}
-
-// ─── Prop 3D per dipartimento ─────────────────────────────────────────────────
-
-// Colora la carrozzeria di un modello auto Kenney (le parti chiare = body)
-function colorCarModel(model: THREE.Group, bodyHex: number): void {
-  model.traverse(child => {
-    if (!(child as THREE.Mesh).isMesh) return;
-    const mesh = child as THREE.Mesh;
-    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    const result: THREE.Material[] = [];
-    for (const mat of mats) {
-      const m = mat as THREE.MeshStandardMaterial;
-      if (m.color && (m.color.r + m.color.g + m.color.b) > 1.6) {
-        // Parte chiara = carrozzeria: clona e tinta
-        const c = m.clone() as THREE.MeshStandardMaterial;
-        c.color.setHex(bodyHex);
-        result.push(c);
-      } else {
-        result.push(mat);
-      }
-    }
-    mesh.material = Array.isArray(mesh.material) ? result : result[0];
-  });
-}
-
-// Lampione: usa il modello Kenney se caricato, altrimenti geometria procedurale.
-function placeLampione(
-  g: THREE.Group, cx: number, cy: number,
-  poleH = 1.25, poleCol = 0x4a4a52, glowCol = 0xffec88,
-) {
-  const template = modelCache.get('light-curved');
-  if (template) {
-    const lamp = template.clone();
-    lamp.scale.setScalar(0.45);
-    lamp.position.set(wx(cx), 0, wz(cy));
-    g.add(lamp);
-    return;
-  }
-  // Fallback procedurale
-  const matP = new THREE.MeshLambertMaterial({ color: poleCol });
-  const matH = new THREE.MeshLambertMaterial({ color: 0x252528 });
-  const matG = new THREE.MeshBasicMaterial({ color: glowCol });
-  const lamp = new THREE.Group();
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.028, poleH, 6), matP);
-  pole.position.y = poleH / 2;
-  lamp.add(pole);
-  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.02, 0.02), matP);
-  arm.position.set(0.12, poleH - 0.04, 0);
-  lamp.add(arm);
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.048, 0.07), matH);
-  head.position.set(0.23, poleH - 0.07, 0);
-  lamp.add(head);
-  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.036, 5, 4), matG);
-  glow.position.set(0.23, poleH - 0.11, 0);
-  lamp.add(glow);
-  lamp.position.set(wx(cx), 0, wz(cy));
-  g.add(lamp);
-}
-
-function nearTower(cx: number, cy: number, r = 45): boolean {
-  if (Math.abs(cx - TOWER.x) < r || Math.abs(cy - TOWER.y) < r) return true;
-  if (cx >= YARD.x - 12 && cx <= YARD.x + YARD.w + 12 && cy >= YARD.y - 12 && cy <= YARD.y + YARD.h + 12) return true;
-  return false;
-}
-
-function buildParkingEnv(g: THREE.Group) {
-  // Auto 3D: usa modelli Kenney se caricati, altrimenti box procedurali
-  const CAR_MODELS = ['sedan', 'sedan-sports', 'hatchback-sports', 'suv', 'suv-luxury', 'van', 'taxi'];
-  const CAR_COLORS = [0xb02030, 0x2f4f6f, 0xc0c4cc, 0x3e6b2a, 0x141416, 0xd9c040, 0x8a3b1e, 0x4a8a9a, 0xe8641b];
-  const winMat = new THREE.MeshLambertMaterial({ color: 0x1c2430 });
-  const useModels = modelCache.has('sedan');
-  let ci = 0;
-  // ry=8, sx=12 per allinearsi al grid della texture 2D (AREA.y+20=-220, step 76 → 1° visibile=8)
-  for (let ry = 8; ry < WORLD.h - 30; ry += 76) {
-    for (let sx = 12; sx < WORLD.w - 20; sx += 44) {
-      const cx = sx + 11, cy = ry + 14;
-      if (nearTower(cx, cy, 40)) continue;
-      if (useModels) {
-        const name = CAR_MODELS[ci % CAR_MODELS.length];
-        const tmpl = modelCache.get(name)!;
-        const car = tmpl.clone();
-        car.scale.setScalar(0.25);
-        car.position.set(wx(cx), 0, wz(cy));
-        car.rotation.y = (ry / 76 % 2 === 0) ? 0 : Math.PI;
-        // Tinta carrozzeria per varietà di colori
-        const bodyCol = CAR_COLORS[ci % CAR_COLORS.length];
-        colorCarModel(car, bodyCol);
-        g.add(car);
-      } else {
-        const col = CAR_COLORS[ci % CAR_COLORS.length];
-        const car = new THREE.Mesh(
-          new THREE.BoxGeometry(0.42, 0.18, 0.82),
-          new THREE.MeshLambertMaterial({ color: col }),
-        );
-        car.position.set(wx(cx), 0.09, wz(cy));
-        const win = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.07, 0.32), winMat);
-        win.position.y = 0.12;
-        car.add(win);
-        g.add(car);
-      }
-      ci++;
-    }
-  }
-  // Lampioni lungo i corridoi stradali (ogni 80px, su entrambi i lati)
-  for (let cy = 60; cy < WORLD.h; cy += 80) {
-    for (const side of [-1, 1]) {
-      const lx = TOWER.x + side * 36;
-      if (!nearTower(lx, cy, 32)) placeLampione(g, lx, cy);
-    }
-  }
-  for (let cx = 60; cx < WORLD.w; cx += 80) {
-    for (const side of [-1, 1]) {
-      const ly = TOWER.y + side * 36;
-      if (!nearTower(cx, ly, 32)) placeLampione(g, cx, ly);
-    }
-  }
-  // Coni stradali arancioni sparsi
-  const matCone = new THREE.MeshLambertMaterial({ color: 0xff6a10 });
-  const matStripe = new THREE.MeshLambertMaterial({ color: 0xe8e2d0 });
-  for (let i = 0; i < 18; i++) {
-    const cx = 60 + (i * 137) % (WORLD.w - 120);
-    const cy = 60 + (i * 97 + 50) % (WORLD.h - 120);
-    if (nearTower(cx, cy, 50)) continue;
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.20, 6), matCone);
-    cone.position.set(wx(cx), 0.10, wz(cy));
-    const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.071, 0.071, 0.04, 6), matStripe);
-    stripe.position.y = -0.04;
-    cone.add(stripe);
-    g.add(cone);
-  }
-  // Semafori ai 4 angoli del parcheggio (modello Kenney o fallback procedurale)
-  const SIGNAL_CORNERS = [
-    [TOWER.x - 155, TOWER.y - 155], [TOWER.x + 155, TOWER.y - 155],
-    [TOWER.x - 155, TOWER.y + 155], [TOWER.x + 155, TOWER.y + 155],
-  ] as [number, number][];
-  const tlTemplate = modelCache.get('traffic-light');
-  for (const [cx, cy] of SIGNAL_CORNERS) {
-    if (tlTemplate) {
-      const tl = tlTemplate.clone();
-      tl.scale.setScalar(0.35);
-      tl.position.set(wx(cx), 0, wz(cy));
-      tl.rotation.y = Math.atan2(TOWER.x - cx, TOWER.y - cy);
-      g.add(tl);
-    } else {
-      // Fallback: palo con 3 luci colorate
-      const matPole = new THREE.MeshLambertMaterial({ color: 0x3a3a44 });
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.022, 0.9, 6), matPole);
-      pole.position.set(wx(cx), 0.45, wz(cy));
-      const box = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.22, 0.06), new THREE.MeshLambertMaterial({ color: 0x222228 }));
-      box.position.y = 0.11;
-      pole.add(box);
-      for (const [i, col] of [[0, 0xff3030], [1, 0xffaa00], [2, 0x30d060]] as [number, number][]) {
-        const lens = new THREE.Mesh(new THREE.SphereGeometry(0.026, 6, 4), new THREE.MeshBasicMaterial({ color: col }));
-        lens.position.set(0, 0.09 - i * 0.07, 0.04);
-        box.add(lens);
-      }
-      g.add(pole);
-    }
-  }
-  // Barriere da cantiere (modello Kenney) sparse vicino alle aree di costruzione
-  const barrTemplate = modelCache.get('construction-barrier');
-  if (barrTemplate) {
-    for (let i = 0; i < 12; i++) {
-      const bx = 80 + (i * 173) % (WORLD.w - 160);
-      const by = 80 + (i * 113 + 40) % (WORLD.h - 160);
-      if (nearTower(bx, by, 55)) continue;
-      const barr = barrTemplate.clone();
-      barr.scale.setScalar(0.30);
-      barr.position.set(wx(bx), 0, wz(by));
-      barr.rotation.y = (i * 0.7) % (Math.PI * 2);
-      g.add(barr);
-    }
-  }
-}
-
-function buildArchiveEnv(g: THREE.Group) {
-  const mat    = new THREE.MeshLambertMaterial({ color: 0x606858 });
-  const matTop = new THREE.MeshLambertMaterial({ color: 0x3a4038 });
-  let ci = 0;
-  for (let ry = 30; ry < WORLD.h - 30; ry += 80) {
-    for (let sx = 10; sx < WORLD.w - 20; sx += 60) {
-      const cx = sx + 16, cy = ry + 26;
-      if (nearTower(cx, cy)) continue;
-      const h = (ci % 3 === 0) ? 0.95 : 0.70;
-      const cab = new THREE.Mesh(new THREE.BoxGeometry(0.50, h, 0.38), mat);
-      cab.position.set(wx(cx), h / 2, wz(cy));
-      const lid = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.04, 0.40), matTop);
-      lid.position.y = h / 2 + 0.02;
-      cab.add(lid);
-      g.add(cab); ci++;
-    }
-  }
-  // Lampade a soffitto (stile ufficio): palo corto con diffusore
-  const matLamp = new THREE.MeshLambertMaterial({ color: 0x888880 });
-  const matDiff = new THREE.MeshBasicMaterial({ color: 0xfff8d8 });
-  for (let cx = 120; cx < WORLD.w - 80; cx += 140) {
-    for (let cy = 120; cy < WORLD.h - 80; cy += 140) {
-      if (nearTower(cx, cy)) continue;
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.40, 5), matLamp);
-      pole.position.set(wx(cx), 0.50, wz(cy));
-      const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.10, 0.08, 8), matLamp);
-      shade.position.y = -0.20;
-      pole.add(shade);
-      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.045, 5, 4), matDiff);
-      bulb.position.y = -0.22;
-      pole.add(bulb);
-      g.add(pole);
-    }
-  }
-  // Carrelli portadocumenti (box su ruote)
-  const matCart = new THREE.MeshLambertMaterial({ color: 0x9a9070 });
-  for (let i = 0; i < 12; i++) {
-    const cx = 50 + (i * 113) % (WORLD.w - 100);
-    const cy = 50 + (i * 89 + 40) % (WORLD.h - 100);
-    if (nearTower(cx, cy, 50)) continue;
-    const cart = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.50, 0.25), matCart);
-    cart.position.set(wx(cx), 0.25, wz(cy));
-    g.add(cart);
-  }
-}
-
-function buildDatacenterEnv(g: THREE.Group) {
-  const matRack  = new THREE.MeshLambertMaterial({ color: 0x252830 });
-  const matGreen = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
-  const matRed   = new THREE.MeshBasicMaterial({ color: 0xff4444 });
-  let ci = 0;
-  for (let ry = 22; ry < WORLD.h - 30; ry += 90) {
-    for (let sx = 10; sx < WORLD.w - 20; sx += 56) {
-      const cx = sx + 14, cy = ry + 29;
-      if (nearTower(cx, cy)) continue;
-      const rack = new THREE.Mesh(new THREE.BoxGeometry(0.48, 1.20, 0.28), matRack);
-      rack.position.set(wx(cx), 0.60, wz(cy));
-      for (let i = 0; i < 4; i++) {
-        const led = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.018, 0.02), i % 4 === 0 ? matRed : matGreen);
-        led.position.set(-0.10 + (i % 3) * 0.12, 0.35 - i * 0.20, 0.15);
-        rack.add(led);
-      }
-      g.add(rack); ci++;
-    }
-  }
-  // Lampioni industriali alti (luce fredda bluastra)
-  for (let cx = 90; cx < WORLD.w; cx += 130) {
-    for (let cy = 90; cy < WORLD.h; cy += 130) {
-      if (nearTower(cx, cy, 52)) continue;
-      placeLampione(g, cx, cy, 1.55, 0x2a2a34, 0xb0e0ff);
-    }
-  }
-  // Canalette cavi a terra (sottili box scuri)
-  const matCable = new THREE.MeshLambertMaterial({ color: 0x1a1c22 });
-  for (let i = 0; i < 8; i++) {
-    const isH = i % 2 === 0;
-    const pos = 80 + i * 70;
-    const cable = new THREE.Mesh(
-      isH ? new THREE.BoxGeometry(WORLD.w * S * 0.6, 0.05, 0.08)
-          : new THREE.BoxGeometry(0.08, 0.05, WORLD.h * S * 0.6),
-      matCable,
-    );
-    cable.position.set(
-      isH ? 0 : wx(pos),
-      0.025,
-      isH ? wz(pos) : 0,
-    );
-    if (!nearTower(isH ? TOWER.x : pos, isH ? pos : TOWER.y, 35)) g.add(cable);
-  }
-}
-
-function buildMallEnv(g: THREE.Group) {
-  const matKiosk  = new THREE.MeshLambertMaterial({ color: 0xd0c8b8 });
-  const matScreen = new THREE.MeshLambertMaterial({ color: 0x1a4a6a });
-  const matPlant  = new THREE.MeshLambertMaterial({ color: 0x1c3a28 });
-  const matPot    = new THREE.MeshLambertMaterial({ color: 0xc8a87a });
-  let ci = 0;
-  for (let ry = 32; ry < WORLD.h - 30; ry += 90) {
-    for (let sx = 14; sx < WORLD.w - 20; sx += 72) {
-      const cx = sx + 18, cy = ry + 28;
-      if (nearTower(cx, cy)) continue;
-      if (ci % 3 !== 2) {
-        const kiosk = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.58, 0.40), matKiosk);
-        kiosk.position.set(wx(cx), 0.29, wz(cy));
-        const screen = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.28, 0.02), matScreen);
-        screen.position.set(0, 0.10, 0.21);
-        kiosk.add(screen);
-        g.add(kiosk);
-      } else {
-        const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.10, 0.22, 6), matPot);
-        pot.position.set(wx(cx), 0.11, wz(cy));
-        const plant = new THREE.Mesh(new THREE.SphereGeometry(0.22, 6, 5), matPlant);
-        plant.position.y = 0.28;
-        pot.add(plant);
-        g.add(pot);
-      }
-      ci++;
-    }
-  }
-  // Lampioni decorativi dorati stile mall
-  for (let cx = 100; cx < WORLD.w; cx += 130) {
-    for (let cy = 100; cy < WORLD.h; cy += 130) {
-      if (nearTower(cx, cy, 52)) continue;
-      placeLampione(g, cx, cy, 1.10, 0xc8a030, 0xfff4c0);
-    }
-  }
-  // Panchine (seduta + schienale)
-  const matBench = new THREE.MeshLambertMaterial({ color: 0xa87040 });
-  for (let i = 0; i < 14; i++) {
-    const cx = 70 + (i * 103) % (WORLD.w - 140);
-    const cy = 70 + (i * 83 + 30) % (WORLD.h - 140);
-    if (nearTower(cx, cy, 50)) continue;
-    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.06, 0.22), matBench);
-    seat.position.set(wx(cx), 0.28, wz(cy));
-    const back = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.22, 0.04), matBench);
-    back.position.set(0, 0.14, -0.09);
-    seat.add(back);
-    g.add(seat);
-  }
-}
-
-function buildIndustrialEnv(g: THREE.Group) {
-  const matRed  = new THREE.MeshLambertMaterial({ color: 0x8a3b1e });
-  const matBlue = new THREE.MeshLambertMaterial({ color: 0x2f4f6f });
-  const matGray = new THREE.MeshLambertMaterial({ color: 0x44444b });
-  let ci = 0;
-  for (let ry = 26; ry < WORLD.h - 30; ry += 84) {
-    for (let sx = 10; sx < WORLD.w - 20; sx += 58) {
-      const cx = sx + 15, cy = ry + 27;
-      if (nearTower(cx, cy)) continue;
-      const k = ci % 3;
-      if (k === 0) {
-        const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.44, 8), matRed);
-        barrel.position.set(wx(cx), 0.22, wz(cy));
-        g.add(barrel);
-      } else if (k === 1) {
-        const crate = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.36, 0.40), matGray);
-        crate.position.set(wx(cx), 0.18, wz(cy));
-        g.add(crate);
-      } else {
-        const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.50, 8), matBlue);
-        barrel.position.set(wx(cx), 0.25, wz(cy));
-        g.add(barrel);
-      }
-      ci++;
-    }
-  }
-  // Torri luce industriali (alte e robuste, luce gialla calda)
-  for (let cx = 95; cx < WORLD.w; cx += 140) {
-    for (let cy = 95; cy < WORLD.h; cy += 140) {
-      if (nearTower(cx, cy, 52)) continue;
-      placeLampione(g, cx, cy, 1.70, 0x3a3a40, 0xffcc44);
-    }
-  }
-  // Barriere di sicurezza gialle/nere
-  const matSafe = new THREE.MeshLambertMaterial({ color: 0xf0b800 });
-  for (let i = 0; i < 10; i++) {
-    const cx = 80 + (i * 119) % (WORLD.w - 160);
-    const cy = 80 + (i * 73 + 60) % (WORLD.h - 160);
-    if (nearTower(cx, cy, 48)) continue;
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.10, 0.10), matSafe);
-    bar.position.set(wx(cx), 0.30, wz(cy));
-    const post1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.35, 5), matSafe);
-    post1.position.set(-0.22, -0.22, 0);
-    bar.add(post1);
-    const post2 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.35, 5), matSafe);
-    post2.position.set(0.22, -0.22, 0);
-    bar.add(post2);
-    g.add(bar);
-  }
-}
-
-function buildRooftopEnv(g: THREE.Group) {
-  const matAC  = new THREE.MeshLambertMaterial({ color: 0xb8b4a8 });
-  const matAnt = new THREE.MeshLambertMaterial({ color: 0x5b5f66 });
-  const matPar = new THREE.MeshLambertMaterial({ color: 0x8f8a80 });
-  const acOff: [number, number][] = [
-    [-130, -110], [130, -110], [-130, 110], [130, 110],
-    [-190, -20],  [190, -20],  [-190,  40], [190,  40],
-    [-60, -190],  [60,  -190], [-60,  190], [60,  190],
-    [-210, -80],  [210,   80], [-90,   80], [90,  -80],
-  ];
-  for (const [ox, oy] of acOff) {
-    const cx = TOWER.x + ox, cy = TOWER.y + oy;
-    if (cx < 10 || cx > WORLD.w - 10 || cy < 10 || cy > WORLD.h - 10) continue;
-    if (nearTower(cx, cy, 50)) continue;
-    const ac = new THREE.Mesh(new THREE.BoxGeometry(0.60, 0.28, 0.40), matAC);
-    ac.position.set(wx(cx), 0.14, wz(cy));
-    g.add(ac);
-  }
-  // Parapetto ai bordi del mondo
-  const hw = WORLD.w * S / 2, hh = WORLD.h * S / 2;
-  const parH = 0.22, parT = 0.14;
-  for (const [px, pz, pw, pd] of [
-    [0, -hh, WORLD.w * S, parT],
-    [0,  hh, WORLD.w * S, parT],
-    [-hw, 0, parT, WORLD.h * S],
-    [ hw, 0, parT, WORLD.h * S],
-  ] as [number, number, number, number][]) {
-    const par = new THREE.Mesh(new THREE.BoxGeometry(pw, parH, pd), matPar);
-    par.position.set(px, parH / 2, pz);
-    g.add(par);
-  }
-  // Antenne agli angoli
-  for (const [ox, oy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as [number, number][]) {
-    const cx = TOWER.x + ox * 220, cy = TOWER.y + oy * 220;
-    if (cx < 0 || cx > WORLD.w || cy < 0 || cy > WORLD.h) continue;
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.6, 6), matAnt);
-    post.position.set(wx(cx), 0.80, wz(cy));
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.025, 0.025), matAnt);
-    bar.position.y = 0.55;
-    post.add(bar);
-    g.add(post);
-  }
-  // Lampioni sul tetto (bassi, warm)
-  for (let cx = 110; cx < WORLD.w; cx += 150) {
-    for (let cy = 110; cy < WORLD.h; cy += 150) {
-      if (nearTower(cx, cy, 55)) continue;
-      placeLampione(g, cx, cy, 0.90, 0x8f8a80, 0xffeebb);
-    }
-  }
-  // Parabole satellite (disco inclinato + braccio)
-  const matDish = new THREE.MeshLambertMaterial({ color: 0x9a9698 });
-  const dishOff: [number, number][] = [[-160, -80], [160, 80], [-80, 160], [80, -160], [0, -200], [200, 0]];
-  for (const [ox, oy] of dishOff) {
-    const cx = TOWER.x + ox, cy = TOWER.y + oy;
-    if (cx < 20 || cx > WORLD.w - 20 || cy < 20 || cy > WORLD.h - 20) continue;
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.40, 5), matDish);
-    base.position.set(wx(cx), 0.20, wz(cy));
-    const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.01, 0.06, 12), matDish);
-    dish.rotation.x = Math.PI / 4;
-    dish.position.y = 0.30;
-    base.add(dish);
-    g.add(base);
-  }
-}
-
-// ─── Entry point ─────────────────────────────────────────────────────────────
 export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown) {
   const assets = _assets as Assets;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -791,7 +68,6 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
     new THREE.CylinderGeometry(0.014, 0.006, 1, 4),
     new THREE.MeshBasicMaterial({ color: 0xf2b705, transparent: true }),
   ));
-  // ─── Ombre a terra ────────────────────────────────────────────────────────
   const shadowPool = new MeshPool(scene, () => {
     const m = new THREE.Mesh(
       new THREE.CircleGeometry(1, 10),
@@ -801,25 +77,20 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
     m.position.y = 0.003;
     return m;
   });
-
   const bombPool  = new MeshPool(scene, () => new THREE.Mesh(
     new THREE.SphereGeometry(0.14, 8, 6),
     new THREE.MeshStandardMaterial({ color: 0x1a1a1c, emissive: 0x000000, roughness: 0.6, metalness: 0.3 }),
   ));
-  const BOMB_RADIUS_3D = 70 * S; // raggio detonazione in unità Three.js
+  const BOMB_RADIUS_3D = 70 * S;
   const bombRingPool = new MeshPool(scene, () => new THREE.Mesh(
     new THREE.RingGeometry(BOMB_RADIUS_3D - 0.04, BOMB_RADIUS_3D + 0.04, 48),
     new THREE.MeshBasicMaterial({ color: 0xff6400, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }),
   ));
   const wallPool  = new MeshPool(scene, () => new THREE.Mesh(new THREE.BoxGeometry(1, WALL_H, 0.08), new THREE.MeshLambertMaterial({ color: 0xbfa574 })));
-
-  // ─── Beams: flash laser istantaneo (fx.beams) ─────────────────────────────
   const beamPool = new MeshPool(scene, () => new THREE.Mesh(
     new THREE.CylinderGeometry(0.022, 0.022, 1, 4),
     new THREE.MeshBasicMaterial({ color: 0xff2a3d, transparent: true }),
   ));
-
-  // ─── Onde d'urto / esplosioni (fx.waves) ──────────────────────────────────
   const wavePool = new MeshPool(scene, () => {
     const m = new THREE.Mesh(
       new THREE.RingGeometry(0.88, 1.0, 48),
@@ -828,8 +99,8 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
     m.rotation.x = -Math.PI / 2; return m;
   });
 
-  // ─── Sfondo scenario (canvas 2D come texture sul terreno) ────────────────
-  const SCENE_W = (WORLD.w + 480) * S; // 480 = 2 × MARGIN(240)
+  // Sfondo scenario (canvas 2D come texture sul terreno)
+  const SCENE_W = (WORLD.w + 480) * S;
   const scenePlane = new THREE.Mesh(
     new THREE.PlaneGeometry(SCENE_W, SCENE_W),
     new THREE.MeshLambertMaterial({ transparent: false }),
@@ -852,7 +123,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
   }
   applySceneTex(0);
 
-  // ─── Prop 3D dipartimento (lazy, cached per dept) ─────────────────────────
+  // Prop 3D dipartimento (lazy, cached per dept)
   let modelsLoaded = false;
   const envPropsCache = new Map<number, THREE.Group>();
   let currentEnvGroup: THREE.Group | null = null;
@@ -874,7 +145,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
   }
   applyEnvDept(0);
 
-  // ─── Settori alleati + cerchio gittata (canvas texture sul terreno) ────────
+  // Settori alleati + cerchio gittata (canvas texture sul terreno)
   const SC = 512;
   const sectorCanvas = document.createElement('canvas');
   sectorCanvas.width = sectorCanvas.height = SC;
@@ -888,17 +159,15 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
   sectorPlane.position.y = 0.008;
   scene.add(sectorPlane);
 
-  // ─── Overlay HTML: banner + barra boss ────────────────────────────────────
+  // Overlay HTML: banner + barra boss
   const overlayCanvas = document.createElement('canvas');
   overlayCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10';
   canvas.parentElement?.appendChild(overlayCanvas);
   const overlayCtx = overlayCanvas.getContext('2d')!;
 
-  // ─── Fumo dalla torre (locale, non nel game state) ────────────────────────
   interface Smoke3d { x: number; y: number; z: number; vx: number; vy: number; vz: number; life: number; max: number; r: number; }
   const smoke3d: Smoke3d[] = [];
 
-  // ─── Scie boss (locale come in 2D — NON in run.fx) ────────────────────────
   interface Trail3d { x: number; y: number; vx: number; vy: number; life: number; max: number; c: string; size: number; grow: number; }
   const trails3d: Trail3d[] = [];
   const smokePool = new MeshPool(scene, () => new THREE.Mesh(
@@ -908,13 +177,11 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
 
   let lastT = performance.now() / 1000;
   let shakeAmt = 0;
-  // ?dept=N forza il dipartimento (utile per testing)
   const forceDept = parseInt(new URLSearchParams(location.search).get('dept') ?? '-1');
   let lastDept = -1;
   let zombieK = 0;
-  let sceneTitle: { name: string; timer: number } | null = null;
+  let sceneTitle: SceneTitle | null = null;
 
-  // Polvere ambientale (locale)
   const dust3d = Array.from({ length: 35 }, () => ({
     x: (Math.random() - 0.5) * 22, y: 0.15 + Math.random() * 3.0,
     z: (Math.random() - 0.5) * 22, vx: 0.04 + Math.random() * 0.06,
@@ -922,7 +189,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
   }));
   const dustSpritePool = new SpritePool(scene);
 
-  // ─── Caricamento modelli GLTF (asincrono) ────────────────────────────────
+  // Caricamento modelli GLTF (asincrono)
   {
     const loader = new GLTFLoader();
     const BASE = (import.meta as any).env?.BASE_URL ?? '/office-tower-defense/';
@@ -936,7 +203,6 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       );
     }))).then(() => {
       modelsLoaded = true;
-      // Ricostruisce ambiente con i modelli reali
       for (const grp of envPropsCache.values()) scene.remove(grp);
       envPropsCache.clear();
       currentEnvGroup = null;
@@ -959,7 +225,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
     overlayCanvas.style.height = h + 'px';
   }
 
-  function getSpr(e: any, frame: number): Spr | null {
+  function getSpr(e: any, frame: number) {
     try {
       if (e.animal) return assets.animal(e.animal, frame, e.scale ?? 1, e.hitFlash > 0);
       return assets.person(e.zombie ? `z${zStage(e)}:${e.look}` : e.look, frame, e.scale ?? 1, e.hitFlash > 0);
@@ -972,7 +238,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
     lastT = now;
     const frame = Math.floor(now * 6) % 2;
 
-    // ── Atmosfera per reparto ──────────────────────────────────────────────
+    // Atmosfera per reparto
     const wave  = run?.wave ?? 1;
     const dept  = forceDept >= 0 ? forceDept % DEPT_PALETTE.length : Math.floor((Math.max(1, wave) - 1) / 10) % DEPT_PALETTE.length;
     const isZombie = run ? isZombieWave(wave) : false;
@@ -996,9 +262,8 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
         .lerpColors(new THREE.Color(pal.fog), new THREE.Color(0x28200c), 0.40);
     }
 
-    // ── Camera: orbita lenta nel menu, shake durante il gioco ────────────────
+    // Camera: orbita lenta nel menu, shake durante il gioco
     if (!run) {
-      // Nel menu ruotiamo lentamente intorno al palazzo come un "attract mode"
       const angle = now * 0.18;
       const r = 9.5;
       cam.position.set(Math.sin(angle) * r, 13, Math.cos(angle) * r);
@@ -1011,27 +276,24 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       cam.lookAt(0, 0, 0);
     }
 
-    // ── Torre: colore dai danni + animazioni neon/finestre ───────────────
+    // Torre: colore dai danni + animazioni neon/finestre
     if (run) {
       const ratio = run.tower.hp / run.stats.maxHp;
       (towerBody.material as THREE.MeshLambertMaterial).color
         .setHSL(ratio * 0.07, 0.22, 0.30 + ratio * 0.28);
     }
-    // Finestre illuminate: flickering casuale
     for (const win of towerLitWins) {
       const mat = win.material as THREE.MeshStandardMaterial;
       const flick = Math.sin(now * 9 + win.position.x * 11 + win.position.y * 7) > 0.92;
       mat.emissiveIntensity = flick ? 0.15 : 0.65;
     }
-    // Insegna "UFFICIO": la quinta lettera 'C' fa i capricci + pulsazione globale
     const signBroken = Math.sin(now * 17) > 0.2 || Math.sin(now * 1.3) > 0.7;
     const signBrokenPrev = Math.sin((now - 0.016) * 17) > 0.2 || Math.sin((now - 0.016) * 1.3) > 0.7;
     if (signBroken !== signBrokenPrev) drawTowerSign(signBroken);
     towerSignMat.emissiveIntensity = run?.phase === 'over' ? 0.05 : signBroken ? 0.15 : 0.8;
-    // Antenna: lampeggio rosso
     (towerAntLight.material as THREE.MeshStandardMaterial).emissiveIntensity = Math.sin(now * 4) > 0 ? 1.0 : 0.08;
 
-    // ── Hero sul tetto ────────────────────────────────────────────────────
+    // Hero sul tetto
     heroSp.visible = !!run;
     if (run) {
       try {
@@ -1040,7 +302,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       } catch { heroSp.visible = false; }
     }
 
-    // ── Ombre a terra ─────────────────────────────────────────────────────
+    // Ombre a terra
     shadowPool.reset();
     if (run) {
       for (const e of run.enemies) {
@@ -1061,7 +323,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       hs.scale.set(0.09, 1, 0.04);
     }
 
-    // ── Cadaveri ──────────────────────────────────────────────────────────
+    // Cadaveri
     corpsePool.reset();
     if (run) for (const c of (run as any).fx?.corpses ?? []) {
       try {
@@ -1071,7 +333,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
         const mat = sp.material as THREE.SpriteMaterial;
         const t = cacheTex(cSpr.img);
         if (mat.map !== t) { mat.map = t; mat.needsUpdate = true; }
-        const h = wy(cSpr.h) * 0.7, w = wy(cSpr.w) * 0.7;
+        const h = wz(cSpr.h) * 0.7, w = wz(cSpr.w) * 0.7;
         sp.scale.set(w, h, 1);
         sp.position.set(wx(c.x), 0.05, wz(c.y));
         mat.opacity = Math.min(1, c.life / (c.max * 0.5));
@@ -1080,7 +342,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       } catch { /* */ }
     }
 
-    // ── Trails dei boss (gestiti localmente come in 2D) ───────────────────
+    // Trails dei boss (gestiti localmente)
     if (run) {
       for (const e of run.enemies as any[]) {
         if (!e.boss || !e.trail || Math.random() > dt * 18) continue;
@@ -1100,7 +362,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       m.scale.setScalar((0.05 + t.size * S) * (0.5 + (t.max - t.life) / t.max));
     }
 
-    // ── Nemici ────────────────────────────────────────────────────────────
+    // Nemici
     actorPool.reset();
     if (run) {
       for (const e of run.enemies) {
@@ -1109,7 +371,6 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
         const tint = e.boss ? 0xff9999 : (e as any).elite ? 0xffcc77 : 0xffffff;
         applySprite(actorPool.get(), s, e.x, e.y, 0, tint);
       }
-      // ── Alleati ─────────────────────────────────────────────────────────
       for (const a of run.allies) {
         const pos = allyPos(a);
         try {
@@ -1125,7 +386,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       }
     }
 
-    // ── Polvere ambientale ────────────────────────────────────────────────
+    // Polvere ambientale
     dustSpritePool.reset();
     {
       const dustTex = (() => {
@@ -1150,7 +411,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       }
     }
 
-    // ── Colpi torre (testa + trail direzionale) ───────────────────────────
+    // Colpi torre (testa + trail direzionale)
     shotPool.reset();
     shotTrailPool.reset();
     if (run) for (const s of (run as any).shots ?? []) {
@@ -1161,7 +422,6 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
         const td = Math.sqrt(tdx * tdx + tdz * tdz) || 1;
         ddx = tdx / td; ddz = tdz / td;
       }
-      // Altezza: i colpi partono dal top della torre e scendono verso il nemico a terra
       const dxT = s.x - TOWER.x, dyT = s.y - TOWER.y;
       const distFromTower = Math.sqrt(dxT * dxT + dyT * dyT);
       let shotH = TOWER_H;
@@ -1171,7 +431,6 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
         const prog = totalDist > 1 ? Math.min(1, distFromTower / totalDist) : 1;
         shotH = TOWER_H * (1 - prog) + 0.38 * prog;
       }
-
       const head = shotPool.get();
       head.position.set(sx, shotH, sz);
       const kind = s.kind;
@@ -1180,7 +439,6 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
         : kind === 'dagger' ? 0xc0c4cc : kind === 'xbow' ? 0x8b6a3e
         : kind === 'pc' ? 0x2de2e6 : 0xffe040;
       (head.material as THREE.MeshLambertMaterial).color.setHex(headColor);
-
       const tr = shotTrailPool.get();
       const sany = s as any;
       if (kind === 'laser' && sany.ox != null) {
@@ -1203,26 +461,25 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       }
     }
 
-    // ── Colpi nemici ──────────────────────────────────────────────────────
+    // Colpi nemici
     eshotPool.reset();
     if (run) for (const s of (run as any).enemyShots ?? []) {
       const m = eshotPool.get();
       m.position.set(wx(s.x), 0.35, wz(s.y));
     }
 
-    // ── Particelle ────────────────────────────────────────────────────────
+    // Particelle
     partPool.reset();
     if (run) for (const p of (run as any).fx?.parts ?? []) {
       if (p.life <= 0) continue;
       const m = partPool.get();
-      // p.x e p.y sono già aggiornate dal game loop (vx/vy integrati)
       m.position.set(wx(p.x), Math.max(0.05, p.life * 0.6), wz(p.y));
       try { (m.material as THREE.MeshLambertMaterial).color.set(p.color); } catch { /* */ }
       const sc = 0.4 + (p.life / (p.max ?? 0.5)) * 0.9;
       m.scale.setScalar(sc);
     }
 
-    // ── Rings ─────────────────────────────────────────────────────────────
+    // Rings
     ringPool.reset();
     if (run) for (const r of (run as any).fx?.rings ?? []) {
       if (r.life <= 0) continue;
@@ -1237,7 +494,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       } catch { /* */ }
     }
 
-    // ── Floating text ─────────────────────────────────────────────────────
+    // Floating text
     textPool.reset();
     if (run) for (const t of (run as any).fx?.texts ?? []) {
       if (t.life <= 0) continue;
@@ -1246,7 +503,6 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       const tt = textTex(t.text, t.color ?? '#fff', t.size ?? 8);
       if (mat.map !== tt) { mat.map = tt; mat.needsUpdate = true; }
       const ratio = t.life / t.max;
-      // t.y in coord 2D scende (y -= 26*dt in updateFx), quindi in 3D sale
       const worldY3d = 0.5 + (1 - ratio) * 2.0;
       sp.scale.set(1.0, 0.38, 1);
       sp.position.set(wx(t.x), worldY3d, wz(t.y));
@@ -1254,7 +510,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       mat.color.setHex(0xffffff);
     }
 
-    // ── Muro ──────────────────────────────────────────────────────────────
+    // Muro
     wallPool.reset();
     if (run) for (const seg of (run as any).wall ?? []) {
       if (seg.hp <= 0) continue;
@@ -1271,7 +527,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
         .setHSL(hit > 0.05 ? 0.08 : 0.09, 0.38, 0.25 + 0.38 * ratio + hit * 0.35);
     }
 
-    // ── Bombe ─────────────────────────────────────────────────────────────
+    // Bombe
     bombPool.reset();
     bombRingPool.reset();
     if (run) for (const b of (run as any).bombs ?? []) {
@@ -1283,7 +539,6 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       (m.material as THREE.MeshStandardMaterial).emissive.setHex(
         Math.sin(now * 12 + b.x) > 0.3 ? 0xffe040 : 0x000000
       );
-      // Cerchio raggio di detonazione (solo fase piazzamento)
       if (run.phase === 'bomb-placement') {
         const ring = bombRingPool.get();
         ring.rotation.x = -Math.PI / 2;
@@ -1291,14 +546,14 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       }
     }
 
-    // ── Flash boss ────────────────────────────────────────────────────────
+    // Flash boss
     const flash = (run as any)?.fx?.flash ?? 0;
     if (flash > 0) {
       const bg = new THREE.Color(0x0d0d0f).lerp(new THREE.Color(0xffffff), Math.min(1, flash * 1.5));
       scene.background = bg;
     }
 
-    // ── Fumo dalla torre ──────────────────────────────────────────────────
+    // Fumo dalla torre
     if (run?.stats) {
       const ratio = run.tower.hp / run.stats.maxHp;
       const rate  = Math.max(0, (1 - ratio - 0.5) * 5);
@@ -1331,7 +586,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       (m.material as THREE.MeshLambertMaterial).opacity = alpha;
     }
 
-    // ── Settori alleati + cerchio gittata ─────────────────────────────────
+    // Settori alleati + cerchio gittata
     sectorCtx.clearRect(0, 0, SC, SC);
     if (run?.stats) {
       const tcx = TOWER.x * SC / WORLD.w, tcy = TOWER.y * SC / WORLD.h;
@@ -1365,7 +620,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
     }
     sectorTex.needsUpdate = true;
 
-    // ── Beams (raggi laser istantanei, fx.beams) ──────────────────────────
+    // Beams (raggi laser istantanei)
     beamPool.reset();
     if (run) for (const b of (run as any).fx?.beams ?? []) {
       if (b.life <= 0) continue;
@@ -1374,7 +629,6 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       const ddx = x2 - x1, ddz = z2 - z1;
       const len = Math.sqrt(ddx * ddx + ddz * ddz);
       if (len < 0.001) { m.visible = false; continue; }
-      // Il cecchino parte dalla finestra di Dom (~84% dell'altezza torre)
       const beamY = b.kind === 'sniper' ? TOWER_H * 0.84 : 0.3;
       m.position.set((x1 + x2) / 2, beamY, (z1 + z2) / 2);
       m.scale.set(1, len, 1);
@@ -1385,7 +639,7 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       bmat.needsUpdate = true;
     }
 
-    // ── Onde d'urto (fx.waves) ────────────────────────────────────────────
+    // Onde d'urto
     wavePool.reset();
     if (run) for (const w of (run as any).fx?.waves ?? []) {
       if (!w || w.life <= 0) continue;
@@ -1399,293 +653,10 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       wmat.needsUpdate = true;
     }
 
-    // ── Overlay HTML: banner + barra boss ────────────────────────────────
+    // Overlay HTML
     const OW = overlayCanvas.width, OH = overlayCanvas.height;
     const dpr = OW / (canvas.clientWidth || 1);
-    overlayCtx.clearRect(0, 0, OW, OH);
-
-    // Vignette + tinta HP (riproduce drawGrade del 2D)
-    {
-      const hp     = run?.stats ? run.tower.hp / run.stats.maxHp : 1;
-      const danger = Math.max(0, 1 - hp / 0.4);
-      overlayCtx.fillStyle = `rgba(255,${Math.round(100 - danger * 80)},${Math.round(20 - danger * 20)},${(0.03 + danger * 0.07).toFixed(3)})`;
-      overlayCtx.fillRect(0, 0, OW, OH);
-      const v = overlayCtx.createRadialGradient(OW / 2, OH * 0.48, Math.min(OW, OH) * 0.18, OW / 2, OH * 0.52, Math.max(OW, OH) * 0.76);
-      v.addColorStop(0,   'rgba(13,13,15,0)');
-      v.addColorStop(0.58,'rgba(13,13,15,0.10)');
-      v.addColorStop(1,   `rgba(13,13,15,${(0.72 + danger * 0.12).toFixed(2)})`);
-      overlayCtx.fillStyle = v;
-      overlayCtx.fillRect(0, 0, OW, OH);
-    }
-
-    // Zombie grade: luce verde malata + tremolio neon (riproduce drawZombieGrade del 2D)
-    if (zombieK > 0) {
-      overlayCtx.fillStyle = `rgba(20,45,15,${(0.35 * zombieK).toFixed(3)})`;
-      overlayCtx.fillRect(0, 0, OW, OH);
-      if (Math.sin(now * 13) > 0.94) {
-        overlayCtx.fillStyle = `rgba(0,0,0,${(0.25 * zombieK).toFixed(3)})`;
-        overlayCtx.fillRect(0, 0, OW, OH);
-      }
-    }
-
-    // Bonus stage: notte giapponese — velo blu + luna piena + petali di ciliegio
-    if ((run as any)?.bonusStage) {
-      overlayCtx.fillStyle = 'rgba(5,5,30,0.72)';
-      overlayCtx.fillRect(0, 0, OW, OH);
-      const moonX = OW * 0.78, moonY = OH * 0.08, moonR = 22 * dpr;
-      overlayCtx.fillStyle = 'rgba(255,245,200,0.95)';
-      overlayCtx.beginPath(); overlayCtx.arc(moonX, moonY, moonR, 0, Math.PI * 2); overlayCtx.fill();
-      overlayCtx.fillStyle = 'rgba(255,245,200,0.22)';
-      overlayCtx.beginPath(); overlayCtx.arc(moonX, moonY, moonR * 1.35, 0, Math.PI * 2); overlayCtx.fill();
-      for (let i = 0; i < 14; i++) {
-        const px2 = ((i * 71 + now * 15) % OW);
-        const py2 = ((i * 53 + now * 22) % OH);
-        overlayCtx.fillStyle = `rgba(255,180,200,${(0.45 + 0.3 * Math.sin(now + i)).toFixed(3)})`;
-        overlayCtx.save();
-        overlayCtx.translate(px2, py2);
-        overlayCtx.rotate(now + i);
-        overlayCtx.beginPath(); overlayCtx.ellipse(0, 0, 4 * dpr, 2.5 * dpr, 0, 0, Math.PI * 2); overlayCtx.fill();
-        overlayCtx.restore();
-      }
-    }
-
-    if (run?.boss) {
-      const list = (run as any).boss.list as any[];
-      const hp   = list.reduce((s: number, e: any) => s + Math.max(0, e.hp), 0);
-      const max  = list.reduce((s: number, e: any) => s + e.maxHp, 0);
-      const bw   = Math.min(OW - 40 * dpr, 420 * dpr);
-      const bx   = (OW - bw) / 2, bby = 14 * dpr;
-      overlayCtx.fillStyle = '#0d0d0f';
-      overlayCtx.fillRect(bx - 3 * dpr, bby - 3 * dpr, bw + 6 * dpr, 14 * dpr);
-      overlayCtx.fillStyle = '#7a0f1c';
-      overlayCtx.fillRect(bx, bby, bw, 8 * dpr);
-      overlayCtx.fillStyle = '#d7263d';
-      overlayCtx.fillRect(bx, bby, Math.round(bw * hp / max), 8 * dpr);
-      overlayCtx.font = `${Math.round(14 * dpr)}px "Permanent Marker", cursive`;
-      overlayCtx.textAlign = 'center';
-      overlayCtx.strokeStyle = '#000'; overlayCtx.lineWidth = 4 * dpr;
-      overlayCtx.strokeText((run as any).boss.name, OW / 2, bby + 28 * dpr);
-      overlayCtx.fillStyle = '#e8e2d0';
-      overlayCtx.fillText((run as any).boss.name, OW / 2, bby + 28 * dpr);
-    }
-    const bnr = (run as any)?.fx?.banner;
-    if (bnr) {
-      const k = bnr.life / bnr.max;
-      overlayCtx.globalAlpha = Math.min(1, k * 5);
-      const bh  = bnr.sub ? 58 * dpr : 40 * dpr;
-      const bby2 = Math.round(OH * 0.24);
-      overlayCtx.fillStyle = 'rgba(13,13,15,0.88)';
-      overlayCtx.fillRect(0, bby2, OW, bh);
-      overlayCtx.textAlign = 'center';
-      overlayCtx.font = `${Math.round(22 * dpr)}px "Permanent Marker", cursive`;
-      overlayCtx.fillStyle = '#0d0d0f';
-      overlayCtx.fillText(bnr.title, OW / 2 + 2 * dpr, bby2 + 32 * dpr);
-      overlayCtx.fillStyle = bnr.color ?? '#f2b705';
-      overlayCtx.fillText(bnr.title, OW / 2, bby2 + 30 * dpr);
-      if (bnr.sub) {
-        overlayCtx.font = `${Math.round(9 * dpr)}px "Press Start 2P", monospace`;
-        overlayCtx.fillStyle = '#e8e2d0';
-        overlayCtx.fillText(bnr.sub, OW / 2, bby2 + 48 * dpr);
-      }
-      overlayCtx.globalAlpha = 1;
-    }
-
-    // Funzione helper: 3D world → pixel overlay
-    function project3d(wx3: number, wy3: number, wz3: number) {
-      const v = new THREE.Vector3(wx3, wy3, wz3).project(cam);
-      return { x: (v.x + 1) / 2 * OW, y: (1 - v.y) / 2 * OH, behind: v.z > 1 };
-    }
-
-    // Aquila di Dem: vola sopra la torre in modalità 3D
-    if ((run as any)?.hero === 'dem') {
-      const flap  = Math.sin(now * 8);
-      const driftX = Math.sin(now * 1.3) * 18 * S;
-      const eagleH = TOWER_H + (95 - Math.cos(now * 2.1) * 6) * S;
-      const { x: ex, y: ey, behind: eb } = project3d(wx(TOWER.x) + driftX, eagleH, wz(TOWER.y));
-      if (!eb) {
-        const ws = (13 + flap * 4) * dpr;
-        const wh = (4  + flap * 3) * dpr;
-        overlayCtx.save();
-        // Ombra sotto l'aquila
-        const { x: shx, y: shy } = project3d(wx(TOWER.x) + driftX, TOWER_H + 0.05, wz(TOWER.y));
-        overlayCtx.globalAlpha = 0.2;
-        overlayCtx.fillStyle = '#0d0d0f';
-        overlayCtx.beginPath();
-        overlayCtx.ellipse(shx, shy, ws * 0.65, 3 * dpr, 0, 0, Math.PI * 2);
-        overlayCtx.fill();
-        overlayCtx.globalAlpha = 1;
-        // Ali
-        overlayCtx.fillStyle = '#4a3820';
-        overlayCtx.beginPath();
-        overlayCtx.moveTo(ex, ey); overlayCtx.lineTo(ex - ws, ey - wh); overlayCtx.lineTo(ex - ws + 4 * dpr, ey + 3 * dpr);
-        overlayCtx.closePath(); overlayCtx.fill();
-        overlayCtx.beginPath();
-        overlayCtx.moveTo(ex, ey); overlayCtx.lineTo(ex + ws, ey - wh); overlayCtx.lineTo(ex + ws - 4 * dpr, ey + 3 * dpr);
-        overlayCtx.closePath(); overlayCtx.fill();
-        // Corpo
-        overlayCtx.fillStyle = '#6a4f2c';
-        overlayCtx.beginPath(); overlayCtx.ellipse(ex, ey + dpr, 4 * dpr, 6 * dpr, 0, 0, Math.PI * 2); overlayCtx.fill();
-        // Testa bianca
-        overlayCtx.fillStyle = '#e8e2d0';
-        overlayCtx.beginPath(); overlayCtx.ellipse(ex, ey - 5 * dpr, 3 * dpr, 3 * dpr, 0, 0, Math.PI * 2); overlayCtx.fill();
-        // Becco giallo
-        overlayCtx.fillStyle = '#f2b705';
-        overlayCtx.fillRect(ex + 2 * dpr, ey - 6 * dpr, 3 * dpr, 2 * dpr);
-        overlayCtx.restore();
-      }
-    }
-
-    // Aura boss: alone colorata pulsante intorno ai nemici boss
-    if (run) {
-      for (const e of run.enemies) {
-        if (!e.boss || e.dead) continue;
-        const auraCol: string = (e as any).aura ?? '#f2b705';
-        const enraged = (e as any).enraged ?? false;
-        const { x: bx, y: by, behind: bh } = project3d(wx(e.x), 0.0, wz(e.y));
-        if (bh) continue;
-        // Raggio schermo ricavato proiettando il bordo dell'aura
-        const baseR = (e.size ?? 30) * S * 1.4;
-        const { x: edX } = project3d(wx(e.x) + baseR, 0.0, wz(e.y));
-        const screenR = Math.abs(edX - bx) * (0.85 + Math.sin(now * 3 + e.id * 0.7) * 0.12);
-        if (screenR < 4) continue;
-        overlayCtx.save();
-        overlayCtx.globalCompositeOperation = 'lighter';
-        const col = enraged ? '#ff2a3d' : auraCol;
-        const auraAlpha = enraged ? 0.45 : 0.35;
-        const grad = overlayCtx.createRadialGradient(bx, by, screenR * 0.08, bx, by, screenR);
-        grad.addColorStop(0, hexToRgba(col, auraAlpha));
-        grad.addColorStop(1, hexToRgba(col, 0));
-        overlayCtx.fillStyle = grad;
-        overlayCtx.beginPath();
-        overlayCtx.arc(bx, by, screenR, 0, Math.PI * 2);
-        overlayCtx.fill();
-        overlayCtx.globalCompositeOperation = 'source-over';
-        // Ellisse a terra
-        const { x: gx, y: gy } = project3d(wx(e.x), 0.01, wz(e.y));
-        const groundR = (e.size ?? 30) * S * 0.55;
-        const { x: geX } = project3d(wx(e.x) + groundR, 0.01, wz(e.y));
-        const gsR = Math.abs(geX - gx);
-        if (gsR > 2) {
-          overlayCtx.strokeStyle = hexToRgba(auraCol, 0.6);
-          overlayCtx.lineWidth = 1.5 * dpr;
-          overlayCtx.beginPath();
-          overlayCtx.ellipse(gx, gy, gsR, gsR * 0.3, 0, 0, Math.PI * 2);
-          overlayCtx.stroke();
-        }
-        overlayCtx.restore();
-      }
-    }
-
-    // Barre HP per boss / elite / alleati danneggiati
-    if (run) {
-      const BAR_W = 44 * dpr, BAR_H = 5 * dpr;
-      overlayCtx.lineWidth = 0;
-      for (const e of run.enemies) {
-        if (e.dead) continue;
-        if (!e.boss && !(e as any).elite && e.hp >= e.maxHp) continue;
-        const { x, y, behind } = project3d(wx(e.x), 0.6, wz(e.y));
-        if (behind) continue;
-        const ratio = Math.max(0, e.hp / e.maxHp);
-        const col = e.boss ? '#d7263d' : '#ff7b1c';
-        overlayCtx.fillStyle = '#200000';
-        overlayCtx.fillRect(x - BAR_W / 2, y - BAR_H - 4 * dpr, BAR_W, BAR_H);
-        overlayCtx.fillStyle = col;
-        overlayCtx.fillRect(x - BAR_W / 2, y - BAR_H - 4 * dpr, BAR_W * ratio, BAR_H);
-      }
-      for (const a of run.allies) {
-        if ((a as any).hp >= (a as any).maxHp) continue;
-        const pos = allyPos(a);
-        const { x, y, behind } = project3d(wx(pos.x), 0.4, wz(pos.y));
-        if (behind) continue;
-        const ratio = Math.max(0, (a as any).hp / (a as any).maxHp);
-        overlayCtx.fillStyle = '#002000';
-        overlayCtx.fillRect(x - BAR_W / 2, y - BAR_H - 4 * dpr, BAR_W, BAR_H);
-        overlayCtx.fillStyle = ratio > 0.5 ? '#7bd332' : ratio > 0.25 ? '#f2b705' : '#d7263d';
-        overlayCtx.fillRect(x - BAR_W / 2, y - BAR_H - 4 * dpr, BAR_W * ratio, BAR_H);
-      }
-    }
-
-    // Freccia boss fuori schermo
-    if (run?.boss) {
-      for (const e of run.enemies) {
-        if (!e.boss) continue;
-        const { x, y } = project3d(wx(e.x), 0, wz(e.y));
-        const m2 = 36 * dpr;
-        if (x > m2 && x < OW - m2 && y > m2 + 40 * dpr && y < OH - m2) continue;
-        const cx2 = OW / 2, cy2 = OH / 2;
-        const dx2 = x - cx2, dy2 = y - cy2;
-        const t2 = Math.min((OW / 2 - m2) / (Math.abs(dx2) || 1), (OH / 2 - m2) / (Math.abs(dy2) || 1));
-        const px2 = cx2 + dx2 * t2, py2 = cy2 + dy2 * t2;
-        const a2 = Math.atan2(dy2, dx2);
-        const pulse = 1 + Math.sin(now * 6) * 0.12;
-        overlayCtx.save();
-        overlayCtx.translate(px2, py2);
-        overlayCtx.rotate(a2);
-        overlayCtx.scale(pulse, pulse);
-        overlayCtx.fillStyle = '#d7263d';
-        overlayCtx.beginPath();
-        overlayCtx.moveTo(14 * dpr, 0);
-        overlayCtx.lineTo(-8 * dpr, -7 * dpr);
-        overlayCtx.lineTo(-8 * dpr, 7 * dpr);
-        overlayCtx.closePath();
-        overlayCtx.fill();
-        overlayCtx.restore();
-      }
-    }
-
-    // Titolo scenario (NUOVO SCENARIO + nome)
-    if (sceneTitle) {
-      sceneTitle.timer -= dt;
-      if (sceneTitle.timer > 0) {
-        const alpha2 = Math.min(1, sceneTitle.timer * 2.5);
-        overlayCtx.globalAlpha = alpha2;
-        overlayCtx.textAlign = 'center';
-        overlayCtx.font = `${Math.round(9 * dpr)}px "Press Start 2P", monospace`;
-        overlayCtx.fillStyle = '#e8e2d0';
-        overlayCtx.fillText('NUOVO SCENARIO', OW / 2, OH * 0.72);
-        overlayCtx.font = `${Math.round(22 * dpr)}px "Permanent Marker", cursive`;
-        overlayCtx.fillStyle = '#000';
-        overlayCtx.fillText(sceneTitle.name, OW / 2 + 2 * dpr, OH * 0.72 + 26 * dpr);
-        overlayCtx.fillStyle = '#f2b705';
-        overlayCtx.fillText(sceneTitle.name, OW / 2, OH * 0.72 + 24 * dpr);
-        overlayCtx.globalAlpha = 1;
-      } else {
-        sceneTitle = null;
-      }
-    }
-
-    // Float texts da run.fx.texts
-    if (run?.fx?.texts?.length) {
-      const FONT = '"Press Start 2P", monospace';
-      overlayCtx.textAlign = 'center';
-      overlayCtx.lineJoin = 'round';
-      for (const t of run.fx.texts) {
-        const { x: sx, y: sy, behind } = project3d(wx(t.x), 0.35, wz(t.y));
-        if (behind) continue;
-        const age = t.max - t.life;
-        const pop = age < 0.12 ? 1 + (0.12 - age) / 0.12 * 0.6 : 1;
-        overlayCtx.globalAlpha = Math.min(1, t.life / t.max * 2);
-        overlayCtx.font = `${Math.round(t.size * pop * dpr)}px ${FONT}`;
-        overlayCtx.strokeStyle = '#141416';
-        overlayCtx.lineWidth = 3 * dpr;
-        overlayCtx.strokeText(t.text, sx, sy);
-        overlayCtx.fillStyle = t.color;
-        overlayCtx.fillText(t.text, sx, sy);
-      }
-      overlayCtx.globalAlpha = 1;
-    }
-
-    // Particelle da run.fx.parts
-    if (run?.fx?.parts?.length) {
-      for (const p of run.fx.parts) {
-        const { x: sx, y: sy, behind } = project3d(wx(p.x), 0.2, wz(p.y));
-        if (behind) continue;
-        overlayCtx.globalAlpha = Math.min(1, p.life / p.max * 2);
-        overlayCtx.fillStyle = p.color;
-        overlayCtx.fillRect(Math.round(sx - p.size * dpr / 2), Math.round(sy - p.size * dpr / 2), Math.round(p.size * dpr), Math.round(p.size * dpr));
-      }
-      overlayCtx.globalAlpha = 1;
-    }
+    sceneTitle = drawOverlay3d(overlayCtx, OW, OH, dpr, run, cam, now, dt, zombieK, sceneTitle);
 
     renderer.render(scene, cam);
   }

@@ -1,6 +1,7 @@
 // Nemici e boss: sprite, segnali del ruolo, aura dei boss, scie, corpi a terra.
 import { TOWER, YARD } from '../state.js';
-import { LOOKS, EYES, FRAMES, type Look } from './people.js';
+import { LOOKS, type Look } from './looks.js';
+import { EYES, FRAMES } from './people.js';
 import { PAL, FONT } from './palette.js';
 import { drawPersonAt, enemySprite, facesLeft, hexA } from './view.js';
 import { drawHeart } from './effects.js';
