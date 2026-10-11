@@ -3,7 +3,9 @@
 import { RARITY, cardPower, findCard } from '../data/cards.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
 import { ALLY_LEVELS, allyArc } from '../data/allies.js';
-import { HEROES, UNLOCK_WAVE, unlockedHeroes, heroStatsText } from '../data/heroes.js';
+import { HEROES, UNLOCK_WAVE, unlockedHeroes, heroStatsText, heroDef } from '../data/heroes.js';
+import { BADGES } from '../data/badges.js';
+import { drawBadgeCanvas } from './badge-share.js';
 import type { HeroDef } from '../data/heroes.js';
 import { bombMult, nextQuadro, canPlaceBomb, bombsForQuadro, bombCost } from '../systems/bombs.js';
 import { weaponDef } from '../data/weapons.js';
@@ -312,6 +314,25 @@ export function showOver(run: Run, reward: number, isRecord: boolean) {
   $('over-after')!.hidden = true;
   ($('btn-save-score') as HTMLButtonElement).disabled = false;
   ($('btn-save-score') as HTMLButtonElement).textContent = 'SALVA';
+
+  // Badge romano: mostra se guadagnato in questa run
+  const badgeBox = $('over-badge')!;
+  const newBadgeId = (run as any).newBadge as string | undefined;
+  const badge = newBadgeId ? BADGES.find(b => b.id === newBadgeId) : null;
+  if (badge) {
+    const hero = heroDef(run.hero ?? 'peppe');
+    const bc = drawBadgeCanvas(badge, hero.name, run.wave);
+    const dest = $('badge-canvas') as HTMLCanvasElement;
+    dest.width = bc.width; dest.height = bc.height;
+    dest.getContext('2d')!.drawImage(bc, 0, 0);
+    dest.style.width = '200px'; dest.style.height = '200px';
+    $('badge-name')!.textContent = badge.name;
+    $('badge-role')!.textContent = badge.role;
+    badgeBox.hidden = false;
+  } else {
+    badgeBox.hidden = true;
+  }
+
   show('scr-over');
 }
 

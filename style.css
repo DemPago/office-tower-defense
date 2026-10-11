@@ -301,6 +301,17 @@ h2 {
 .help { color: var(--grey); margin-top: 8px; opacity: .8; }
 .buoni { color: var(--toxic); }
 .record { color: var(--pink); font-family: var(--spray); font-size: 18px; }
+/* Badge romano nel game over */
+#over-badge {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  margin: 10px 0; padding: 10px;
+  background: rgba(10,8,6,0.85);
+  border: 1px solid rgba(212,160,23,0.35);
+}
+#badge-canvas { image-rendering: pixelated; display: block; }
+.badge-name { font-family: var(--spray); font-size: 16px; color: #d4a017; margin: 0; }
+.badge-role { font-size: 7px; color: var(--grey); font-style: italic; margin: 0; }
+.btn.small { font-size: 8px; padding: 4px 10px; margin-top: 4px; }
 
 .btn {
   min-width: 200px;

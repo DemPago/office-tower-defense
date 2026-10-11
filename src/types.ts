@@ -19,6 +19,7 @@ export interface Meta {
   hero?: string;
   heroes?: string[];
   tutorialDone?: boolean;
+  badges?: string[];   // id dei badge romani sbloccati
 }
 
 // ─── Statistiche calcolate della torre ──────────────────────────────────────
@@ -311,4 +312,6 @@ export interface Run {
   bonusBreakTimer?: number;
   // sblocco personaggio
   newHero?: string | null;
+  // badge romano guadagnato in questa run
+  newBadge?: string;
 }

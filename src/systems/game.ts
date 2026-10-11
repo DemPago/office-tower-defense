@@ -12,6 +12,7 @@ import { updateFx, floatText } from './fx.js';
 import { checkBombs, resetBombsLeft } from './bombs.js';
 import { TOWER } from '../state.js';
 import { UNLOCK_WAVE, unlockNextHero } from '../data/heroes.js';
+import { badgeForWave } from '../data/badges.js';
 import { banner } from './fx.js';
 import { startBonusWave, endBonusWave } from './bonus.js';
 import type { Run } from '../types.js';
@@ -84,6 +85,12 @@ export function update(run: Run, dt: number): void {
       banner(run, `SETTORE ${run.wave / 10 + 1}`, 'Muro ripristinato — nuovo quadro in arrivo!', '#2de2e6');
     } else {
       repairWall(run); // solo i tratti ancora in piedi si riparano
+    }
+    // Badge romano: milestone raggiunta durante il gioco → banner celebrativo.
+    const newBadge = badgeForWave(run.wave);
+    if (newBadge && !(run.meta.badges ?? []).includes(newBadge.id)) {
+      banner(run, `🏛 ${newBadge.name.toUpperCase()}`, `${newBadge.role} · ${newBadge.years}`, newBadge.color);
+      if (!run.newBadge) run.newBadge = newBadge.id;
     }
     // Completati tutti i livelli (i 6 reparti): si sblocca un nuovo personaggio.
     if (run.wave % UNLOCK_WAVE === 0) {

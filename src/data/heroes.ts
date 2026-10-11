@@ -29,15 +29,15 @@ export interface HeroDef {
 }
 
 export const HEROES: HeroDef[] = [
-  { id: 'peppe',   name: 'Peppe',      weapon: 'laser',    stats: { rate: 0.15, manaRegen: 0.25, hp: -0.15 },               desc: 'Esperto AI sciupato dal running' },
-  { id: 'dem',     name: 'Dem',        weapon: 'daggers',  stats: { gold: 0.25, hp: 0.1, dmg: -0.1 },                        desc: 'Al servizio dei poveri e italiano vero' },
-  { id: 'nando',   name: 'Nando',      weapon: 'crossbow', stats: { crit: 0.1, range: 0.1, rate: -0.1 },                     desc: 'Campione di RDA' },
-  { id: 'tony',    name: 'Tony',       weapon: 'pistol',   stats: { dmg: 0.05, crit: 0.1, regen: -0.5, hp: -0.1 },           desc: 'È come una macchina' },
-  { id: 'vanessa', name: 'Vanessa',    weapon: 'hearts',   stats: { regen: 0.6, hp: 0.15, dmg: -0.1 },                       desc: 'Bionda, decisa, inarrestabile' },
-  { id: 'clara',   name: 'Clara',      weapon: 'energy',   stats: { manaRegen: 0.4, manaMax: 25, hp: -0.1 },                  desc: 'Epiche su Jira' },
-  { id: 'pesce',   name: 'Uomo Pesce', weapon: 'sonic',    stats: { hp: 0.3, armor: 0.1, rate: -0.15 },                       desc: 'Nessuno sa come sia stato assunto' },
-  { id: 'frank',   name: 'Frank',      weapon: 'crossbow', stats: { range: 0.2, crit: 0.1, hp: -0.2, regen: -0.15 },          desc: 'Alto, sottile, pericolosamente preciso' },
-  { id: 'cirios',  name: 'Cirios',     weapon: 'daggers',  stats: { gold: 0.3, armor: 0.1, rate: -0.15, range: -0.1 },        desc: 'Una fattura in mano vale più di una spada' },
+  { id: 'peppe',   name: 'Peppe',      weapon: 'laser',    stats: { rate: 0.15, manaRegen: 0.25, hp: -0.15 },               desc: 'Inspired by Hank Scorpio. Wears Patagonia. Runs 5K before the standup. Genuinely happy to help — and that\'s what makes him dangerous.' },
+  { id: 'dem',     name: 'Dem',        weapon: 'daggers',  stats: { gold: 0.25, hp: 0.1, dmg: -0.1 },                        desc: 'Nobody knows his past. Nobody asks. He completes the mission, collects the prize, and disappears. They say he\'s done this before. In other towers. Under other names.' },
+  { id: 'nando',   name: 'Nando',      weapon: 'crossbow', stats: { crit: 0.1, range: 0.1, rate: -0.1 },                     desc: 'Regional archery champion, two-time. No social media, by choice. Has never lost a bet. Has never explained why. Arrives late, leaves early, somehow always wins.' },
+  { id: 'tony',    name: 'Tony',       weapon: 'pistol',   stats: { dmg: 0.05, crit: 0.1, regen: -0.5, hp: -0.1 },           desc: 'Senior manager. Eats kebab at his desk every single day. Asks "com\'è?" about everything, including quarterly reports. Data expert. Still looking for his cousin, last seen at a Calabrian wedding. No one talks about it.' },
+  { id: 'vanessa', name: 'Vanessa',    weapon: 'hearts',   stats: { regen: 0.6, hp: 0.15, dmg: -0.1 },                       desc: 'Blond, decisive, impossible to stop. Survived three office restructurings and two CEO changes. The fourth one tried. She\'s still here. They\'re not.' },
+  { id: 'clara',   name: 'Clara',      weapon: 'energy',   stats: { manaRegen: 0.4, manaMax: 25, hp: -0.1 },                  desc: 'Doesn\'t drive. Doesn\'t cook. Doesn\'t talk. Shoots. Her loyal companion handles everything else — with a sword. Don\'t get in her way.' },
+  { id: 'pesce',   name: 'Uomo Pesce', weapon: 'sonic',    stats: { hp: 0.3, armor: 0.1, rate: -0.15 },                       desc: 'Nobody knows how he got the job. The HR system accepted his application. Facilities gave him a badge. He showed up Monday. That was three years ago. He absorbs damage. He keeps going.' },
+  { id: 'frank',   name: 'Frank',      weapon: 'crossbow', stats: { range: 0.2, crit: 0.1, hp: -0.2, regen: -0.15 },          desc: 'Tall. Quiet. Surgically precise. Comes from somewhere. Returns there every evening. Nobody follows. Nobody asks. His crossbow never misses. Especially the second shot.' },
+  { id: 'cirios',  name: 'Cirios',     weapon: 'daggers',  stats: { gold: 0.3, armor: 0.1, rate: -0.15, range: -0.1 },        desc: 'One invoice in hand is worth more than a sword. Gold flows toward him naturally, as if gravity itself respects the margin. From Napoli. Deeply, irreversibly from Napoli.' },
 ];
 
 // Sempre disponibili — i 7 personaggi originali

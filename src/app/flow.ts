@@ -13,6 +13,8 @@ import * as screens from '../ui/screens.js';
 import { getTop } from '../leaderboard.js';
 import { play } from '../audio.js';
 import { renderShare } from '../ui/share.js';
+import { BADGES } from '../data/badges.js';
+import { shareBadge } from '../ui/badge-share.js';
 import { startMenuAnimation } from '../ui/menu-anim.js';
 
 const $ = (id: string): HTMLElement | null => document.getElementById(id);
@@ -224,6 +226,10 @@ export function createFlow(app: any) {
     meta.buoni += reward;
     meta.best = Math.max(meta.best, run.wave);
     meta.runs++;
+    // Persiste i badge romani guadagnati in questa run
+    if (run.newBadge && !(meta.badges ?? []).includes(run.newBadge)) {
+      meta.badges = [...(meta.badges ?? []), run.newBadge];
+    }
     saveMeta(meta);
     app.initials.reset();
     // Un attimo di pausa per vedere la torre crollare, poi il riepilogo.
@@ -252,6 +258,13 @@ export function createFlow(app: any) {
     if (!run || run.phase !== 'bomb-placement' || !run.bombs.length) return;
     removeBomb(run, run.bombs.length - 1);
     screens.updateBombUI(run);
+  });
+
+  $('btn-badge-share')!.addEventListener('click', () => {
+    const { run } = app;
+    if (!run?.newBadge) return;
+    const badge = BADGES.find(b => b.id === run.newBadge);
+    if (badge) shareBadge(badge, run.hero ?? 'peppe', run.wave);
   });
 
   $('btn-play')!.addEventListener('click', newRun);
