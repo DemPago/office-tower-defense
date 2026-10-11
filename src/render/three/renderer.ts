@@ -1498,6 +1498,39 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
       }
     }
 
+    // Float texts da run.fx.texts
+    if (run?.fx?.texts?.length) {
+      const FONT = '"Press Start 2P", monospace';
+      overlayCtx.textAlign = 'center';
+      overlayCtx.lineJoin = 'round';
+      for (const t of run.fx.texts) {
+        const { x: sx, y: sy, behind } = project3d(wx(t.x), 0.35, wz(t.y));
+        if (behind) continue;
+        const age = t.max - t.life;
+        const pop = age < 0.12 ? 1 + (0.12 - age) / 0.12 * 0.6 : 1;
+        overlayCtx.globalAlpha = Math.min(1, t.life / t.max * 2);
+        overlayCtx.font = `${Math.round(t.size * pop * dpr)}px ${FONT}`;
+        overlayCtx.strokeStyle = '#141416';
+        overlayCtx.lineWidth = 3 * dpr;
+        overlayCtx.strokeText(t.text, sx, sy);
+        overlayCtx.fillStyle = t.color;
+        overlayCtx.fillText(t.text, sx, sy);
+      }
+      overlayCtx.globalAlpha = 1;
+    }
+
+    // Particelle da run.fx.parts
+    if (run?.fx?.parts?.length) {
+      for (const p of run.fx.parts) {
+        const { x: sx, y: sy, behind } = project3d(wx(p.x), 0.2, wz(p.y));
+        if (behind) continue;
+        overlayCtx.globalAlpha = Math.min(1, p.life / p.max * 2);
+        overlayCtx.fillStyle = p.color;
+        overlayCtx.fillRect(Math.round(sx - p.size * dpr / 2), Math.round(sy - p.size * dpr / 2), Math.round(p.size * dpr), Math.round(p.size * dpr));
+      }
+      overlayCtx.globalAlpha = 1;
+    }
+
     renderer.render(scene, cam);
   }
 

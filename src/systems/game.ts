@@ -9,7 +9,7 @@ import { isZombieWave } from '../data/enemies.js';
 import { offerAllies, updateAllies, animateAllies, restAllies } from './allies.js';
 import { REINFORCE_EVERY } from '../data/allies.js';
 import { updateFx, floatText } from './fx.js';
-import { checkBombs } from './bombs.js';
+import { checkBombs, resetBombsLeft } from './bombs.js';
 import { TOWER } from '../state.js';
 import { UNLOCK_WAVE, unlockNextHero } from '../data/heroes.js';
 import { banner } from './fx.js';
@@ -33,11 +33,11 @@ export function update(run: Run, dt: number): void {
     updateAbilities(run, dt); // e il mana si ricarica
     run.breakTimer -= dt;
     if (run.breakTimer <= 0) {
-      // Prima di ogni nuovo quadro (wave 11, 21, 31...) → piazza le bombe
+      // Prima di ogni ondata non-boss → piazza le bombe; boss = multiplo di 10
       const nextWave = run.wave + 1;
-      const isQuadroStart = nextWave % 10 === 1 && nextWave > 1;
-      if (isQuadroStart && run.bombsPlacedQuadro !== Math.ceil(nextWave / 10)) {
-        run.bombsPlacedQuadro = Math.ceil(nextWave / 10);
+      const isBossWave = nextWave % 10 === 0;
+      if (!isBossWave) {
+        resetBombsLeft(run);
         run.phase = 'bomb-placement';
       } else {
         startWave(run);

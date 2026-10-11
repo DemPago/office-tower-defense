@@ -72,15 +72,16 @@ export const LOOKS = {
   focal_f: { skin: SKIN.light, hair: '#2a2a2e', hairStyle: 'bun',   glasses: 'glasses', build: 'fat', top: '#3a1a3a', shirt: '#e8e2d0', skirt: '#3a1a3a', shoes: '#141416', chain: '#f2b705', badge: true, item: 'phone', angry: true },
 
   // Personaggi giocabili (sul tetto del palazzo)
-  peppe:      { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'bald', glasses: 'glasses', facial: 'mustache', top: '#4a5a70', shirt: '#e8e2d0', tie: '#2f4f8f', pants: '#3a3226', headphones: true },
+  peppe:      { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'bald', glasses: 'glasses', top: '#4a5a70', shirt: '#e8e2d0', tie: '#2f4f8f', vest: '#2a3f55', pants: '#3a3226', headphones: true },
   dem:        { skin: SKIN.tan, hair: '#141416', hairStyle: 'slick', facial: 'stubble', top: '#e8e2d0', shirt: '#e8e2d0', sleeves: 'short', chain: '#f2b705', pants: '#2a3a5a', shoes: '#5a3a22', item: 'mug' },
-  nando:      { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'curly', glasses: 'glasses', top: '#3e6b2a', shirt: '#3e6b2a', pants: '#3a4a6a', shoes: '#d9d4c7', item: 'crossbow' },
+  nando:      { skin: SKIN.light, hair: '#5a3a22', hairStyle: 'curly', glasses: 'shades', top: '#3e6b2a', shirt: '#3e6b2a', pants: '#3a4a6a', shoes: '#d9d4c7', item: 'crossbow' },
   tony:       { skin: SKIN.tan, hair: '#0d0d0f', hairStyle: 'slick', scar: true, top: '#e8e2d0', shirt: '#b02030', chain: '#f2b705', pants: '#e8e2d0', shoes: '#e8e2d0', item: 'cigar' },
-  vanessa:    { skin: SKIN.light, hair: '#e0c060', hairStyle: 'long', top: '#b02a5a', shirt: '#e8e2d0', skirt: '#2a2a2e', shoes: '#b02a5a', item: 'phone' },
+  vanessa:    { skin: SKIN.light, hair: '#f0d068', hairStyle: 'long', glasses: 'shades', top: '#c03060', shirt: '#e8e2d0', skirt: '#141416', shoes: '#c03060', chain: '#f2b705', item: 'phone' },
   clara:      { skin: SKIN.light, hair: '#1e1e22', hairStyle: 'bob', glasses: 'big', top: '#257179', shirt: '#e8e2d0', pants: '#2a2a2e', item: 'laptop' },
-  pesce:      { skin: '#4a8a9a', hair: '#2f6070', hairStyle: 'fin', glasses: 'fish', gills: true, top: '#1f2a44', shirt: '#e8e2d0', tie: '#e8641b', pants: '#1f2a44' },
-  frank:      { skin: SKIN.light, hair: '#1e1e22', hairStyle: 'short', build: 'thin', top: '#3a3c42', shirt: '#e8e2d0', tie: '#2de2e6', pants: '#2a2a2e', shoes: '#141416', item: 'laptop' },
+  pesce:      { skin: '#4a8a9a', hair: '#2f6070', hairStyle: 'fin', glasses: 'fish', gills: true, top: '#ff7b1c', shirt: '#ff7b1c', sleeves: 'short', pants: '#f2b705', shoes: '#d9b45a' },
+  frank:      { skin: SKIN.light, hair: '#1e1e22', hairStyle: 'short', top: '#3a3c42', shirt: '#e8e2d0', tie: '#2de2e6', pants: '#2a2a2e', shoes: '#141416', item: 'laptop' },
   cirios:     { skin: SKIN.mid, hair: '#a0a4a8', hairStyle: 'slick', facial: 'mustache', glasses: 'glasses', top: '#2a2a2e', shirt: '#c8c0b0', pants: '#3a3226', shoes: '#141416', item: 'invoice' },
+  rob:        { skin: SKIN.dark, hair: '#141416', hairStyle: 'short', build: 'fat', top: '#1f2a44', shirt: '#1f2a44', sleeves: 'short', pants: '#141416', shoes: '#141416', scar: true, weapon: 'spada' },
 
   // Protagonista (vecchio look) e colleghi (rinforzi)
   player:     { skin: SKIN.mid, hair: '#141416', hairStyle: 'short', hat: 'hardhat', hatColor: '#f2b705', top: '#2f4f6f', shirt: '#2f4f6f', vest: '#f2b705', pants: '#3a4a6a' },

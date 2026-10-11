@@ -259,6 +259,59 @@ export function drawFx(ctx: CanvasRenderingContext2D, run: Run) {
   ctx.globalAlpha = 1;
 }
 
+// Aquila di Dem: vola sopra la torre quando hero === 'dem'
+export function drawDemEagle(ctx: CanvasRenderingContext2D, hero: string | undefined, now: number): void {
+  if (hero !== 'dem') return;
+  const flap = Math.sin(now * 8);
+  const drift = Math.sin(now * 1.3) * 18;
+  const bobY = Math.cos(now * 2.1) * 6;
+  const ex = TOWER.x + drift;
+  const ey = TOWER.y - 95 + bobY;
+  const ws = 13 + flap * 4; // half-wingspan
+  const wh = 4 + flap * 3;  // wing height
+
+  ctx.save();
+  // Ombra
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = '#0d0d0f';
+  ctx.beginPath();
+  ctx.ellipse(ex, TOWER.y - 60, ws * 0.7, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Ali
+  ctx.fillStyle = '#4a3820';
+  // ala sinistra
+  ctx.beginPath();
+  ctx.moveTo(ex, ey);
+  ctx.lineTo(ex - ws, ey - wh);
+  ctx.lineTo(ex - ws + 4, ey + 3);
+  ctx.closePath();
+  ctx.fill();
+  // ala destra
+  ctx.beginPath();
+  ctx.moveTo(ex, ey);
+  ctx.lineTo(ex + ws, ey - wh);
+  ctx.lineTo(ex + ws - 4, ey + 3);
+  ctx.closePath();
+  ctx.fill();
+  // corpo
+  ctx.fillStyle = '#6a4f2c';
+  ctx.beginPath();
+  ctx.ellipse(ex, ey + 1, 4, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // testa bianca
+  ctx.fillStyle = '#e8e2d0';
+  ctx.beginPath();
+  ctx.ellipse(ex, ey - 5, 3, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // becco giallo
+  ctx.fillStyle = '#f2b705';
+  ctx.fillRect(ex + 2, ey - 6, 3, 2);
+
+  ctx.restore();
+}
+
 // Cuore in pixel art centrato in (x, y), grande r.
 export function drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, light: string) {
   ctx.fillStyle = PAL.black;

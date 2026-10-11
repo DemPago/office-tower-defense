@@ -18,7 +18,7 @@ import { VIEW_R, CAMERA, setPixelSize } from './view.js';
 import { drawTower, updateSmoke, drawSmoke, hiddenByTower } from './tower.js';
 import { drawSectors, drawAlly } from './allies.js';
 import { drawShadow, drawEnemy, drawGhost, updateTrails, drawTrails, drawCorpse } from './enemies.js';
-import { drawDust, drawGrade, drawRange, drawShots, drawFx } from './effects.js';
+import { drawDust, drawGrade, drawRange, drawShots, drawFx, drawDemEagle } from './effects.js';
 import { drawZombieWorld, drawZombieGrade } from './zombie.js';
 import { isZombieWave } from '../data/enemies.js';
 import { drawWall } from './wall.js';
@@ -169,6 +169,7 @@ export function createRenderer(canvas: HTMLCanvasElement, assets: Assets) {
       drawShots(ctx, run, time);
       drawBombs(ctx, run, time);
       drawFx(ctx, run);
+      drawDemEagle(ctx, run.hero, time);
     }
 
     // Da qui si disegna in coordinate dello schermo

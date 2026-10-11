@@ -1,6 +1,8 @@
 // Flusso delle schermate: menu (con scelta del personaggio), negozio, partita,
 // pausa, carte, rinforzi e fine partita.
-import { createRun } from '../state.js';
+import { createRun, TOWER } from '../state.js';
+import { allyHp } from '../data/allies.js';
+import { banner, floatText } from '../systems/fx.js';
 import { saveMeta } from '../save.js';
 import { runReward } from '../systems/game.js';
 import { pickCard, reroll, playCard, sellCard } from '../systems/cards.js';
@@ -52,6 +54,9 @@ export function createFlow(app: any) {
   function newRun() {
     if (menuAnim) { menuAnim.stop(); menuAnim = null; }
     app.run = createRun(meta);
+    if (app.run.hero === 'clara') {
+      app.run.allies.push({ uid: Math.random(), id: 'rob', level: 1, slot: 0, cooldown: 0, recoil: 0, spawn: 1, hp: allyHp(1), maxHp: allyHp(1), x: 0, y: 0, hitFlash: 0, dead: false });
+    }
     app.paused = false;
     app.overHandled = false;
     screens.hideAll();
@@ -107,6 +112,20 @@ export function createFlow(app: any) {
 
   function onCardsPhase() {
     const { run } = app;
+    // Effetti per eroe
+    if (run.hero === 'tony') {
+      banner(run, 'com\'è?', 'dice Tony', '#f2b705');
+    }
+    if (run.hero === 'cirios') {
+      banner(run, '🔵⚪ NAPOLI! ⚪🔵', 'urla Ciro', '#007FBF');
+    }
+    if (run.hero === 'nando') {
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * Math.PI * 2;
+        const d = 40 + Math.random() * 90;
+        floatText(run, TOWER.x + Math.cos(a) * d, TOWER.y - 30 + Math.sin(a) * d * 0.4, '💰', '#f2b705', 11 + Math.floor(Math.random() * 5));
+      }
+    }
     screens.showCards(run,
       i => {
         const result = pickCard(run, meta, i);
