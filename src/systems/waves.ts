@@ -186,7 +186,7 @@ function makeBoss(b: any, w: number, playerDmg: number) {
       trail: b.trail || null,
       hp, maxHp: hp,
       speed: b.speed * (W && W.speedMult ? W.speedMult : 1),
-      atk: base.atk * atkScale(w) * b.atkFactor * (W ? W.atkMult : 1),
+      atk: base.atk * Math.min(atkScale(w), 3) * b.atkFactor * (W ? W.atkMult : 1),
       range: W ? W.range : 0,
       shotCd: W ? W.shotCd : 1.3,
       gold: WAVE_CONFIG.bossGoldBase * goldScale(w) / group,
