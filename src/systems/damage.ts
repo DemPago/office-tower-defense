@@ -102,7 +102,7 @@ function killEnemy(run: Run, e: any) {
 }
 
 export function damageTower(run: Run, amount: number): void {
-  if (run.phase === 'over') return;
+  if (run.phase === 'over' || run.phase === 'break' || run.phase === 'bonus-break') return;
   const t = run.tower;
   const ratioBefore = t.hp / run.stats.maxHp;
   t.hp -= amount * (1 - run.stats.armor);
