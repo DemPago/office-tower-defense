@@ -451,6 +451,49 @@ function buildParkingEnv(g: THREE.Group) {
     cone.add(stripe);
     g.add(cone);
   }
+  // Semafori ai 4 angoli del parcheggio (modello Kenney o fallback procedurale)
+  const SIGNAL_CORNERS = [
+    [TOWER.x - 155, TOWER.y - 155], [TOWER.x + 155, TOWER.y - 155],
+    [TOWER.x - 155, TOWER.y + 155], [TOWER.x + 155, TOWER.y + 155],
+  ] as [number, number][];
+  const tlTemplate = modelCache.get('traffic-light');
+  for (const [cx, cy] of SIGNAL_CORNERS) {
+    if (tlTemplate) {
+      const tl = tlTemplate.clone();
+      tl.scale.setScalar(0.35);
+      tl.position.set(wx(cx), 0, wz(cy));
+      tl.rotation.y = Math.atan2(TOWER.x - cx, TOWER.y - cy);
+      g.add(tl);
+    } else {
+      // Fallback: palo con 3 luci colorate
+      const matPole = new THREE.MeshLambertMaterial({ color: 0x3a3a44 });
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.022, 0.9, 6), matPole);
+      pole.position.set(wx(cx), 0.45, wz(cy));
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.22, 0.06), new THREE.MeshLambertMaterial({ color: 0x222228 }));
+      box.position.y = 0.11;
+      pole.add(box);
+      for (const [i, col] of [[0, 0xff3030], [1, 0xffaa00], [2, 0x30d060]] as [number, number][]) {
+        const lens = new THREE.Mesh(new THREE.SphereGeometry(0.026, 6, 4), new THREE.MeshBasicMaterial({ color: col }));
+        lens.position.set(0, 0.09 - i * 0.07, 0.04);
+        box.add(lens);
+      }
+      g.add(pole);
+    }
+  }
+  // Barriere da cantiere (modello Kenney) sparse vicino alle aree di costruzione
+  const barrTemplate = modelCache.get('construction-barrier');
+  if (barrTemplate) {
+    for (let i = 0; i < 12; i++) {
+      const bx = 80 + (i * 173) % (WORLD.w - 160);
+      const by = 80 + (i * 113 + 40) % (WORLD.h - 160);
+      if (nearTower(bx, by, 55)) continue;
+      const barr = barrTemplate.clone();
+      barr.scale.setScalar(0.30);
+      barr.position.set(wx(bx), 0, wz(by));
+      barr.rotation.y = (i * 0.7) % (Math.PI * 2);
+      g.add(barr);
+    }
+  }
 }
 
 function buildArchiveEnv(g: THREE.Group) {
@@ -884,7 +927,8 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
     const loader = new GLTFLoader();
     const BASE = (import.meta as any).env?.BASE_URL ?? '/office-tower-defense/';
     const MODELS = ['sedan', 'sedan-sports', 'hatchback-sports', 'suv', 'suv-luxury',
-                    'van', 'taxi', 'light-curved', 'construction-cone'];
+                    'van', 'taxi', 'light-curved', 'construction-cone',
+                    'construction-barrier', 'traffic-light'];
     Promise.all(MODELS.map(name => new Promise<void>(ok => {
       loader.load(`${BASE}models/${name}.glb`,
         gltf => { modelCache.set(name, gltf.scene); ok(); },

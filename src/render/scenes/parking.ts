@@ -47,13 +47,15 @@ export function build(g: CanvasRenderingContext2D, rnd: () => number, data?: any
   scatter(rnd, many(10), 14, (x: number, y: number) => P.puddle(g, x, y, 10 + rnd() * 10, 4 + rnd() * 4));
   scatter(rnd, many(8), 10, (x: number, y: number) => P.manhole(g, x, y));
   scatter(rnd, many(40), 10, (x: number, y: number, r: number) => {
-    if (r < 0.25) P.cone(g, x, y);
-    else if (r < 0.4) P.barrel(g, x, y, rnd() < 0.5 ? PAL.rust : '#2f4f6f');
-    else if (r < 0.55) P.planterTree(g, x, y, rnd() < 0.5);
-    else if (r < 0.65) P.tire(g, x, y);
+    if (r < 0.20) P.cone(g, x, y);
+    else if (r < 0.35) P.barrel(g, x, y, rnd() < 0.5 ? PAL.rust : '#2f4f6f');
+    else if (r < 0.50) P.planterTree(g, x, y, rnd() < 0.5);
+    else if (r < 0.60) P.tire(g, x, y);
+    else if (r < 0.72) P.fireHydrant(g, x, y);
     else P.trash(g, x, y, rnd);
   });
   scatter(rnd, many(5), 30, (x: number, y: number) => P.dumpster(g, x, y));
+  scatter(rnd, many(6), 20, (x: number, y: number) => P.vendingMachine(g, x, y, rnd() < 0.5 ? '#1a3a6a' : '#2a1a4a'));
   P.spray(g, 'SCIOPERO!', TOWER.x - 170, TOWER.y - 150, PAL.pink, -0.08, 18);
   P.spray(g, 'NO STRAORDINARI', TOWER.x + 180, TOWER.y + 160, PAL.cyan, 0.05, 13);
 }

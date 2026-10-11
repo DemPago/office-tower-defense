@@ -52,12 +52,14 @@ export function build(g: CanvasRenderingContext2D, rnd: () => number, data: { li
     P.fence(g, TOWER.x + LANE + 4, t, TOWER.x + LANE + 4, t + 52);
   }
   scatter(rnd, many(110), 8, (x: number, y: number, r: number) => {
-    if (r < 0.35) P.barrel(g, x, y, [PAL.rust, '#2f4f6f', '#3e6b2a'][Math.floor(rnd() * 3)]);
-    else if (r < 0.5) { for (let k = 0; k < 3; k++) P.rect(g, x - 8, y - 10 + k * 4, 18, 2, PAL.woodHi); P.rect(g, x - 8, y - 10, 18, 12, 'rgba(0,0,0,0.15)'); } // pallet
-    else if (r < 0.62) { P.rect(g, x, y - 16, 2, 16, PAL.steel); g.fillStyle = PAL.hazard; g.beginPath(); g.moveTo(x + 1, y - 26); g.lineTo(x + 9, y - 14); g.lineTo(x - 7, y - 14); g.fill(); P.rect(g, x, y - 22, 2, 5, PAL.black); } // cartello di pericolo
-    else if (r < 0.75) P.tire(g, x, y);
+    if (r < 0.30) P.barrel(g, x, y, [PAL.rust, '#2f4f6f', '#3e6b2a'][Math.floor(rnd() * 3)]);
+    else if (r < 0.45) { for (let k = 0; k < 3; k++) P.rect(g, x - 8, y - 10 + k * 4, 18, 2, PAL.woodHi); P.rect(g, x - 8, y - 10, 18, 12, 'rgba(0,0,0,0.15)'); } // pallet
+    else if (r < 0.57) { P.rect(g, x, y - 16, 2, 16, PAL.steel); g.fillStyle = PAL.hazard; g.beginPath(); g.moveTo(x + 1, y - 26); g.lineTo(x + 9, y - 14); g.lineTo(x - 7, y - 14); g.fill(); P.rect(g, x, y - 22, 2, 5, PAL.black); } // cartello di pericolo
+    else if (r < 0.68) P.tire(g, x, y);
+    else if (r < 0.80) P.fireHydrant(g, x, y);
     else P.trash(g, x, y, rnd);
   });
+  scatter(rnd, many(4), 25, (x: number, y: number) => P.vendingMachine(g, x, y, '#3a2010'));
   // Torri faro (le luci girano nell'animazione)
   for (const [x, y] of [[TOWER.x - 210, TOWER.y - 180], [TOWER.x + 220, TOWER.y + 170], [TOWER.x + 230, TOWER.y - 200]]) {
     P.rect(g, x - 1, y - 40, 3, 40, PAL.steel);

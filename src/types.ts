@@ -287,7 +287,6 @@ export interface Run {
   stats: Stats;
   enemies: Enemy[];
   bombs: any[];
-  bombPenalty: number;
   bombsLeft?: number;
   bombsDone?: boolean;
   bombsPlacedQuadro?: number;

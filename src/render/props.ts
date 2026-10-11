@@ -593,6 +593,55 @@ export function nasone(g: Ctx, x: number, y: number): { x: number; y: number; gr
   return { x: x + 6.5, y: y - 10, ground: y - 1 };           // dove cade l'acqua
 }
 
+// Idrante antincendio (stile italiano, rosso/giallo).
+export function fireHydrant(g: Ctx, x: number, y: number): void {
+  shadow(g, x - 4, y + 1, 8, 2);
+  rect(g, x - 3.5, y - 1.5, 7, 2, PAL.black);
+  rect(g, x - 3, y - 1.5, 6, 1.5, '#b03a10');            // base
+  rect(g, x - 2.5, y - 11, 6, 10, PAL.black);
+  rect(g, x - 2, y - 10.5, 5, 9, '#cc4418');             // corpo
+  rect(g, x - 2, y - 10.5, 1.5, 9, '#e86030');           // luce laterale
+  rect(g, x + 1.5, y - 10.5, 1, 9, '#962e0e');           // ombra
+  rect(g, x - 2.5, y - 13, 6, 2.5, PAL.black);
+  rect(g, x - 2, y - 12.5, 5, 2, '#b03010');             // cappello
+  rect(g, x - 1, y - 13.5, 3, 1, '#802010');             // puntale
+  for (const [bx, by] of [[-4.5, -7.5], [3, -7.5]] as [number, number][]) {
+    rect(g, x + bx, y + by, 2.5, 2.5, PAL.black);
+    rect(g, x + bx + 0.5, y + by + 0.5, 1.5, 1.5, '#902010'); // valvola
+    rect(g, x + bx + 0.5, y + by + 0.5, 0.5, 0.5, '#d07060');
+  }
+  rect(g, x - 1.5, y - 9, 4, 1, PAL.hazard);             // banda gialla di sicurezza
+}
+
+// Distributore automatico (snack / bibite).
+export function vendingMachine(g: Ctx, x: number, y: number, color: string = '#1a3a6a'): void {
+  shadow(g, x - 1, y + 1, 15, 3);
+  rect(g, x - 1.5, y - 32.5, 16, 33, PAL.black);
+  rect(g, x - 1, y - 32, 15, 32, color);
+  rect(g, x - 1, y - 32, 1.5, 32, shade(color, 1.4));    // luce sx
+  rect(g, x + 12, y - 32, 1.5, 32, shade(color, 0.6));   // ombra dx
+  rect(g, x - 1, y - 32, 15, H, shade(color, 1.5));      // top
+  rect(g, x + 2, y - 29, 10, 18, '#1c2430');             // vetrina
+  rect(g, x + 3, y - 28.5, 3, H, '#6f8597');             // riflesso vetrina
+  for (let row = 0; row < 3; row++) {
+    const vy = y - 26 + row * 5;
+    for (let col = 0; col < 2; col++) {
+      const vx = x + 3 + col * 5;
+      const c = [[PAL.red, PAL.toxic, '#f0a020'], [PAL.cyan, PAL.pink, PAL.hazard]][col][row];
+      rect(g, vx, vy, 4, 3.5, shade(c, 0.7));
+      rect(g, vx, vy, 4, H, shade(c, 1.3));
+    }
+  }
+  rect(g, x + 2, y - 10, 10, 3, '#0a1020');             // fessura selezione
+  rect(g, x + 3, y - 9, 8, 1.5, '#0f1828');
+  rect(g, x + 4, y - 6, 6, 5, '#1c2430');               // slot ritiro
+  rect(g, x + 5, y - 5, 4, 3, PAL.black);
+  rect(g, x + 7, y - 5.5, 0.5, 3.5, shade(color, 0.8));  // centina slot
+  rect(g, x + 3, y - 22, 3, 2, PAL.pink);               // pulsanti
+  rect(g, x + 7, y - 22, 3, 2, PAL.cyan);
+  rect(g, x + 3, y - 20, 7, H, shade(color, 1.2));
+}
+
 // Kebabbaro: chiosco con lo spiedo (che gira nell'animazione), insegna e sgabelli.
 export function kebab(g: Ctx, x: number, y: number): { x: number; y: number; sign: { x: number; y: number } } {
   shadow(g, x + 2, y + 1, 44, 4);
