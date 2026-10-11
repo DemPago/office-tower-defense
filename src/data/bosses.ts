@@ -32,7 +32,7 @@ export const BOSSES = [
 ];
 
 // Dopo l'ondata 100 i boss ricominciano dal primo, con un "+" nel nome.
-export function bossForWave(wave) {
+export function bossForWave(wave: number) {
   if (wave % 10 !== 0) return null;
   const i = (wave / 10 - 1) % BOSSES.length;
   const loop = Math.floor((wave / 10 - 1) / BOSSES.length);

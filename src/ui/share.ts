@@ -4,15 +4,15 @@ export const KOFI_URL = 'https://ko-fi.com/dem420156';
 export const GAME_URL = 'https://dempago.github.io/office-tower-defense/';
 
 const NETWORKS = [
-  { id: 'whatsapp', label: 'WhatsApp', icon: '💬', url: (t, u) => 'https://wa.me/?text=' + encodeURIComponent(t + ' ' + u) },
-  { id: 'telegram', label: 'Telegram', icon: '✈️', url: (t, u) => `https://t.me/share/url?url=${encodeURIComponent(u)}&text=${encodeURIComponent(t)}` },
-  { id: 'x',        label: 'X',        icon: '𝕏',  url: (t, u) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}&url=${encodeURIComponent(u)}` },
-  { id: 'facebook', label: 'Facebook', icon: 'f',  url: (t, u) => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(u)}` },
-  { id: 'linkedin', label: 'LinkedIn', icon: 'in', url: (t, u) => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(u)}` },
+  { id: 'whatsapp', label: 'WhatsApp', icon: '💬', url: (t: string, u: string) => 'https://wa.me/?text=' + encodeURIComponent(t + ' ' + u) },
+  { id: 'telegram', label: 'Telegram', icon: '✈️', url: (t: string, u: string) => `https://t.me/share/url?url=${encodeURIComponent(u)}&text=${encodeURIComponent(t)}` },
+  { id: 'x',        label: 'X',        icon: '𝕏',  url: (t: string, u: string) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}&url=${encodeURIComponent(u)}` },
+  { id: 'facebook', label: 'Facebook', icon: 'f',  url: (t: string, u: string) => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(u)}` },
+  { id: 'linkedin', label: 'LinkedIn', icon: 'in', url: (t: string, u: string) => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(u)}` },
 ];
 
 // Riempie il contenitore con i pulsanti. text() restituisce il testo da condividere al momento del clic.
-export function renderShare(container, text) {
+export function renderShare(container: HTMLElement, text: () => string) {
   container.innerHTML = '';
   for (const n of NETWORKS) {
     const a = document.createElement('a');

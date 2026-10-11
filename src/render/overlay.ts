@@ -2,8 +2,11 @@
 // titolo dello scenario, banner, barra del boss, avvisi e freccia del boss.
 import { PAL, FONT, SPRAY } from './palette.js';
 import { hazardStripes } from './props.js';
+import type { Run, Enemy } from '../types.js';
 
-export function drawSceneTitle(ctx, name, W, H, fade) {
+interface View { scale: number; ox: number; oy: number; ui: number; }
+
+export function drawSceneTitle(ctx: CanvasRenderingContext2D, name: string, W: number, H: number, fade: number): void {
   ctx.globalAlpha = Math.min(1, (fade - 0.2) * 3);
   ctx.textAlign = 'center';
   ctx.font = `9px ${FONT}`;
@@ -17,7 +20,7 @@ export function drawSceneTitle(ctx, name, W, H, fade) {
   ctx.globalAlpha = 1;
 }
 
-export function drawBanner(ctx, run, W, H) {
+export function drawBanner(ctx: CanvasRenderingContext2D, run: Run, W: number, H: number): void {
   const b = run.fx.banner;
   if (!b) return;
   const k = b.life / b.max;
@@ -43,11 +46,12 @@ export function drawBanner(ctx, run, W, H) {
   ctx.globalAlpha = 1;
 }
 
-export function drawBossBar(ctx, run, W) {
+export function drawBossBar(ctx: CanvasRenderingContext2D, run: Run, W: number): void {
   if (!run.boss) return;
-  const list = run.boss.list;
-  const hp = list.reduce((a, e) => a + Math.max(0, e.hp), 0);
-  const max = list.reduce((a, e) => a + e.maxHp, 0);
+  const boss = run.boss as any;
+  const list: Enemy[] = boss.list;
+  const hp = list.reduce((a: number, e: Enemy) => a + Math.max(0, e.hp), 0);
+  const max = list.reduce((a: number, e: Enemy) => a + e.maxHp, 0);
   const w = Math.min(W - 40, 420), x = (W - w) / 2, y = 14;
   ctx.fillStyle = PAL.black;
   ctx.fillRect(x - 3, y - 3, w + 6, 14);
@@ -61,14 +65,14 @@ export function drawBossBar(ctx, run, W) {
   ctx.textAlign = 'center';
   ctx.strokeStyle = PAL.black;
   ctx.lineWidth = 4;
-  ctx.strokeText(run.boss.name, W / 2, y + 24);
+  ctx.strokeText(boss.name, W / 2, y + 24);
   ctx.fillStyle = PAL.white;
-  ctx.fillText(run.boss.name, W / 2, y + 24);
+  ctx.fillText(boss.name, W / 2, y + 24);
 }
 
 
 // Freccia sul bordo dello schermo che indica da dove arriva il boss.
-export function drawBossPointer(ctx, run, view, W, H) {
+export function drawBossPointer(ctx: CanvasRenderingContext2D, run: Run, view: View, W: number, H: number): void {
   for (const e of run.enemies) {
     if (!e.boss) continue;
     const sx = (view.ox + e.x * view.scale) / view.ui, sy = (view.oy + (e.y - e.size / 2) * view.scale) / view.ui;

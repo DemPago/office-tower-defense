@@ -5,11 +5,11 @@ import { LOOKS, GRID, WORLD_PER_PX, drawPerson, zombify } from './people.js';
 import { AGRID, drawAnimal } from './animals.js';
 import { ANIMALS } from '../data/animals.js';
 
-function silhouette(src, color) {
+function silhouette(src: HTMLCanvasElement, color: string) {
   const c = document.createElement('canvas');
   c.width = src.width;
   c.height = src.height;
-  const g = c.getContext('2d');
+  const g = c.getContext('2d')!;
   g.drawImage(src, 0, 0);
   g.globalCompositeOperation = 'source-in';
   g.fillStyle = color;
@@ -18,43 +18,43 @@ function silhouette(src, color) {
 }
 
 // Aggiunge un contorno scuro tutto intorno a uno sprite.
-function outlined(base) {
+function outlined(base: HTMLCanvasElement) {
   const out = document.createElement('canvas');
   out.width = base.width;
   out.height = base.height;
-  const og = out.getContext('2d');
+  const og = out.getContext('2d')!;
   const black = silhouette(base, '#0d0d0f');
   for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) og.drawImage(black, dx, dy);
   og.drawImage(base, 0, 0);
   return out;
 }
 
-function buildAnimal(id, frame) {
+function buildAnimal(id: string, frame: number) {
   const base = document.createElement('canvas');
   base.width = AGRID.w + 2;
   base.height = AGRID.h + 2;
-  const bg = base.getContext('2d');
+  const bg = base.getContext('2d')!;
   bg.translate(1, 1);
-  drawAnimal(bg, ANIMALS[id], frame);
+  drawAnimal(bg, ANIMALS[id as keyof typeof ANIMALS], frame);
   return outlined(base);
 }
 
-function build(lookId, frame) {
+function build(lookId: string, frame: number) {
   // 1) personaggio alla risoluzione della griglia, con 1 pixel di margine per il contorno
   const base = document.createElement('canvas');
   base.width = GRID.w + 2;
   base.height = GRID.h + 2;
-  const bg = base.getContext('2d');
+  const bg = base.getContext('2d')!;
   bg.translate(1, 1);
   // 'z2:impiegato' = impiegato zombie, malridotto allo stadio 2
   const isZombie = lookId[0] === 'z' && lookId[2] === ':';
-  const look = isZombie ? zombify(LOOKS[lookId.slice(3)], Number(lookId[1])) : LOOKS[lookId];
+  const look = isZombie ? zombify(LOOKS[lookId.slice(3) as keyof typeof LOOKS], Number(lookId[1])) : LOOKS[lookId as keyof typeof LOOKS];
   drawPerson(bg, look, frame);
   // 2) contorno scuro tutto intorno
   const out = document.createElement('canvas');
   out.width = base.width;
   out.height = base.height;
-  const og = out.getContext('2d');
+  const og = out.getContext('2d')!;
   const black = silhouette(base, '#0d0d0f');
   for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) og.drawImage(black, dx, dy);
   og.drawImage(base, 0, 0);
@@ -66,7 +66,7 @@ export async function loadAssets() {
   // Restituisce { img, w, h }: l'immagine e la sua misura nel mondo di gioco
   // (scale 2 per i boss). I piedi sono sul bordo in basso, al centro.
   // tint: false = normale, true = tutto bianco (colpito), oppure un colore (es. rosso per i boss infuriati)
-  function person(lookId, frame = 0, scale = 1, tint = false) {
+  function person(lookId: string, frame = 0, scale = 1, tint: boolean | string = false) {
     const key = `${lookId}|${frame}|${tint}`;
     let img = cache.get(key);
     if (!img) {
@@ -77,7 +77,7 @@ export async function loadAssets() {
     return { img, w: img.width * k, h: img.height * k, k };
   }
   // Come person(), ma per gli animali dei boss (griglia a risoluzione doppia dei personaggi).
-  function animal(id, frame = 0, scale = 1, tint = false) {
+  function animal(id: string, frame = 0, scale = 1, tint: boolean | string = false) {
     const key = `A|${id}|${frame}|${tint}`;
     let img = cache.get(key);
     if (!img) {

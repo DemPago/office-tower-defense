@@ -4,14 +4,14 @@ import { TOWER } from '../state.js';
 import { AREA, MARGIN, SCENE_RES, seeded, free } from './scenes/common.js';
 import * as P from './props.js';
 
-let decals = null;
+let decals: HTMLCanvasElement | null = null;
 
 // Macchie, pozze e resti disegnati una volta sola, sopra a qualsiasi scenario.
 function buildDecals() {
   const c = document.createElement('canvas');
   c.width = AREA.w * SCENE_RES;
   c.height = AREA.h * SCENE_RES;
-  const g = c.getContext('2d');
+  const g = c.getContext('2d')!;
   g.scale(SCENE_RES, SCENE_RES);
   g.translate(MARGIN, MARGIN);
   const rnd = seeded(777);
@@ -45,7 +45,7 @@ function buildDecals() {
 }
 
 // Sopra allo scenario, in coordinate del mondo. k = intensità (0-1, per la dissolvenza).
-export function drawZombieWorld(ctx, time, k) {
+export function drawZombieWorld(ctx: CanvasRenderingContext2D, time: number, k: number) {
   if (!decals) decals = buildDecals();
   ctx.globalAlpha = k;
   ctx.drawImage(decals, -MARGIN, -MARGIN, AREA.w, AREA.h);
@@ -62,7 +62,7 @@ export function drawZombieWorld(ctx, time, k) {
 }
 
 // Luce verde malata su tutto lo schermo, in coordinate dello schermo.
-export function drawZombieGrade(ctx, canvas, time, k) {
+export function drawZombieGrade(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, time: number, k: number) {
   ctx.fillStyle = `rgba(20,45,15,${0.35 * k})`;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   // la luce ogni tanto trema, come un neon che sta per saltare

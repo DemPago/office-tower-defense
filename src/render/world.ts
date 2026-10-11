@@ -7,6 +7,9 @@
 //   enemies.js  nemici, boss, scie, corpi
 //   effects.js  colpi, particelle, numeri, atmosfera
 //   overlay.js  scritte sopra al mondo (banner, barra del boss, avvisi)
+import { Run } from '../types.js';
+import type { loadAssets } from './assets.js';
+type Assets = Awaited<ReturnType<typeof loadAssets>>;
 import { TOWER, YARD } from '../state.js';
 import { allyPos } from '../systems/allies.js';
 import { PAL } from './palette.js';
@@ -21,7 +24,7 @@ import { isZombieWave } from '../data/enemies.js';
 import { drawWall } from './wall.js';
 import { drawSceneTitle, drawBanner, drawBossBar, drawBossPointer } from './overlay.js';
 
-function drawBombs(ctx, run, time) {
+function drawBombs(ctx: CanvasRenderingContext2D, run: Run, time: number) {
   for (const b of run.bombs) {
     if (b.detonated) continue;
     // Corpo bomba (piccolo)
@@ -52,19 +55,19 @@ function drawBombs(ctx, run, time) {
   }
 }
 
-export function createRenderer(canvas, assets) {
-  const ctx = canvas.getContext('2d');
+export function createRenderer(canvas: HTMLCanvasElement, assets: Assets) {
+  const ctx = canvas.getContext('2d')!;
   const view = { scale: 1, ox: 0, oy: 0, ui: 1 };
   const scenes = new Map(); // scenari già disegnati (si tengono gli ultimi due)
-  let sceneIdx = 0, prevIdx = null, fade = 0;
+  let sceneIdx = 0, prevIdx: number | null = null, fade = 0;
   // Fumo e polvere sono solo decorazione: vivono qui e non nello stato del gioco.
-  const smoke = [];
-  const trails = [];
+  const smoke: any[] = [];
+  const trails: any[] = [];
   const dust = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), v: 0.01 + Math.random() * 0.02, a: Math.random() * 6 }));
   let lastTime = performance.now() / 1000;
   let zombieK = 0; // intensità dell'atmosfera zombie (sale e scende piano)
 
-  function scene(i) {
+  function scene(i: number) {
     if (!scenes.has(i)) {
       scenes.set(i, buildScene(i));
       for (const k of scenes.keys()) if (k !== i && k !== sceneIdx && scenes.size > 2) scenes.delete(k);
@@ -89,7 +92,7 @@ export function createRenderer(canvas, assets) {
     view.ui = dpr * Math.max(1, Math.min(2.4, Math.min(w, h) / 380));
   }
 
-  function draw(run) {
+  function draw(run: Run | null) {
     const time = performance.now() / 1000;
     const dt = Math.min(0.05, time - lastTime);
     lastTime = time;
@@ -148,7 +151,7 @@ export function createRenderer(canvas, assets) {
     }
 
     // Profondità: chi sta più in alto (dietro al palazzo) si disegna prima.
-    const actors = run ? [
+    const actors: { y: number; draw: () => void; e?: any }[] = run ? [
       ...run.enemies.map(e => ({ y: e.y, draw: () => drawEnemy(ctx, assets, e), e })),
       ...run.allies.map(a => ({ y: allyPos(a).y, draw: () => drawAlly(ctx, assets, a, time) })),
     ].sort((a, b) => a.y - b.y) : [];
@@ -170,13 +173,13 @@ export function createRenderer(canvas, assets) {
 
     // Da qui si disegna in coordinate dello schermo
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    if (run && run.fx.flash > 0) {
+    if (run && (run.fx as any).flash > 0) {
       // trasformazione del boss: tutto si illumina di bianco
-      ctx.fillStyle = `rgba(255,255,255,${Math.min(1, run.fx.flash * 1.2)})`;
+      ctx.fillStyle = `rgba(255,255,255,${Math.min(1, (run.fx as any).flash * 1.2)})`;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     drawDust(ctx, dust, dt, canvas);
-    drawGrade(ctx, canvas, run);
+    drawGrade(ctx, canvas, run!);
     if (zombieK > 0) drawZombieGrade(ctx, canvas, time, zombieK);
     ctx.setTransform(view.ui, 0, 0, view.ui, 0, 0);
     const W = canvas.width / view.ui, H = canvas.height / view.ui;
@@ -189,14 +192,14 @@ export function createRenderer(canvas, assets) {
   }
 
   // Riquadro sullo schermo (pixel CSS) di una parte del mondo, per il tutorial.
-  function screenRect(name) {
+  function screenRect(name: string) {
     const area = name === 'tower' ? { x: TOWER.x - 40, y: TOWER.y - 110, w: 80, h: 140 } : { x: YARD.x - 10, y: YARD.y - 14, w: YARD.w + 20, h: YARD.h + 26 };
     const c = canvas.getBoundingClientRect(), k = c.width / canvas.width;
     return { left: c.left + (view.ox + area.x * view.scale) * k, top: c.top + (view.oy + area.y * view.scale) * k, width: area.w * view.scale * k, height: area.h * view.scale * k };
   }
 
   // Converte coordinate CSS (clientX/clientY) in coordinate mondo.
-  function screenToWorld(cx, cy) {
+  function screenToWorld(cx: number, cy: number) {
     const rect = canvas.getBoundingClientRect();
     const px = (cx - rect.left) * (canvas.width / rect.width);
     const py = (cy - rect.top) * (canvas.height / rect.height);

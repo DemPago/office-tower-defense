@@ -1,11 +1,12 @@
 // Il palazzo (la torre) disegnato a risoluzione doppia, il protagonista sul tetto e il fumo.
 import { TOWER } from '../state.js';
+import type { Run } from '../types.js';
 import { PAL, FONT, SPRAY } from './palette.js';
 import { hazardStripes, sandbag } from './props.js';
 import { drawPersonAt } from './view.js';
 
 // Misure del palazzo (la torre).
-export const B = { w: 60, h: 84 };
+export const B: { w: number; h: number; x0: number; base: number; top: number } = { w: 60, h: 84, x0: 0, base: 0, top: 0 };
 B.x0 = TOWER.x - B.w / 2;
 B.base = TOWER.y + 24;
 B.top = B.base - B.h;
@@ -24,7 +25,7 @@ const CRACKS = [
   [[60, 120], [52, 132], [58, 144], [50, 156]],
 ];
 
-let facadeCache = null;
+let facadeCache: HTMLCanvasElement | null = null;
 
 // Facciata "statica" (cemento, macchie, colature): disegnata una sola volta.
 function facade() {
@@ -33,7 +34,7 @@ function facade() {
   c.width = TW;
   c.height = TH;
   const g = c.getContext('2d');
-  const p = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+  const p = (x: number, y: number, w: number, h: number, col: string) => { g!.fillStyle = col; g!.fillRect(x, y, w, h); };
   let seed = 5;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
   p(0, 0, TW, TH, PAL.concrete);
@@ -53,16 +54,18 @@ function facade() {
     p(x, y, 2, 20 + Math.floor(rnd() * 20), 'rgba(138,59,30,0.45)');
   }
   // graffito
-  g.font = `16px ${SPRAY}`;
-  g.fillStyle = PAL.black;
-  g.fillText('OTD', 8, TH - 12);
-  g.fillStyle = PAL.pink;
-  g.fillText('OTD', 6, TH - 14);
+  g!.font = `16px ${SPRAY}`;
+  g!.fillStyle = PAL.black;
+  g!.fillText('OTD', 8, TH - 12);
+  g!.fillStyle = PAL.pink;
+  g!.fillText('OTD', 6, TH - 14);
   facadeCache = c;
   return c;
 }
 
-function drawWindow(p, x, y, kind, flick, i) {
+type FillRect = (x: number, y: number, w: number, h: number, col: string) => void;
+
+function drawWindow(p: FillRect, x: number, y: number, kind: string, flick: boolean, i: number) {
   p(x - 1, y - 1, 26, 22, PAL.black);
   p(x, y + 20, 24, 2, PAL.concreteHi); // davanzale
   if (kind === 'L') {
@@ -93,7 +96,7 @@ function drawWindow(p, x, y, kind, flick, i) {
 }
 
 // Tetto pagoda: corpo rosso + gronde che si alzano agli angoli
-function drawRoof(p, x, y, w, h) {
+function drawRoof(p: FillRect, x: number, y: number, w: number, h: number) {
   p(x, y + h - 2, w, 3, '#0d0508');                          // cornice nera
   p(x + 2, y + 1, w - 4, h - 3, '#c41c1c');                  // corpo
   p(x + 2, y + 1, w - 4, 2, '#e63030');                      // highlight cima
@@ -107,14 +110,15 @@ function drawRoof(p, x, y, w, h) {
   p(x - 14, y + h - 11, 3, 4, '#c41c1c'); p(x + w + 11, y + h - 11, 3, 4, '#c41c1c');
 }
 
-function drawCastle(ctx, assets, run, time) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function drawCastle(ctx: CanvasRenderingContext2D, assets: any, run: Run | null, time: number) {
   const dead = run && run.phase === 'over';
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.fillRect(B.x0 + 6, B.base - 2, B.w + 14, 7);
   ctx.save();
   ctx.translate(B.x0, B.top);
   ctx.scale(0.5, 0.5);
-  const p = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+  const p: FillRect = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
   const W = TW, H = TH;
 
   // ── Ciliegio pixel art (a sinistra del castello) ──
@@ -193,7 +197,7 @@ function drawCastle(ctx, assets, run, time) {
   ctx.restore();
   // Protagonist on roof
   if (dead) return;
-  const recoil = run && run.tower.recoil > 0 ? 1 : 0;
+  const recoil = run && run.tower.recoil! > 0 ? 1 : 0;
   const bob = Math.round(Math.sin(time * 2.2) * 0.6);
   const feet = B.top - 3 + recoil + bob;
   drawPersonAt(ctx, assets.person(run ? run.hero : 'peppe', 0, 1), TOWER.x + 4, feet);
@@ -204,7 +208,8 @@ function drawCastle(ctx, assets, run, time) {
   }
 }
 
-export function drawTower(ctx, assets, run, time) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function drawTower(ctx: CanvasRenderingContext2D, assets: any, run: Run | null, time: number) {
   if (run?.bonusStage) { drawCastle(ctx, assets, run, time); return; }
   const hpRatio = run ? run.tower.hp / run.stats.maxHp : 1;
   const dead = run && run.phase === 'over';
@@ -216,7 +221,7 @@ export function drawTower(ctx, assets, run, time) {
   ctx.save();
   ctx.translate(B.x0, B.top);
   ctx.scale(0.5, 0.5);
-  const p = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+  const p: FillRect = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
 
   p(-3, -3, TW + 6, TH + 6, PAL.black);
   ctx.drawImage(facade(), 0, 0);
@@ -305,7 +310,7 @@ export function drawTower(ctx, assets, run, time) {
   if (dead) return;
 
   // Il protagonista sul tetto: elmetto e giubbotto catarifrangente
-  const recoil = run && run.tower.recoil > 0 ? 1 : 0;
+  const recoil = run && run.tower.recoil! > 0 ? 1 : 0;
   const bob = Math.round(Math.sin(time * 2.2) * 0.6);
   const feet = B.top - 3 + recoil + bob;
   drawPersonAt(ctx, assets.person(run ? run.hero : 'peppe', 0, 1), TOWER.x + 4, feet);
@@ -320,7 +325,17 @@ export function drawTower(ctx, assets, run, time) {
   }
 }
 
-export function updateSmoke(smoke, run, dt) {
+interface SmokeParticle {
+  x: number;
+  y: number;
+  vx: number;
+  size: number;
+  life: number;
+  max: number;
+  fire: boolean;
+}
+
+export function updateSmoke(smoke: SmokeParticle[], run: Run | null, dt: number) {
   const ratio = run ? run.tower.hp / run.stats.maxHp : 1;
   const over = run && run.phase === 'over';
   const rate = over ? 34 : ratio < 0.3 ? 10 : ratio < 0.6 ? 4 : 0.6;
@@ -335,7 +350,7 @@ export function updateSmoke(smoke, run, dt) {
   for (let i = smoke.length - 1; i >= 0; i--) if (smoke[i].life <= 0) smoke.splice(i, 1);
 }
 
-export function drawSmoke(ctx, smoke) {
+export function drawSmoke(ctx: CanvasRenderingContext2D, smoke: SmokeParticle[]) {
   for (const s of smoke) {
     const k = s.life / s.max;
     ctx.globalAlpha = k * 0.75;
@@ -346,6 +361,6 @@ export function drawSmoke(ctx, smoke) {
   ctx.globalAlpha = 1;
 }
 
-export function hiddenByTower(e) {
+export function hiddenByTower(e: { x: number; y: number }) {
   return Math.abs(e.x - TOWER.x) < B.w / 2 + 8 && e.y > B.top && e.y < B.base;
 }

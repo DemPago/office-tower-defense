@@ -4,17 +4,38 @@ import { RARITY, cardPower, findCard } from '../data/cards.js';
 import { META_UPGRADES, levelCost } from '../data/upgrades.js';
 import { ALLY_LEVELS, allyArc } from '../data/allies.js';
 import { HEROES, UNLOCK_WAVE, unlockedHeroes, heroStatsText } from '../data/heroes.js';
+import type { HeroDef } from '../data/heroes.js';
 import { bombMult, nextQuadro, canPlaceBomb, bombsForQuadro, BOMB_MAX } from '../systems/bombs.js';
 import { weaponDef } from '../data/weapons.js';
 import { slotName } from '../systems/allies.js';
 import { fmt } from '../util.js';
 import { domAdvice } from './dom.js';
+import type { Run, Meta } from '../types.js';
 
-const $ = id => document.getElementById(id);
+interface BoardRow {
+  id?: string;
+  ts?: number;
+  initials: string;
+  wave: number;
+  kills: number;
+}
+
+interface BoardData {
+  rows: BoardRow[];
+  source?: string;
+}
+
+interface ScoreResult {
+  rank?: number;
+  id?: string;
+  ts?: number;
+}
+
+const $ = (id: string) => document.getElementById(id);
 const SCREENS = ['scr-menu', 'scr-shop', 'scr-cards', 'scr-pause', 'scr-over', 'scr-board', 'scr-bombs'];
 
-export function show(id) {
-  for (const s of SCREENS) $(s).hidden = s !== id;
+export function show(id: string | null) {
+  for (const s of SCREENS) $(s)!.hidden = s !== id;
 }
 
 export function hideAll() {
@@ -22,7 +43,7 @@ export function hideAll() {
 }
 
 // Popola #hero-preview con ritratto + info strutturate.
-function updateHeroPreview(h, portrait, locked) {
+function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean) => HTMLCanvasElement, locked: boolean) {
   const box = $('hero-preview');
   if (!box) return;
   if (locked) {
@@ -30,7 +51,8 @@ function updateHeroPreview(h, portrait, locked) {
     return;
   }
   const w = weaponDef(h.weapon);
-  const pills = Object.entries(h.stats || {}).map(([k, v]) => {
+  const stats = (h.stats || {}) as Record<string, number>;
+  const pills = Object.entries(stats).map(([k, v]) => {
     const n = k === 'manaMax' ? `${v > 0 ? '+' : ''}${v}` : `${v > 0 ? '+' : ''}${Math.round(v * 100)}%`;
     const label = { dmg:'danno', rate:'fuoco', hp:'vita', regen:'regen',
                     range:'gittata', manaRegen:'mana', crit:'crit',
@@ -54,12 +76,13 @@ function updateHeroPreview(h, portrait, locked) {
 }
 
 // portrait(id, locked) restituisce un canvas col ritratto; onHero(id) quando ne scegli uno.
-export function showMenu(meta, portrait, onHero) {
-  $('menu-best').textContent = meta.best ? `Record: ondata ${meta.best}` : 'Nessuna partita ancora';
-  $('menu-buoni').textContent = `🎫 ${fmt(meta.buoni)} buoni pasto`;
+export function showMenu(meta: Meta, portrait: (id: string, locked: boolean) => HTMLCanvasElement, onHero: (id: string) => void) {
+  $('menu-best')!.textContent = meta.best ? `Record: ondata ${meta.best}` : 'Nessuna partita ancora';
+  $('menu-buoni')!.textContent = `🎫 ${fmt(meta.buoni)} buoni pasto`;
   const have = unlockedHeroes(meta);
-  const current = have.includes(meta.hero) ? meta.hero : 'peppe';
+  const current = meta.hero && have.includes(meta.hero) ? meta.hero : 'peppe';
   const list = $('hero-list');
+  if (!list) return;
   list.innerHTML = '';
   for (const h of HEROES) {
     const locked = !have.includes(h.id);
@@ -73,30 +96,30 @@ export function showMenu(meta, portrait, onHero) {
     btn.addEventListener('click', () => { if (!locked) onHero(h.id); else updateHeroPreview(h, portrait, locked); });
     list.appendChild(btn);
   }
-  const sel = HEROES.find(h => h.id === current);
+  const sel = HEROES.find((h: HeroDef) => h.id === current)!;
   updateHeroPreview(sel, portrait, false);
   show('scr-menu');
 }
 
 
-export function updateBombUI(run) {
+export function updateBombUI(run: Run) {
   const q = nextQuadro(run);
   const mult = bombMult(run);
   const pct = run.bombPenalty * 5;
   const left = run.bombsLeft ?? bombsForQuadro(run);
   const total = bombsForQuadro(run);
-  $('bomb-quadro-label').textContent = `QUADRO ${q}`;
-  $('bomb-mult-label').textContent = `💣 ×${mult}`;
-  $('bomb-penalty-val').textContent = pct > 0 ? `−${pct}% a tutte le stat` : 'nessuna';
-  $('bomb-count-val').textContent = `${total - left} / ${total}`;
+  $('bomb-quadro-label')!.textContent = `QUADRO ${q}`;
+  $('bomb-mult-label')!.textContent = `💣 ×${mult}`;
+  $('bomb-penalty-val')!.textContent = pct > 0 ? `−${pct}% a tutte le stat` : 'nessuna';
+  $('bomb-count-val')!.textContent = `${total - left} / ${total}`;
   const can = canPlaceBomb(run);
-  document.querySelector('.bombs-hint').textContent = can
+  document.querySelector('.bombs-hint')!.textContent = can
     ? `Rimangono ${left} bomb${left === 1 ? 'a' : 'e'} — clicca sulla mappa`
     : left === 0 ? 'Bombe esaurite per questo quadro' : `Limite stat raggiunto`;
 }
 
 // Sezione "carte giocabili" nella schermata carte: carte usabili dalla mano.
-export function updateHandPlayable(run, onPlay, onSell) {
+export function updateHandPlayable(run: Run, onPlay: (i: number) => void, onSell: (i: number) => void) {
   const box = $('hand-playable');
   if (!box) return;
   const list = $('hand-play-list');
@@ -108,6 +131,7 @@ export function updateHandPlayable(run, onPlay, onSell) {
   box.hidden = false;
   list.innerHTML = '';
   for (const { pick, i, def } of playable) {
+    if (!def) continue;
     const row = document.createElement('div');
     row.className = 'hc-playable';
     row.innerHTML = `<span class="ico">${def.icon}</span><span class="nm">${def.name}<br><small>${def.desc(pick.m)}</small></span>`;
@@ -126,14 +150,15 @@ export function updateHandPlayable(run, onPlay, onSell) {
   }
 }
 
-export function showBombs(run) {
+export function showBombs(run: Run) {
   updateBombUI(run);
   show('scr-bombs');
 }
 
-export function showShop(meta, onBuy) {
-  $('shop-buoni').textContent = `🎫 ${fmt(meta.buoni)} buoni pasto`;
+export function showShop(meta: Meta, onBuy: (id: string) => void) {
+  $('shop-buoni')!.textContent = `🎫 ${fmt(meta.buoni)} buoni pasto`;
   const list = $('shop-list');
+  if (!list) return;
   list.innerHTML = '';
   for (const def of META_UPGRADES) {
     const L = meta.levels[def.id] || 0;
@@ -152,18 +177,20 @@ export function showShop(meta, onBuy) {
   show('scr-shop');
 }
 
-export function showCards(run, onPick, onReroll) {
+export function showCards(run: Run, onPick: (i: number) => void, onReroll: () => void) {
   const box = $('cards-list');
+  if (!box) return;
   box.innerHTML = '';
-  const rr = $('btn-reroll');
+  const rr = $('btn-reroll') as HTMLButtonElement | null;
+  if (!rr) return;
   const domWizard = $('dom-wizard');
   if (domWizard) domWizard.hidden = true;
 
   // ── Modalità scarto: mano piena, scegli quale carta rimuovere ──
   if (run.discarding) {
-    $('cards-title').textContent = '🗂️ MANO PIENA!';
-    const { card: pending } = run.pendingPick;
-    $('cards-sub').textContent = `Vuoi aggiungere ${pending.icon} ${pending.name} — rimuovi una carta`;
+    $('cards-title')!.textContent = '🗂️ MANO PIENA!';
+    const { card: pending } = run.pendingPick!;
+    $('cards-sub')!.textContent = `Vuoi aggiungere ${pending.icon} ${pending.name} — rimuovi una carta`;
     rr.hidden = true;
     run.cardPicks.forEach((pick, i) => {
       const def = findCard(pick.id);
@@ -188,10 +215,10 @@ export function showCards(run, onPick, onReroll) {
 
   // ── Modalità malus pesanti (dopo ondata zombie) ──
   if (run.isHeavyMalus) {
-    $('cards-title').textContent = '☣️ ONDATA ZOMBIE SUPERATA!';
-    $('cards-sub').textContent = 'Tutto il team è a pezzi. Scegli il danno minore.';
+    $('cards-title')!.textContent = '☣️ ONDATA ZOMBIE SUPERATA!';
+    $('cards-sub')!.textContent = 'Tutto il team è a pezzi. Scegli il danno minore.';
     rr.hidden = true;
-    run.cardChoices.forEach((card, i) => {
+    run.cardChoices!.forEach((card, i) => {
       const el = document.createElement('button');
       el.className = 'card malus heavy-malus';
       el.style.setProperty('--rar', 'var(--red)');
@@ -210,7 +237,7 @@ export function showCards(run, onPick, onReroll) {
 
   // ── Modalità normale ──
   const advice = domAdvice(run);
-  run.cardChoices.forEach((card, i) => {
+  run.cardChoices!.forEach((card, i) => {
     const isMalus = !!card.malus;
     const r = isMalus ? { label: 'MALUS', color: 'var(--red)' } : RARITY[card.rarity];
     const owned = run.cards[card.id] || 0;
@@ -233,12 +260,12 @@ export function showCards(run, onPick, onReroll) {
   rr.disabled = run.rerolls <= 0;
   rr.onclick = onReroll;
   rr.hidden = false;
-  $('cards-title').textContent = `Ondata ${run.wave} superata!`;
-  $('cards-sub').textContent = 'Scegli un potenziamento';
+  $('cards-title')!.textContent = `Ondata ${run.wave} superata!`;
+  $('cards-sub')!.textContent = 'Scegli un potenziamento';
   if (domWizard) {
     if (advice) {
-      $('dom-text').textContent = advice.reason;
-      $('dom-card-name').textContent = advice.card.icon + ' ' + advice.card.name;
+      $('dom-text')!.textContent = advice.reason;
+      $('dom-card-name')!.textContent = advice.card.icon + ' ' + advice.card.name;
       domWizard.hidden = false;
     }
   }
@@ -247,12 +274,13 @@ export function showCards(run, onPick, onReroll) {
 
 // Scelta del rinforzo: usa la stessa schermata delle carte.
 // Ogni carta è "ASSUMI" (collega nuovo in una postazione libera) o "PROMUOVI" (uno già in campo).
-export function showAllies(run, onPick) {
+export function showAllies(run: Run, onPick: (i: number) => void) {
   const domWizard2 = $('dom-wizard');
   if (domWizard2) domWizard2.hidden = true;
   const box = $('cards-list');
+  if (!box) return;
   box.innerHTML = '';
-  run.allyChoices.forEach((choice, i) => {
+  run.allyChoices!.forEach((choice, i) => {
     const { def } = choice;
     const hire = choice.kind === 'hire';
     const lv = hire ? 0 : choice.ally.level;
@@ -269,33 +297,33 @@ export function showAllies(run, onPick) {
     el.addEventListener('click', () => onPick(i));
     box.appendChild(el);
   });
-  $('btn-reroll').hidden = true;
-  $('cards-title').textContent = '🚨 RINFORZI IN ARRIVO!';
-  $('cards-sub').textContent = 'Assumi un collega nuovo o promuovi uno che hai già';
+  $('btn-reroll')!.hidden = true;
+  $('cards-title')!.textContent = '🚨 RINFORZI IN ARRIVO!';
+  $('cards-sub')!.textContent = 'Assumi un collega nuovo o promuovi uno che hai già';
   show('scr-cards');
 }
 
-export function showOver(run, reward, isRecord) {
-  $('over-wave').textContent = `Sei arrivato all'ondata ${run.wave}`;
-  $('over-stats').textContent = `${run.kills} nemici eliminati · ${run.bossesKilled} boss sconfitti`;
-  $('over-reward').textContent = `+${fmt(reward)} 🎫 buoni pasto`;
-  $('over-record').hidden = !isRecord;
-  $('initials-box').hidden = false;
-  $('over-after').hidden = true;
-  $('btn-save-score').disabled = false;
-  $('btn-save-score').textContent = 'SALVA';
+export function showOver(run: Run, reward: number, isRecord: boolean) {
+  $('over-wave')!.textContent = `Sei arrivato all'ondata ${run.wave}`;
+  $('over-stats')!.textContent = `${run.kills} nemici eliminati · ${run.bossesKilled} boss sconfitti`;
+  $('over-reward')!.textContent = `+${fmt(reward)} 🎫 buoni pasto`;
+  $('over-record')!.hidden = !isRecord;
+  $('initials-box')!.hidden = false;
+  $('over-after')!.hidden = true;
+  ($('btn-save-score') as HTMLButtonElement).disabled = false;
+  ($('btn-save-score') as HTMLButtonElement).textContent = 'SALVA';
   show('scr-over');
 }
 
 // Mostra le 3 lettere; quella selezionata lampeggia.
-export function renderInitials(chars, cursor) {
+export function renderInitials(chars: string[], cursor: number) {
   document.querySelectorAll('#initials .slot').forEach((slot, i) => {
-    slot.querySelector('.ch').textContent = chars[i];
+    slot.querySelector('.ch')!.textContent = chars[i];
     slot.classList.toggle('cur', i === cursor);
   });
 }
 
-function renderBoard(list, top, mine) {
+function renderBoard(list: HTMLElement, top: BoardData, mine: ScoreResult | null) {
   list.innerHTML = '';
   if (!top.rows.length) {
     list.innerHTML = '<li class="empty">Ancora nessun punteggio. Sii il primo!</li>';
@@ -311,15 +339,15 @@ function renderBoard(list, top, mine) {
 }
 
 // Dopo aver salvato (o saltato): posizione raggiunta e classifica.
-export function showOverAfter(result, top) {
-  $('initials-box').hidden = true;
-  $('over-after').hidden = false;
-  $('over-rank').textContent = result?.rank ? `Sei ${result.rank}° in classifica!` : '';
-  renderBoard($('over-board'), top, result);
+export function showOverAfter(result: ScoreResult | null, top: BoardData) {
+  $('initials-box')!.hidden = true;
+  $('over-after')!.hidden = false;
+  $('over-rank')!.textContent = result?.rank ? `Sei ${result.rank}° in classifica!` : '';
+  renderBoard($('over-board')!, top, result);
 }
 
-export function showBoard(top) {
-  $('board-source').textContent = top.source === 'online' ? 'Classifica mondiale' : 'Classifica di questo dispositivo';
-  renderBoard($('board-list'), top, null);
+export function showBoard(top: BoardData) {
+  $('board-source')!.textContent = top.source === 'online' ? 'Classifica mondiale' : 'Classifica di questo dispositivo';
+  renderBoard($('board-list')!, top, null);
   show('scr-board');
 }

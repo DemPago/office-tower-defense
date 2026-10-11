@@ -91,27 +91,67 @@ export const LOOKS = {
   scrum:      { skin: SKIN.light, hair: '#e8e2d0', hairStyle: 'short', facial: 'longbeard', hat: 'wizard', hatColor: '#7a1f2b', top: '#7a1f2b', shirt: '#7a1f2b', pants: '#7a1f2b', item: 'clipboard' },
 };
 
+// ─── Tipi locali ────────────────────────────────────────────────
+export interface Look {
+  skin: string;
+  hair: string;
+  hairStyle: string;
+  top: string;
+  shirt: string;
+  tie?: string | null;
+  sleeves?: string;
+  pants?: string;
+  skirt?: string;
+  shoes?: string;
+  build?: string;
+  glasses?: string;
+  facial?: string;
+  hat?: string;
+  hatColor?: string;
+  vest?: string;
+  coat?: string;
+  item?: string;
+  itemColor?: string;
+  angry?: boolean;
+  lanyard?: boolean;
+  badge?: boolean;
+  chain?: string;
+  cape?: string;
+  capeTrim?: string;
+  capeStars?: boolean;
+  headphones?: boolean;
+  scar?: boolean;
+  monocle?: boolean;
+  weapon?: string;
+  zombie?: boolean;
+  stage?: number;
+  gills?: boolean;
+}
+
+type PxFn = (x: number, y: number, w: number, h: number, c: string) => void;
+type ClearFn = (x: number, y: number, w: number, h: number) => void;
+
 // Versione zombie di un look: pelle verde malata, vestiti strappati, sangue, occhi vuoti.
 // stage 0-3: quanto è malridotto (cresce man mano che lo colpisci).
-export function zombify(L, stage = 0) {
+export function zombify(L: Look, stage = 0) {
   return { ...L, skin: '#8aa070', angry: true, zombie: true, stage };
 }
 
 // ─── Disegno ────────────────────────────────────────────────────
 
-function shade(hex, k) {
+function shade(hex: string, k: number) {
   const n = parseInt(hex.slice(1), 16);
-  const f = c => Math.max(0, Math.min(255, Math.round(c * k)));
+  const f = (c: number) => Math.max(0, Math.min(255, Math.round(c * k)));
   return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`;
 }
 
 const INK = '#141416', MOUTH = '#5a1e1e', WHITE = '#e8e2d0';
 
 // frame 0-3: ciclo della camminata (gambe e braccia alternate)
-export function drawPerson(g, L, frame) {
+export function drawPerson(g: CanvasRenderingContext2D, L: Look, frame: number) {
   const oy = GRID.top;
-  const clear = (x, y, w, h) => g.clearRect(x + OX, y + oy, w, h);
-  const px = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x + OX, y + oy, w, h); };
+  const clear: ClearFn = (x: number, y: number, w: number, h: number) => g.clearRect(x + OX, y + oy, w, h);
+  const px: PxFn = (x: number, y: number, w: number, h: number, c: string) => { g.fillStyle = c; g.fillRect(x + OX, y + oy, w, h); };
 
   // corporatura: huge = boss con spalle larghe
   const tw = L.build === 'huge' ? 24 : L.build === 'fat' ? 20 : L.build === 'thin' ? 12 : 16;
@@ -362,7 +402,7 @@ export function drawPerson(g, L, frame) {
   if (L.headphones) { px(10, 1, 12, 1, INK); px(8, 8, 2, 5, '#2de2e6'); px(22, 8, 2, 5, '#2de2e6'); px(8, 8, 1, 5, INK); }
 
   // cappelli
-  const hc = L.hatColor;
+  const hc = L.hatColor!;
   if (L.hat === 'hardhat') {
     px(12, -1, 8, 1, hc); px(10, 0, 12, 4, hc); px(8, 3, 16, 2, shade(hc, 0.85));
     px(12, 0, 3, 1, shade(hc, 1.3)); px(15, -1, 2, 5, shade(hc, 0.85)); px(8, 4, 16, 1, shade(hc, 0.6));
@@ -387,7 +427,7 @@ export function drawPerson(g, L, frame) {
 }
 
 // Arma in mano (lato SINISTRO). hx, hy = posizione della mano sinistra, tw = larghezza busto.
-function drawWeapon(px, L, hx, hy, tw) {
+function drawWeapon(px: PxFn, L: Look, hx: number, hy: number, tw: number) {
   switch (L.weapon) {
     case 'mazza': // mazza da baseball di legno
       px(hx + 1, hy - 1, 2, 16, '#8b6a3e'); // manico
@@ -459,7 +499,7 @@ function drawWeapon(px, L, hx, hy, tw) {
 
 // Oggetto in mano (lato destro). hx, hy = posizione della mano.
 // Dettagli da zombie sopra al personaggio già disegnato.
-function drawZombieDetails(px, L, tx, tw) {
+function drawZombieDetails(px: PxFn, L: Look, tx: number, tw: number) {
   const BLOOD = '#7a0f1c', DRIP = '#a01828', ROT = '#5a7048';
   px(12, 10, 2, 2, '#e8f0d0'); px(18, 10, 2, 2, '#e8f0d0');        // occhi vuoti, senza pupilla
   px(12, 12, 2, 1, ROT); px(18, 12, 2, 1, ROT);                     // occhiaie
@@ -478,7 +518,7 @@ function drawZombieDetails(px, L, tx, tw) {
 
 // Zombie che si sfascia: 1 = perde il braccio sinistro, 2 = anche un pezzo di testa,
 // 3 = anche il braccio destro e le costole in vista.
-function drawZombieDamage(px, clear, L, tx, tw, swing) {
+function drawZombieDamage(px: PxFn, clear: ClearFn, L: Look, tx: number, tw: number, swing: number) {
   const BLOOD = '#7a0f1c', BONE = '#d9d4c7', MEAT = '#a0303a';
   // braccio sinistro strappato: resta un moncherino
   clear(tx - 4, 18 + swing, 4, 22);
@@ -486,7 +526,7 @@ function drawZombieDamage(px, clear, L, tx, tw, swing) {
   px(tx - 3, 23 + swing, 3, 1, MEAT);
   px(tx - 2, 23 + swing, 1, 1, BONE);
   px(tx - 3, 24 + swing, 1, 3, BLOOD);
-  if (L.stage >= 2) {
+  if ((L.stage ?? 0) >= 2) {
     // pezzo di cranio mancante, cervello in vista
     clear(16, 1, 7, 5);
     clear(19, 5, 3, 2);
@@ -495,7 +535,7 @@ function drawZombieDamage(px, clear, L, tx, tw, swing) {
     px(15, 5, 1, 1, BONE); px(21, 6, 1, 1, BONE);
     px(19, 8, 1, 4, BLOOD);
   }
-  if (L.stage >= 3) {
+  if ((L.stage ?? 0) >= 3) {
     // anche il braccio destro, e uno squarcio nel petto con le costole
     clear(tx + tw, 18 - swing, 4, 22);
     px(tx + tw, 20 - swing, 3, 3, L.top);
@@ -507,7 +547,7 @@ function drawZombieDamage(px, clear, L, tx, tw, swing) {
   }
 }
 
-function drawItem(px, L, hx, hy, tw, tx) {
+function drawItem(px: PxFn, L: Look, hx: number, hy: number, tw: number, tx: number) {
   switch (L.item) {
     case 'briefcase': {
       const c = L.itemColor || '#6b4a2b';

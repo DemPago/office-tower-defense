@@ -2,8 +2,21 @@
 import { TOWER } from '../state.js';
 import { PAL, FONT } from './palette.js';
 import { line } from './view.js';
+import type { Run, WaveRing, Shot } from '../types.js';
 
-export function drawDust(ctx, dust, dt, canvas) {
+interface WaveRingExt extends WaveRing {
+  energy?: boolean;
+  x?: number;
+  y?: number;
+}
+
+interface ShotExt extends Shot {
+  ox?: number;
+  oy?: number;
+  crit?: boolean;
+}
+
+export function drawDust(ctx: CanvasRenderingContext2D, dust: Array<{x: number; y: number; v: number; a: number}>, dt: number, canvas: HTMLCanvasElement) {
   ctx.fillStyle = 'rgba(232,226,208,0.25)';
   const s = Math.max(1, Math.round(canvas.height / 400));
   for (const d of dust) {
@@ -15,19 +28,19 @@ export function drawDust(ctx, dust, dt, canvas) {
 }
 
 // Pattern scanlines (creato una volta sola)
-let _scanPat = null;
-function scanlinePattern(ctx) {
+let _scanPat: CanvasPattern | null = null;
+function scanlinePattern(ctx: CanvasRenderingContext2D) {
   if (_scanPat) return _scanPat;
   const pc = document.createElement('canvas');
   pc.width = 1; pc.height = 2;
   const pg = pc.getContext('2d');
-  pg.fillStyle = 'rgba(0,0,0,0.07)';
-  pg.fillRect(0, 0, 1, 1);
+  pg!.fillStyle = 'rgba(0,0,0,0.07)';
+  pg!.fillRect(0, 0, 1, 1);
   _scanPat = ctx.createPattern(pc, 'repeat');
   return _scanPat;
 }
 
-export function drawGrade(ctx, canvas, run) {
+export function drawGrade(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, run: Run) {
   const w = canvas.width, h = canvas.height;
   const hp = (run && run.stats) ? run.tower.hp / run.stats.maxHp : 1;
 
@@ -37,7 +50,7 @@ export function drawGrade(ctx, canvas, run) {
   ctx.fillRect(0, 0, w, h);
 
   // Scanlines: riga scura ogni 2px per unificare la texture pixel art
-  ctx.fillStyle = scanlinePattern(ctx);
+  ctx.fillStyle = scanlinePattern(ctx)!;
   ctx.fillRect(0, 0, w, h);
 
   // Vignette più marcata e rettangolare
@@ -49,7 +62,7 @@ export function drawGrade(ctx, canvas, run) {
   ctx.fillRect(0, 0, w, h);
 }
 
-export function drawRange(ctx, range, time) {
+export function drawRange(ctx: CanvasRenderingContext2D, range: number, time: number) {
   ctx.save();
   ctx.strokeStyle = 'rgba(242,183,5,0.22)';
   ctx.lineWidth = 1;
@@ -61,7 +74,7 @@ export function drawRange(ctx, range, time) {
   ctx.restore();
 }
 
-function shotDir(s) {
+function shotDir(s: ShotExt) {
   const t = s.target;
   if (!t || t.dead) return { dx: 0, dy: -1 };
   const tx = t.x, ty = t.y - t.size * 0.35;
@@ -69,18 +82,18 @@ function shotDir(s) {
   return { dx: (tx - s.x) / d, dy: (ty - s.y) / d };
 }
 
-export function drawShots(ctx, run, time) {
+export function drawShots(ctx: CanvasRenderingContext2D, run: Run, time: number) {
   ctx.lineCap = 'square';
-  for (const w of run.fx.waves) {
+  for (const w of run.fx.waves as WaveRingExt[]) {
     ctx.save();
     if (w.energy) {
       // esplosione della sfera energetica: viola con il centro bianco
       const k = w.life / 0.35;
       ctx.globalAlpha = k;
       ctx.fillStyle = `rgba(160,90,255,${0.35 * k})`;
-      ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(w.x!, w.y!, w.r, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#c8a0ff'; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(w.x, w.y, w.r * 0.3 * k, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(w.x!, w.y!, w.r * 0.3 * k, 0, Math.PI * 2); ctx.fill();
     } else {
       // onda sonica: tre anelli concentrici che si allargano dal palazzo
       const k = w.life / 0.45;
@@ -106,13 +119,13 @@ export function drawShots(ctx, run, time) {
     ctx.fillRect(b.x2 - 1.5, b.y2 - 1.5, 3, 3);
     ctx.globalAlpha = 1;
   }
-  for (const s of run.shots) {
+  for (const s of run.shots as ShotExt[]) {
     const { dx, dy } = shotDir(s);
     const x = Math.round(s.x), y = Math.round(s.y);
     if (s.kind === 'laser') {
       // raggio continuo dalla postazione del PM fino alla punta del colpo
       ctx.globalAlpha = 0.5;
-      line(ctx, s.ox, s.oy, x, y, PAL.red, 3);
+      line(ctx, s.ox!, s.oy!, x, y, PAL.red, 3);
       ctx.globalAlpha = 1;
       line(ctx, x - dx * 18, y - dy * 18, x, y, PAL.red, 3);
       line(ctx, x - dx * 16, y - dy * 16, x, y, '#ffd0d6', 1);
@@ -201,7 +214,7 @@ export function drawShots(ctx, run, time) {
 }
 
 // Anello quadrato in pixel art — più coerente con gli sprite fillRect.
-function pixelRing(ctx, x, y, r, color, k) {
+function pixelRing(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, k: number) {
   const rd = Math.round(r * (1.2 - k * 0.4));
   const px = Math.round(x), py = Math.round(y);
   const th = Math.max(2, Math.round(rd * 0.08 + 1));
@@ -212,12 +225,12 @@ function pixelRing(ctx, x, y, r, color, k) {
   ctx.fillRect(px - rd,      py - rd + th, th,     rd * 2 - th * 2); // left
   ctx.fillRect(px + rd - th, py - rd + th, th,     rd * 2 - th * 2); // right
   // riempimento centrale semitrasparente
-  ctx.fillStyle = color.replace('#', 'rgba(').replace(/(..)(..)(..)$/, (_, r, g, b) =>
+  ctx.fillStyle = color.replace('#', 'rgba(').replace(/(..)(..)(..)$/, (_: string, r: string, g: string, b: string) =>
     `${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},0.06)`);
   ctx.fillRect(px - rd + th, py - rd + th, rd * 2 - th * 2, rd * 2 - th * 2);
 }
 
-export function drawFx(ctx, run) {
+export function drawFx(ctx: CanvasRenderingContext2D, run: Run) {
   const fx = run.fx;
   for (const r of fx.rings) {
     const k = r.life / r.max;
@@ -247,7 +260,7 @@ export function drawFx(ctx, run) {
 }
 
 // Cuore in pixel art centrato in (x, y), grande r.
-export function drawHeart(ctx, x, y, r, color, light) {
+export function drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, light: string) {
   ctx.fillStyle = PAL.black;
   ctx.beginPath();
   ctx.arc(x - r * 0.5, y - r * 0.2, r * 0.62, 0, Math.PI * 2);

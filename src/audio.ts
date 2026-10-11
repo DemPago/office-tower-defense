@@ -3,11 +3,11 @@
 // per questo initAudio() viene chiamata al primo input dell'utente.
 const MUTE_KEY = 'otd-v2-muted';
 
-let ac = null;        // AudioContext
-let master = null;    // volume generale
-let noiseBuf = null;  // rumore bianco riusato per spari, esplosioni, tamburi
+let ac: AudioContext | null = null;        // AudioContext
+let master: GainNode | null = null;    // volume generale
+let noiseBuf: AudioBuffer | null = null;  // rumore bianco riusato per spari, esplosioni, tamburi
 let muted = false;
-const lastPlayed = {};
+const lastPlayed: Record<string, number> = {};
 
 try {
   muted = localStorage.getItem(MUTE_KEY) === '1';
@@ -20,7 +20,7 @@ export function initAudio() {
     if (ac.state === 'suspended') ac.resume();
     return;
   }
-  const Ctx = window.AudioContext || window.webkitAudioContext;
+  const Ctx = window.AudioContext || (window as any).webkitAudioContext;
   if (!Ctx) return;
   ac = new Ctx();
   master = ac.createGain();
@@ -42,49 +42,49 @@ export function toggleMute() {
   } catch {
     // niente
   }
-  if (master) master.gain.setTargetAtTime(muted ? 0 : 0.6, ac.currentTime, 0.02);
+  if (master) master.gain.setTargetAtTime(muted ? 0 : 0.6, ac!.currentTime, 0.02);
   return muted;
 }
 
 // ─── Mattoncini ─────────────────────────────────────────────────
 
 // Una nota: forma d'onda, frequenza iniziale → finale, durata, volume.
-function tone({ type = 'square', f1, f2 = f1, dur = 0.1, vol = 0.1, at = 0, filter = null }) {
-  const t = ac.currentTime + at;
-  const o = ac.createOscillator();
-  const g = ac.createGain();
-  o.type = type;
+function tone({ type = 'square', f1, f2 = f1, dur = 0.1, vol = 0.1, at = 0, filter = null }: { type?: string; f1: number; f2?: number; dur?: number; vol?: number; at?: number; filter?: number | null }) {
+  const t = ac!.currentTime + at;
+  const o = ac!.createOscillator();
+  const g = ac!.createGain();
+  o.type = type as OscillatorType;
   o.frequency.setValueAtTime(f1, t);
   if (f2 !== f1) o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t + dur);
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  let out = o;
+  let out: AudioNode = o;
   if (filter) {
-    const f = ac.createBiquadFilter();
+    const f = ac!.createBiquadFilter();
     f.type = 'lowpass';
     f.frequency.value = filter;
     o.connect(f);
     out = f;
   }
-  out.connect(g).connect(master);
+  out.connect(g).connect(master!);
   o.start(t);
   o.stop(t + dur + 0.05);
 }
 
 // Rumore filtrato: esplosioni, colpi, rullante.
-function noise({ dur = 0.1, vol = 0.1, at = 0, type = 'bandpass', freq = 1000, q = 1 }) {
-  const t = ac.currentTime + at;
-  const src = ac.createBufferSource();
+function noise({ dur = 0.1, vol = 0.1, at = 0, type = 'bandpass', freq = 1000, q = 1 }: { dur?: number; vol?: number; at?: number; type?: string; freq?: number; q?: number }) {
+  const t = ac!.currentTime + at;
+  const src = ac!.createBufferSource();
   src.buffer = noiseBuf;
-  const f = ac.createBiquadFilter();
-  f.type = type;
+  const f = ac!.createBiquadFilter();
+  f.type = type as BiquadFilterType;
   f.frequency.value = freq;
   f.Q.value = q;
-  const g = ac.createGain();
+  const g = ac!.createGain();
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(f).connect(g).connect(master);
+  src.connect(f).connect(g).connect(master!);
   src.start(t, Math.random() * 0.5);
   src.stop(t + dur + 0.05);
 }
@@ -117,9 +117,9 @@ const SOUNDS = {
   boom:    { gap: 0.1,  play: () => { noise({ dur: 0.45, vol: 0.3, type: 'lowpass', freq: 800 }); tone({ type: 'sine', f1: 120, f2: 40, dur: 0.4, vol: 0.25 }); } },
 };
 
-export function play(name) {
+export function play(name: string) {
   if (!ac || muted) return;
-  const s = SOUNDS[name];
+  const s = (SOUNDS as Record<string, { gap: number; play: () => void }>)[name];
   if (!s) return;
   const now = ac.currentTime;
   if (now - (lastPlayed[name] || 0) < s.gap) return; // evita la cacofonia
@@ -132,7 +132,7 @@ export function play(name) {
 // Atmosfera da "arriva l'impero", ma non è la Marcia Imperiale (che è protetta da copyright).
 function bossMarch() {
   const q = 60 / 100; // un quarto a 100 battiti al minuto
-  const note = n => 440 * Math.pow(2, (n - 69) / 12);
+  const note = (n: number) => 440 * Math.pow(2, (n - 69) / 12);
   const D3 = 50, E3 = 52, F3 = 53, G3 = 55, A3 = 57, Bb3 = 58, Cs3 = 49;
   // [nota, durata in quarti]
   const melody = [

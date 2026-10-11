@@ -4,7 +4,7 @@ import { PAL, FONT, shade } from '../palette.js';
 import * as P from '../props.js';
 import { AREA, LANE, free, inYard, scatter, many } from './common.js';
 
-export function build(g, rnd, data) {
+export function build(g: CanvasRenderingContext2D, rnd: () => number, data: any, _opts?: { skipCars?: boolean }) {
   for (let y = AREA.y; y < AREA.y + AREA.h; y += 16) {
     for (let x = AREA.x; x < AREA.x + AREA.w; x += 16) {
       P.rect(g, x, y, 16, 16, '#353a43');
@@ -46,13 +46,13 @@ export function build(g, rnd, data) {
       P.serverRack(g, x, ry, data.leds);
     }
   }
-  scatter(rnd, many(14), 14, (x, y) => P.puddle(g, x, y, 8 + rnd() * 10, 3 + rnd() * 4, '#1f4a52', PAL.cyan));
-  scatter(rnd, many(16), 16, (x, y, r) => (r < 0.5 ? P.acUnit(g, x, y) : P.box(g, x, y)));
+  scatter(rnd, many(14), 14, (x: number, y: number) => P.puddle(g, x, y, 8 + rnd() * 10, 3 + rnd() * 4, '#1f4a52', PAL.cyan));
+  scatter(rnd, many(16), 16, (x: number, y: number, r: number) => (r < 0.5 ? P.acUnit(g, x, y) : P.box(g, x, y)));
   P.spray(g, 'HAI PROVATO A RIAVVIARE?', TOWER.x, TOWER.y - 150, PAL.toxic, -0.03, 12);
   return { floor: '#4a505a', seam: '#30343b' };
 }
 
-export function ambient(ctx, time, data) {
+export function ambient(ctx: CanvasRenderingContext2D, time: number, data: any) {
   const tick = Math.floor(time * 6);
   for (let i = 0; i < data.leds.length; i++) {
     const led = data.leds[i];

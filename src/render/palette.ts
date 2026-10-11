@@ -14,8 +14,8 @@ export const FONT = '"Press Start 2P", monospace';
 export const SPRAY = '"Permanent Marker", "Press Start 2P", cursive';
 
 // Schiarisce (k > 1) o scurisce (k < 1) un colore esadecimale.
-export function shade(hex, k) {
+export function shade(hex: string, k: number): string {
   const n = parseInt(hex.slice(1), 16);
-  const f = c => Math.max(0, Math.min(255, Math.round(c * k)));
+  const f = (c: number) => Math.max(0, Math.min(255, Math.round(c * k)));
   return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`;
 }

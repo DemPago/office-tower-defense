@@ -25,26 +25,26 @@ export const SCENES = [
   { name: 'Tetto del grattacielo', ...rooftop },
 ];
 
-export function sceneIndexForWave(wave) {
+export function sceneIndexForWave(wave: number) {
   return Math.floor((Math.max(1, wave) - 1) / 10) % SCENES.length;
 }
 
 // Costruisce lo sfondo di uno scenario: { canvas, ambient(ctx, time) }.
-export function buildScene(index, opts?: { skipCars?: boolean }) {
+export function buildScene(index: number, opts?: { skipCars?: boolean }) {
   const scene = SCENES[index];
   const c = document.createElement('canvas');
   c.width = AREA.w * SCENE_RES;
   c.height = AREA.h * SCENE_RES;
-  const g = c.getContext('2d');
+  const g = c.getContext('2d')!;
   g.scale(SCENE_RES, SCENE_RES);
   g.translate(MARGIN, MARGIN); // si disegna in coordinate del mondo, con dettagli a mezzo pixel
   const rnd = seeded(101 + index * 7);
   const data = { leds: [], neons: [], lights: [] };
   const yardStyle = scene.build(g, rnd, data, opts) || {};
-  if (scene.italian) placeItalian(g, rnd, data, scene.italian);
+  if ((scene as any).italian) placeItalian(g, rnd, data, (scene as any).italian);
   drawYard(g, rnd, yardStyle);
-  const ambient = (ctx, t) => {
-    if (scene.ambient) scene.ambient(ctx, t, data);
+  const ambient = (ctx: CanvasRenderingContext2D, t: number) => {
+    if ((scene as any).ambient) (scene as any).ambient(ctx, t, data);
     animateItalian(ctx, t, data);
   };
   return { canvas: c, name: scene.name, ambient, data };

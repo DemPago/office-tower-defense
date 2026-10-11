@@ -121,6 +121,7 @@ export type EnemyDef = Record<string, any>;
 
 export interface Enemy {
   id: number;               // id univoco per hitIds
+  name?: string;
   x: number; y: number;
   hp: number; maxHp: number;
   size: number;
@@ -146,6 +147,19 @@ export interface Enemy {
   charge: ChargeConfig | null;
   def: EnemyDef;
   bonusPending?: boolean;
+  // Runtime state set dynamically by update systems / enemy definitions
+  anim?: number;
+  lastStep?: number;
+  enraged?: boolean;
+  scale?: number;
+  shotCd?: number;
+  healCd?: number;
+  role?: string;
+  weaponBeam?: boolean;
+  weaponPierce?: boolean;
+  weaponType?: string;
+  weaponSlow?: boolean;
+  weaponAoe?: boolean;
 }
 
 // ─── Colpi ───────────────────────────────────────────────────────────────────
@@ -214,6 +228,11 @@ export interface Ally {
   cooldown: number;
   hitFlash: number;
   dead: boolean;
+  uid?: number;
+  promoFlash?: number;
+  hurt?: number;
+  recoil?: number;
+  pulse?: number;
 }
 
 // ─── Stato della torre ───────────────────────────────────────────────────────
@@ -276,6 +295,7 @@ export interface Run {
   spawnQueue: any[];
   boss: Enemy | null;
   slowTowerT: number;
+  spawnTimer?: number;
   fx: FxState;
   healFull: boolean;
   // modalità scarto carte

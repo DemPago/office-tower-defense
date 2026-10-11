@@ -4,7 +4,7 @@ import { PAL, shade } from '../palette.js';
 import * as P from '../props.js';
 import { YARD, LANE } from './common.js';
 
-export function drawYard(g, rnd, { floor = PAL.concrete, seam = PAL.concreteDk } = {}) {
+export function drawYard(g: CanvasRenderingContext2D, rnd: () => number, { floor = PAL.concrete, seam = PAL.concreteDk } = {}) {
   const { x, y, w, h } = YARD;
   P.rect(g, x - 6, y - 6, w + 12, h + 12, PAL.black);
   P.hazardStripes(g, x - 5, y - 5, w + 10, h + 10);

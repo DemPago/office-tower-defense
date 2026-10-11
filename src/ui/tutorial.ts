@@ -20,7 +20,7 @@ const STEPS = [
     text: 'Dopo ogni ondata scegli 1 carta su 3. Ogni 5 ondate arrivano i colleghi di rinforzo, ogni 10 un boss (che torna come animale gigante!). Buon lavoro!' },
 ];
 
-export function createTutorial({ onPause, onResume, onDone }) {
+export function createTutorial({ onPause, onResume, onDone }: { onPause: () => void; onResume: () => void; onDone: () => void }) {
   const root = document.createElement('div');
   root.id = 'tutorial';
   root.hidden = true;
@@ -36,26 +36,28 @@ export function createTutorial({ onPause, onResume, onDone }) {
       </div>
     </div>`;
   document.body.appendChild(root);
-  const hole = root.querySelector('.tut-hole'), box = root.querySelector('.tut-box');
-  let i = 0, getRects = null;
+  const hole = root.querySelector<HTMLElement>('.tut-hole')!;
+  const box = root.querySelector<HTMLElement>('.tut-box')!;
+  let i = 0;
+  let getRects: ((name: string) => DOMRect | null) | null = null;
 
-  function rectFor(step) {
+  function rectFor(step: { target?: string; box?: string; also?: string }) {
     const special = step.box && getRects && getRects(step.box);
     if (special) return special;
     if (!step.target) return null;
-    const r = document.querySelector(step.target).getBoundingClientRect();
+    const r = document.querySelector(step.target!)!.getBoundingClientRect();
     if (!step.also) return r;
-    const o = document.querySelector(step.also).getBoundingClientRect();
+    const o = document.querySelector(step.also!)!.getBoundingClientRect();
     const left = Math.min(r.left, o.left), top = Math.min(r.top, o.top);
     return { left, top, width: Math.max(r.right, o.right) - left, height: Math.max(r.bottom, o.bottom) - top };
   }
 
   function render() {
     const step = STEPS[i];
-    root.querySelector('.tut-step').textContent = `${i + 1} / ${STEPS.length}`;
-    root.querySelector('.tut-title').textContent = step.title;
-    root.querySelector('.tut-text').textContent = step.text;
-    root.querySelector('.tut-next').textContent = i === STEPS.length - 1 ? 'Si comincia! ▶' : 'Avanti ▶';
+    root.querySelector('.tut-step')!.textContent = `${i + 1} / ${STEPS.length}`;
+    root.querySelector('.tut-title')!.textContent = step.title;
+    root.querySelector('.tut-text')!.textContent = step.text;
+    root.querySelector('.tut-next')!.textContent = i === STEPS.length - 1 ? 'Si comincia! ▶' : 'Avanti ▶';
     const r = rectFor(step);
     if (r) {
       const pad = 6;
@@ -78,16 +80,16 @@ export function createTutorial({ onPause, onResume, onDone }) {
     onDone();
   }
 
-  root.querySelector('.tut-next').addEventListener('click', () => {
+  root.querySelector('.tut-next')!.addEventListener('click', () => {
     if (++i >= STEPS.length) close();
     else render();
   });
-  root.querySelector('.tut-skip').addEventListener('click', close);
+  root.querySelector('.tut-skip')!.addEventListener('click', close);
   addEventListener('resize', () => { if (!root.hidden) render(); });
 
   return {
     // rects(name) restituisce il riquadro sullo schermo di "tower" o "yard" (dal renderer)
-    start(rects) {
+    start(rects: (name: string) => DOMRect | null) {
       getRects = rects;
       i = 0;
       root.hidden = false;

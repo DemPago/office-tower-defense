@@ -54,7 +54,7 @@ export const CARDS: CardDef[] = [
 // Malus pesanti: dopo ogni ondata zombie (7, 17, 27…) le 3 scelte sono TUTTE negative.
 // Scegli il male minore. Nessun compenso in oro, nessun reroll.
 export const HEAVY_MALUS_CARDS: CardDef[] = [
-  { id: 'licenziamento', icon: '📋', name: 'Licenziamento',    malus: true, heavy: true,
+  { id: 'licenziamento', icon: '📋', name: 'Licenziamento',    rarity: 'epic', max: 99, malus: true, heavy: true,
     desc: () => 'Rimuove l\'ultima carta che hai scelto',
     mod: () => {},
     onPick: (run: Run) => {
@@ -65,19 +65,19 @@ export const HEAVY_MALUS_CARDS: CardDef[] = [
         if (run.cards[victim.id] > 0) run.cards[victim.id]--;
       }
     } },
-  { id: 'crisi',         icon: '📉', name: 'Crisi aziendale',  malus: true, heavy: true,
+  { id: 'crisi',         icon: '📉', name: 'Crisi aziendale',  rarity: 'epic', max: 99, malus: true, heavy: true,
     desc: () => '-30% danno e -30% velocità di fuoco',
     mod: (c: BonusSet) => { c.dmg -= 0.30; c.rate -= 0.30; } },
-  { id: 'burnout',       icon: '🔥', name: 'Burnout del team', malus: true, heavy: true,
+  { id: 'burnout',       icon: '🔥', name: 'Burnout del team', rarity: 'epic', max: 99, malus: true, heavy: true,
     desc: () => '-2 vita al secondo (rigenera meno)',
     mod: (c: BonusSet) => { c.regen -= 2; } },
-  { id: 'blackout',      icon: '🌑', name: 'Blackout sistemico', malus: true, heavy: true,
+  { id: 'blackout',      icon: '🌑', name: 'Blackout sistemico', rarity: 'epic', max: 99, malus: true, heavy: true,
     desc: () => '+50% costo mana per i poteri',
     mod: (c: BonusSet) => { c.cdr -= 0.50; } },
-  { id: 'tagli',         icon: '✂️', name: 'Tagli al budget',  malus: true, heavy: true,
+  { id: 'tagli',         icon: '✂️', name: 'Tagli al budget',  rarity: 'epic', max: 99, malus: true, heavy: true,
     desc: () => '-35% oro dai nemici',
     mod: (c: BonusSet) => { c.gold -= 0.35; } },
-  { id: 'downgrade',     icon: '⬇️', name: 'Downgrade forzato', malus: true, heavy: true,
+  { id: 'downgrade',     icon: '⬇️', name: 'Downgrade forzato', rarity: 'epic', max: 99, malus: true, heavy: true,
     desc: () => '-25% gittata',
     mod: (c: BonusSet) => { c.range -= 0.25; } },
 ];
@@ -85,17 +85,17 @@ export const HEAVY_MALUS_CARDS: CardDef[] = [
 // Carte malus: compaiono quando vinci troppo facilmente (vita > 80%).
 // Penalità fissa, mai in pool normale — compenso in oro che scala con l'ondata.
 export const MALUS_CARDS: CardDef[] = [
-  { id: 'riunione',  icon: '😴', name: 'Riunione infinita',     malus: true, max: 1,
+  { id: 'riunione',  icon: '😴', name: 'Riunione infinita',     rarity: 'common', malus: true, max: 1,
     desc: () => '-15% velocità di fuoco',
     reward: (wave: number) => `+${30 + wave * 2}💰 in compenso`,
     mod: (c: BonusSet) => { c.rate -= 0.15; },
     onPick: (run: Run) => { run.gold += 30 + run.wave * 2; } },
-  { id: 'bug_prod',  icon: '🐛', name: 'Bug in produzione',     malus: true, max: 1,
+  { id: 'bug_prod',  icon: '🐛', name: 'Bug in produzione',     rarity: 'common', malus: true, max: 1,
     desc: () => '-20% danno',
     reward: (wave: number) => `+${40 + wave * 2}💰 in compenso`,
     mod: (c: BonusSet) => { c.dmg -= 0.20; },
     onPick: (run: Run) => { run.gold += 40 + run.wave * 2; } },
-  { id: 'reorg',     icon: '📉', name: 'Ristrutturazione',      malus: true, max: 1,
+  { id: 'reorg',     icon: '📉', name: 'Ristrutturazione',      rarity: 'common', malus: true, max: 1,
     desc: () => '-0.8 vita/s rigenera',
     reward: (wave: number) => `+${25 + wave * 2}💰 in compenso`,
     mod: (c: BonusSet) => { c.regen -= 0.8; },

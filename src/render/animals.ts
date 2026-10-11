@@ -7,16 +7,23 @@ export const AGRID = { w: 128, h: 80 };
 const GROUND = 78;
 const EYE = '#ff2a3d', INK = '#141416', WHITE = '#e8e2d0';
 
-function shade(hex, k) {
+import type { EnemyDef } from '../types';
+
+type PxFn   = (x: number, y: number, w: number, h: number, c: string) => void;
+type EllFn  = (cx: number, cy: number, rx: number, ry: number, c: string) => void;
+type BlobFn = (cx: number, cy: number, rx: number, ry: number, c: string, light?: boolean) => void;
+type DrawTools = { px: PxFn; ell: EllFn; blob: BlobFn };
+
+function shade(hex: string, k: number): string {
   const n = parseInt(hex.slice(1), 16);
-  const f = c => Math.max(0, Math.min(255, Math.round(c * k)));
+  const f = (c: number) => Math.max(0, Math.min(255, Math.round(c * k)));
   return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`;
 }
 
-export function drawAnimal(g, A, frame) {
-  const px = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.max(1, Math.round(w)), Math.max(1, Math.round(h))); };
+export function drawAnimal(g: CanvasRenderingContext2D, A: EnemyDef, frame: number): void {
+  const px: PxFn = (x: number, y: number, w: number, h: number, c: string) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.max(1, Math.round(w)), Math.max(1, Math.round(h))); };
   // ellisse piena "a pixel"
-  const ell = (cx, cy, rx, ry, c) => {
+  const ell: EllFn = (cx: number, cy: number, rx: number, ry: number, c: string) => {
     for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
       const dy = (y + 0.5 - cy) / ry;
       if (Math.abs(dy) > 1) continue;
@@ -25,12 +32,12 @@ export function drawAnimal(g, A, frame) {
     }
   };
   // ellisse con volume: bordo scuro, colore, luce in alto a sinistra
-  const blob = (cx, cy, rx, ry, c, light = true) => {
+  const blob: BlobFn = (cx: number, cy: number, rx: number, ry: number, c: string, light = true) => {
     ell(cx, cy, rx, ry, shade(c, 0.6));
     ell(cx - 0.5, cy - 0.8, rx - 1, ry - 1, c);
     if (light && rx > 3 && ry > 3) ell(cx - rx * 0.3, cy - ry * 0.4, rx * 0.5, ry * 0.32, shade(c, 1.22));
   };
-  const tools = { px, ell, blob };
+  const tools: DrawTools = { px, ell, blob };
   if (A.kind === 'bird') return drawBird(tools, A, frame);
   if (A.kind === 'snake') return drawSnake(tools, A, frame);
   drawQuad(tools, A, frame);
@@ -38,7 +45,7 @@ export function drawAnimal(g, A, frame) {
 
 // ─── Quattro zampe (cane, toro, lupo, orso, leone, ratto, gorilla, drago) ──
 
-function drawQuad({ px, ell, blob }, A, frame) {
+function drawQuad({ px, ell, blob }: DrawTools, A: EnemyDef, frame: number): void {
   const fur = A.fur, dk = shade(fur, 0.62), belly = A.belly;
   const ape = A.kind === 'ape';
   const L = A.len * 2.3, BH = A.bh * 2.1, LEG = A.leg * 2.2;
@@ -47,7 +54,7 @@ function drawQuad({ px, ell, blob }, A, frame) {
   const legW = Math.max(4, BH * 0.28);
 
   // una zampa: coscia, stinco, piede con artigli
-  const leg = (x, len, off, far) => {
+  const leg = (x: number, len: number, off: number, far: boolean) => {
     const c = far ? dk : fur;
     blob(x, cy + BH * 0.12, legW * 0.95, BH * 0.38, c, !far);
     px(x - legW * 0.45 + off * 0.5, cy + BH * 0.25, legW * 0.85, GROUND - (cy + BH * 0.25) - 2 - (off ? lift : 0), c);
@@ -199,7 +206,7 @@ function drawQuad({ px, ell, blob }, A, frame) {
 
 // ─── Uccello (corvo) ────────────────────────────────────────────
 
-function drawBird({ px, ell, blob }, A, frame) {
+function drawBird({ px, ell, blob }: DrawTools, A: EnemyDef, frame: number): void {
   const fur = A.fur, sheen = A.belly;
   const y = 36 + [0, -2, 0, 2][frame];
   const up = frame % 2 === 0;
@@ -219,7 +226,7 @@ function drawBird({ px, ell, blob }, A, frame) {
 
 // ─── Serpente ───────────────────────────────────────────────────
 
-function drawSnake({ px, ell, blob }, A, frame) {
+function drawSnake({ px, ell, blob }: DrawTools, A: EnemyDef, frame: number): void {
   const fur = A.fur, band = A.belly;
   for (let x = 4; x < 92; x += 1.5) {
     const y = 66 + Math.sin(x / 9 + frame * 1.5) * 6;

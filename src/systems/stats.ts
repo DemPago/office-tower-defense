@@ -54,8 +54,8 @@ export function computeStats(run: Run, meta: Meta): Stats {
   let auraRate = 0, auraDmg = 0;
   for (const ally of run.allies) {
     const def = ALLIES.find((a: { id: string }) => a.id === ally.id);
-    if (def.aura === 'rate') auraRate += def.auraPer * ally.level;
-    if (def.aura === 'dmg') auraDmg += def.auraPer * ally.level;
+    if (def && def.aura === 'rate') auraRate += (def.auraPer ?? 0) * ally.level;
+    if (def && def.aura === 'dmg') auraDmg += (def.auraPer ?? 0) * ally.level;
   }
 
   const W = weaponDef(run.weapon ?? '');

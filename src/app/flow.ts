@@ -13,24 +13,24 @@ import { play } from '../audio.js';
 import { renderShare } from '../ui/share.js';
 import { startMenuAnimation } from '../ui/menu-anim.js';
 
-const $ = id => document.getElementById(id);
+const $ = (id: string): HTMLElement | null => document.getElementById(id);
 
-export function createFlow(app) {
+export function createFlow(app: any) {
   const { meta, assets } = app;
 
   // Ritratto del personaggio (testa e busto) per il menu; i bloccati sono solo una sagoma.
-  function heroPortrait(id, locked) {
+  function heroPortrait(id: string, locked: boolean) {
     const sp = assets.person(id, 1, 1, locked ? '#141416' : false);
     const c = document.createElement('canvas');
     c.width = 84;
     c.height = 84;
     const g = c.getContext('2d');
-    g.imageSmoothingEnabled = false;
-    g.drawImage(sp.img, 0, 8, sp.img.width, 42, 0, 0, sp.img.width * 2, 84);
+    g!.imageSmoothingEnabled = false;
+    g!.drawImage(sp.img, 0, 8, sp.img.width, 42, 0, 0, sp.img.width * 2, 84);
     return c;
   }
 
-  let menuAnim = null;
+  let menuAnim: { stop: () => void } | null = null;
 
   function showMenu() {
     screens.showMenu(meta, heroPortrait, id => {
@@ -39,7 +39,7 @@ export function createFlow(app) {
       play('pick');
       showMenu();
     });
-    if (!menuAnim) menuAnim = startMenuAnimation($('menu-bg'));
+    if (!menuAnim) menuAnim = startMenuAnimation($('menu-bg') as HTMLCanvasElement);
   }
 
   function onBombPhase() {
@@ -71,14 +71,14 @@ export function createFlow(app) {
     showMenu();
   }
 
-  function setPaused(p) {
+  function setPaused(p: boolean) {
     const { run } = app;
     if (!run || run.phase === 'over' || run.phase === 'cards' || run.phase === 'ally') return;
     app.paused = p;
     if (p) {
       // mostra "Arrenditi" solo tra un'ondata e l'altra (break o bonus-break)
       const inBreak = run.phase === 'break' || run.phase === 'bonus-break';
-      $('btn-surrender').hidden = !inBreak;
+      $('btn-surrender')!.hidden = !inBreak;
       screens.show('scr-pause');
     } else screens.hideAll();
   }
@@ -92,8 +92,9 @@ export function createFlow(app) {
   }
 
   function openShop() {
-    screens.showShop(meta, id => {
+    screens.showShop(meta, (id: string) => {
       const def = META_UPGRADES.find(d => d.id === id);
+      if (!def) return;
       const L = meta.levels[id] || 0;
       const cost = levelCost(def, L);
       if (L >= def.max || meta.buoni < cost) return;
@@ -144,36 +145,36 @@ export function createFlow(app) {
   }
 
   // Condivisione: dal menu un invito generico, a fine partita il proprio risultato.
-  renderShare($('share-menu'), () => 'Difendi la tua scrivania dalla gerarchia aziendale! 🏢 Prova Office Tower Defense');
-  renderShare($('share-over'), () => app.run
+  renderShare($('share-menu')!, () => 'Difendi la tua scrivania dalla gerarchia aziendale! 🏢 Prova Office Tower Defense');
+  renderShare($('share-over')!, () => app.run
     ? `Sono stato licenziato all'ondata ${app.run.wave} di Office Tower Defense 🏢💥 Riesci a fare meglio?`
     : 'Prova Office Tower Defense 🏢');
 
-  $('btn-bombs-ok').addEventListener('click', () => {
+  $('btn-bombs-ok')!.addEventListener('click', () => {
     const { run } = app;
     if (!run || run.phase !== 'bomb-placement') return;
     run.phase = 'break';
     run.breakTimer = 1.5;
     screens.hideAll();
   });
-  $('btn-bombs-remove').addEventListener('click', () => {
+  $('btn-bombs-remove')!.addEventListener('click', () => {
     const { run } = app;
     if (!run || run.phase !== 'bomb-placement' || !run.bombs.length) return;
     removeBomb(run, run.bombs.length - 1);
     screens.updateBombUI(run);
   });
 
-  $('btn-play').addEventListener('click', newRun);
-  $('btn-howto').addEventListener('click', () => { app.wantTutorial = true; newRun(); });
-  $('btn-shop').addEventListener('click', openShop);
-  $('btn-shop-back').addEventListener('click', showMenu);
-  $('btn-board').addEventListener('click', async () => screens.showBoard(await getTop(10)));
-  $('btn-board-back').addEventListener('click', showMenu);
-  $('btn-resume').addEventListener('click', () => setPaused(false));
-  $('btn-surrender').addEventListener('click', surrender);
-  $('btn-quit').addEventListener('click', toMenu);
-  $('btn-retry').addEventListener('click', newRun);
-  $('btn-over-menu').addEventListener('click', toMenu);
+  $('btn-play')!.addEventListener('click', newRun);
+  $('btn-howto')!.addEventListener('click', () => { app.wantTutorial = true; newRun(); });
+  $('btn-shop')!.addEventListener('click', openShop);
+  $('btn-shop-back')!.addEventListener('click', showMenu);
+  $('btn-board')!.addEventListener('click', async () => screens.showBoard(await getTop(10)));
+  $('btn-board-back')!.addEventListener('click', showMenu);
+  $('btn-resume')!.addEventListener('click', () => setPaused(false));
+  $('btn-surrender')!.addEventListener('click', surrender);
+  $('btn-quit')!.addEventListener('click', toMenu);
+  $('btn-retry')!.addEventListener('click', newRun);
+  $('btn-over-menu')!.addEventListener('click', toMenu);
 
   return { toMenu, setPaused, onCardsPhase, onAllyPhase, onGameOver, onBombPhase };
 }

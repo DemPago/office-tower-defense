@@ -2,17 +2,18 @@
 // Consiglia la carta migliore dopo ogni ondata e l'upgrade da comprare durante il gioco.
 import { UPGRADES } from '../data/upgrades.js';
 import { upgradeCost } from '../systems/economy.js';
+import type { Run, CardDef } from '../types.js';
 
 // ─── Carte ───────────────────────────────────────────────────────
 
-function scoreCard(run, card) {
+function scoreCard(run: Run, card: CardDef) {
   if (card.malus) return -80; // quasi mai consigliata, salvo le altre siano peggio
   const owned = run.cards[card.id] || 0;
   if (owned >= card.max) return -Infinity;
 
   const { stats: s, tower, wall, wave } = run;
   const hpPct = tower.hp / s.maxHp;
-  const wallBroken = wall.some(seg => seg.hp <= 0);
+  const wallBroken = wall.some((seg: { hp: number }) => seg.hp <= 0);
 
   let score = card.rarity === 'epic' ? 25 : card.rarity === 'rare' ? 12 : 0;
   if (owned > 0 && card.linear) score += 15;
@@ -48,10 +49,10 @@ function scoreCard(run, card) {
   return score;
 }
 
-function cardReason(run, card) {
-  if (card.malus) return `Carta malus: ${card.desc()} — l'oro non vale il malus permanente.`;
+function cardReason(run: Run, card: CardDef) {
+  if (card.malus) return `Carta malus: ${card.desc(1)} — l'oro non vale il malus permanente.`;
   const hpPct = run.tower.hp / run.stats.maxHp;
-  const wallBroken = run.wall.some(seg => seg.hp <= 0);
+  const wallBroken = run.wall.some((seg: { hp: number }) => seg.hp <= 0);
 
   if (wallBroken && ['concrete', 'barbed', 'steel', 'selfrepair'].includes(card.id))
     return 'Il muro ha brecce — priorità al rinforzo del perimetro.';
@@ -81,7 +82,7 @@ function cardReason(run, card) {
 }
 
 // Ritorna { index, card, reason } con la carta consigliata fra le 3 offerte.
-export function domAdvice(run) {
+export function domAdvice(run: Run) {
   const choices = run.cardChoices;
   if (!choices || !choices.length) return null;
   let best = 0, bestScore = -Infinity;
@@ -96,7 +97,7 @@ export function domAdvice(run) {
 // ─── Upgrade ─────────────────────────────────────────────────────
 
 // Ritorna l'id dell'upgrade che conviene comprare adesso (o null se nessuno è accessibile).
-export function domUpgradeAdvice(run) {
+export function domUpgradeAdvice(run: Run) {
   const { stats: s, tower, upgrades } = run;
   const hpPct = tower.hp / s.maxHp;
 
@@ -112,7 +113,7 @@ export function domUpgradeAdvice(run) {
   for (const def of UPGRADES) {
     const cost = upgradeCost(run, def.id);
     if (cost === null || run.gold < cost) continue;
-    const score = base[def.id] ?? 30;
+    const score = (base as Record<string, number>)[def.id] ?? 30;
     if (score > bestScore) { bestScore = score; best = def.id; }
   }
   return best;

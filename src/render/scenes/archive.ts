@@ -4,7 +4,7 @@ import { PAL, FONT, shade } from '../palette.js';
 import * as P from '../props.js';
 import { AREA, LANE, free, inYard, scatter, many } from './common.js';
 
-export function build(g, rnd) {
+export function build(g: CanvasRenderingContext2D, rnd: () => number) {
   const slab = ['#7d776c', '#77716a', '#837d71', '#716b62'];
   for (let y = AREA.y; y < AREA.y + AREA.h; y += 24) {
     for (let x = AREA.x + ((y / 24) % 2 ? 12 : 0) - 12; x < AREA.x + AREA.w; x += 24) {
@@ -32,7 +32,7 @@ export function build(g, rnd) {
       if (rnd() < 0.3) P.paperStack(g, x + 6, ry - 24, 2 + Math.floor(rnd() * 5));
     }
   }
-  scatter(rnd, many(50), 10, (x, y, r) => {
+  scatter(rnd, many(50), 10, (x: number, y: number, r: number) => {
     if (r < 0.3) P.paperStack(g, x, y, 3 + Math.floor(rnd() * 8));
     else if (r < 0.5) P.box(g, x, y, 12, 10);
     else if (r < 0.62) P.chair(g, x, y);

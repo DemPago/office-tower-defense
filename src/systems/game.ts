@@ -49,7 +49,7 @@ export function update(run: Run, dt: number): void {
   if (run.phase === 'bonus-break') {
     updateTower(run, dt);
     updateAbilities(run, dt);
-    run.bonusBreakTimer -= dt;
+    run.bonusBreakTimer = (run.bonusBreakTimer ?? 0) - dt;
     if (run.bonusBreakTimer <= 0) startBonusWave(run);
     return;
   }

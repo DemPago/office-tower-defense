@@ -1,4 +1,5 @@
 // Rinforzi: colleghi intorno al palazzo, i loro spicchi e il recinto elettrico.
+import type { Run, Ally } from '../types.js';
 import { TOWER } from '../state.js';
 import { allyDef, allyPos } from '../systems/allies.js';
 import { ALLY_SLOTS, allyArc } from '../data/allies.js';
@@ -9,9 +10,9 @@ import { drawPersonAt, rad } from './view.js';
 const ALLY_COLOR = { pm: PAL.red, sm: PAL.toxic, dev: PAL.cyan };
 
 // Spicchi difesi dai colleghi: un arco colorato a terra.
-export function drawSectors(ctx, run, time) {
+export function drawSectors(ctx: CanvasRenderingContext2D, run: Run, time: number) {
   for (const ally of run.allies) {
-    const color = ALLY_COLOR[ally.id];
+    const color = ALLY_COLOR[ally.id as keyof typeof ALLY_COLOR];
     if (!color) continue; // i maghi non hanno spicchio
     const width = allyArc(ally.level), center = ALLY_SLOTS[ally.slot];
     const r = 104 + ally.slot * 3;
@@ -29,8 +30,10 @@ export function drawSectors(ctx, run, time) {
 }
 
 
-export function drawAlly(ctx, assets, ally, time) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function drawAlly(ctx: CanvasRenderingContext2D, assets: any, ally: Ally, time: number) {
   const def = allyDef(ally.id);
+  if (!def) return;
   const { x, y } = allyPos(ally);
   const drop = 0;
 
@@ -44,14 +47,14 @@ export function drawAlly(ctx, assets, ally, time) {
     ctx.ellipse(x, y, 18 + pulse * 3, 7 + pulse, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  const recoil = ally.recoil > 0 ? 1 : 0;
-  if (ally.promoFlash > 0) {
+  const recoil = (ally.recoil ?? 0) > 0 ? 1 : 0;
+  if ((ally.promoFlash ?? 0) > 0) {
     // promozione: colonna di luce dorata
-    ctx.fillStyle = `rgba(242,183,5,${0.35 * ally.promoFlash / 1.5})`;
+    ctx.fillStyle = `rgba(242,183,5,${0.35 * (ally.promoFlash ?? 0) / 1.5})`;
     ctx.fillRect(x - 8, y - 70, 16, 72);
   }
   drawPersonAt(ctx, assets.person(def.look, 0, 1), x, y - 1 + drop + recoil);
-  if (ally.hurt > 0) {
+  if ((ally.hurt ?? 0) > 0) {
     ctx.globalAlpha = 0.45;
     drawPersonAt(ctx, assets.person(def.look, 0, 1, '#ff2a3d'), x, y - 1 + drop + recoil);
     ctx.globalAlpha = 1;

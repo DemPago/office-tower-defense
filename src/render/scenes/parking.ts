@@ -4,7 +4,7 @@ import { PAL, FONT, shade } from '../palette.js';
 import * as P from '../props.js';
 import { AREA, LANE, free, inYard, scatter, many } from './common.js';
 
-export function build(g, rnd, data?, opts?: { skipCars?: boolean }) {
+export function build(g: CanvasRenderingContext2D, rnd: () => number, data?: any, opts?: { skipCars?: boolean }) {
   P.rect(g, AREA.x, AREA.y, AREA.w, AREA.h, PAL.asphalt);
   P.noise(g, AREA, many(60000), [PAL.asphalt2, PAL.asphaltHi, PAL.black, '#38383d'], rnd);
   P.noise(g, AREA, many(4000), ['#55555c', '#1c1c20'], rnd, 1); // sassolini nell'asfalto
@@ -43,17 +43,17 @@ export function build(g, rnd, data?, opts?: { skipCars?: boolean }) {
     const end = P.crack(g, x, y, rnd, 4 + Math.floor(rnd() * 10));
     if (rnd() < 0.4) P.weeds(g, Math.round(end.x), Math.round(end.y));
   }
-  scatter(rnd, many(30), 6, (x, y) => P.stain(g, x, y, 5 + rnd() * 10, 3 + rnd() * 5));
-  scatter(rnd, many(10), 14, (x, y) => P.puddle(g, x, y, 10 + rnd() * 10, 4 + rnd() * 4));
-  scatter(rnd, many(8), 10, (x, y) => P.manhole(g, x, y));
-  scatter(rnd, many(40), 10, (x, y, r) => {
+  scatter(rnd, many(30), 6, (x: number, y: number) => P.stain(g, x, y, 5 + rnd() * 10, 3 + rnd() * 5));
+  scatter(rnd, many(10), 14, (x: number, y: number) => P.puddle(g, x, y, 10 + rnd() * 10, 4 + rnd() * 4));
+  scatter(rnd, many(8), 10, (x: number, y: number) => P.manhole(g, x, y));
+  scatter(rnd, many(40), 10, (x: number, y: number, r: number) => {
     if (r < 0.25) P.cone(g, x, y);
     else if (r < 0.4) P.barrel(g, x, y, rnd() < 0.5 ? PAL.rust : '#2f4f6f');
     else if (r < 0.55) P.planterTree(g, x, y, rnd() < 0.5);
     else if (r < 0.65) P.tire(g, x, y);
     else P.trash(g, x, y, rnd);
   });
-  scatter(rnd, many(5), 30, (x, y) => P.dumpster(g, x, y));
+  scatter(rnd, many(5), 30, (x: number, y: number) => P.dumpster(g, x, y));
   P.spray(g, 'SCIOPERO!', TOWER.x - 170, TOWER.y - 150, PAL.pink, -0.08, 18);
   P.spray(g, 'NO STRAORDINARI', TOWER.x + 180, TOWER.y + 160, PAL.cyan, 0.05, 13);
 }

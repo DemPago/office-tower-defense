@@ -5,13 +5,13 @@ import { initAudio, toggleMute, isMuted } from '../audio.js';
 import { placeBomb } from '../systems/bombs.js';
 import * as screens from '../ui/screens.js';
 
-const $ = id => document.getElementById(id);
+const $ = (id: string) => document.getElementById(id);
 
-export function setupControls(app, canvas, renderer) {
+export function setupControls(app: any, canvas: HTMLCanvasElement, renderer: any) {
   const { flow } = app;
 
   // Click sul canvas: durante bomb-placement piazza una bomba
-  canvas.addEventListener('click', e => {
+  canvas.addEventListener('click', (e: MouseEvent) => {
     const { run } = app;
     if (!run || run.phase !== 'bomb-placement') return;
     const world = renderer.screenToWorld(e.clientX, e.clientY);
@@ -20,14 +20,14 @@ export function setupControls(app, canvas, renderer) {
     }
   });
 
-  $('btn-pause').addEventListener('click', () => flow.setPaused(!app.paused));
-  $('btn-speed').addEventListener('click', () => { app.speed = app.speed === 3 ? 1 : app.speed + 1; });
+  $('btn-pause')!.addEventListener('click', () => flow.setPaused(!app.paused));
+  $('btn-speed')!.addEventListener('click', () => { app.speed = app.speed === 3 ? 1 : app.speed + 1; });
 
   // Suoni: l'audio parte al primo clic o tasto (regola dei browser).
   addEventListener('pointerdown', initAudio);
   addEventListener('keydown', initAudio);
-  const refreshSoundButton = () => { $('btn-sound').textContent = isMuted() ? '🔇' : '🔊'; };
-  $('btn-sound').addEventListener('click', () => { toggleMute(); refreshSoundButton(); });
+  const refreshSoundButton = () => { $('btn-sound')!.textContent = isMuted() ? '🔇' : '🔊'; };
+  $('btn-sound')!.addEventListener('click', () => { toggleMute(); refreshSoundButton(); });
   refreshSoundButton();
 
   // Schermo intero (non tutti i browser lo permettono, es. iPhone).
@@ -37,10 +37,10 @@ export function setupControls(app, canvas, renderer) {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen().catch(() => {});
   };
-  $('btn-full').hidden = !canFullscreen;
-  $('btn-full').addEventListener('click', toggleFullscreen);
+  ($('btn-full') as HTMLElement).hidden = !canFullscreen;
+  $('btn-full')!.addEventListener('click', toggleFullscreen);
   // Sui telefoni si passa a schermo intero appena si preme GIOCA.
-  $('btn-play').addEventListener('click', () => {
+  $('btn-play')!.addEventListener('click', () => {
     if (canFullscreen && !document.fullscreenElement && matchMedia('(pointer: coarse)').matches) toggleFullscreen();
   });
 

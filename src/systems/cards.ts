@@ -89,7 +89,7 @@ export function playCard(run: Run, meta: Meta, handIndex: number): CardDef | fal
   if (!pick) return false;
   const card = findCard(pick.id);
   if (!card || card.type !== 'use') return false;
-  card.use(run);
+  card.use!(run);
   run.tower.hp = Math.min(run.stats.maxHp, run.tower.hp);
   run.mana = Math.min(maxMana(run), run.mana);
   run.cardPicks.splice(handIndex, 1);
@@ -124,8 +124,8 @@ export function pickCard(run: Run, meta: Meta, index: number): boolean | 'discar
     run.cardPicks.splice(index, 1);
     if (run.cards[victim.id] > 0) run.cards[victim.id]--;
     run.discarding = false;
-    const { card } = run.pendingPick;
-    run.pendingPick = null;
+    const { card } = run.pendingPick!;
+    run.pendingPick = undefined;
     applyCard(run, meta, card);
     return true;
   }

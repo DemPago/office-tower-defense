@@ -4,7 +4,7 @@ import { PAL, FONT, shade } from '../palette.js';
 import * as P from '../props.js';
 import { AREA, LANE, free, inYard, scatter, many } from './common.js';
 
-export function build(g, rnd, data) {
+export function build(g: CanvasRenderingContext2D, rnd: () => number, data: any) {
   // Sotto il tetto: la città di notte
   P.rect(g, AREA.x, AREA.y, AREA.w, AREA.h, '#0b0d14');
   P.noise(g, AREA, many(3000), ['#f2b705', '#e9f08a', '#2de2e6', '#ff3e8a', '#3a3c42'], rnd);
@@ -49,7 +49,7 @@ export function build(g, rnd, data) {
     }
   }
   // Casotti delle scale e serbatoi d'acqua
-  scatter(rnd, many(10), 30, (x, y, r) => {
+  scatter(rnd, many(10), 30, (x: number, y: number, r: number) => {
     if (x < roof.x + 20 || y < roof.y + 40 || x > roof.x + roof.w - 50 || y > roof.y + roof.h - 20) return;
     if (r < 0.5) {
       P.shadow(g, x + 4, y + 1, 40, 5);
@@ -78,7 +78,7 @@ export function build(g, rnd, data) {
     for (let k = 10; k < 100; k += 20) P.rect(g, x + k, y - 8, 1, 8, PAL.black);
   }
   // Lucernari, condizionatori, antenne
-  scatter(rnd, many(90), 12, (x, y, r) => {
+  scatter(rnd, many(90), 12, (x: number, y: number, r: number) => {
     if (x < roof.x + 10 || y < roof.y + 10 || x > roof.x + roof.w - 40 || y > roof.y + roof.h - 30) return;
     if (Math.hypot(x - hx, y - hy) < 60) return;
     if (r < 0.3) P.skylight(g, x, y);
@@ -90,7 +90,7 @@ export function build(g, rnd, data) {
   return { floor: '#55585f', seam: '#3a3c42' };
 }
 
-export function ambient(ctx, time, data) {
+export function ambient(ctx: CanvasRenderingContext2D, time: number, data: any) {
   const on = Math.sin(time * 3) > 0;
   for (const l of data.lights) {
     if (!on) continue;

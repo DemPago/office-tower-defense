@@ -1,14 +1,15 @@
+/// <reference types="vite/client" />
 // Sequenza intro: 1) splash con titolo pixel art, 2) video generato, 3) fallback animazione.
 // playIntro(canvas, onDone) → onDone avvia il menu principale.
 
-export function playIntro(canvas, onDone) {
+export function playIntro(canvas: HTMLCanvasElement, onDone: () => void): void {
   playTitleSplash(canvas, () => playVideo(canvas, onDone));
 }
 
 // ─── 1. Splash con titolo ────────────────────────────────────────────────────
 
-function playTitleSplash(canvas, onDone) {
-  const ctx = canvas.getContext('2d');
+function playTitleSplash(canvas: HTMLCanvasElement, onDone: () => void): void {
+  const ctx = canvas.getContext('2d')!;
   let t = 0, done = false;
   const DURATION = 3.0;   // secondi totali dello splash
   const FADE_IN  = 0.5;   // fade in
@@ -29,7 +30,7 @@ function playTitleSplash(canvas, onDone) {
   document.addEventListener('keydown', finish);
 
   let last = performance.now();
-  function frame(now) {
+  function frame(now: number): void {
     if (done) return;
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
@@ -89,7 +90,7 @@ function playTitleSplash(canvas, onDone) {
 
 // ─── 2. Video generato (public/intro.mp4) ────────────────────────────────────
 
-function playVideo(canvas, onDone) {
+function playVideo(canvas: HTMLCanvasElement, onDone: () => void): void {
   const video = document.createElement('video');
   video.src = import.meta.env.BASE_URL + 'intro.mp4';
   video.playsInline = true;
@@ -150,8 +151,8 @@ function playVideo(canvas, onDone) {
 
 // ─── 3. Animazione pixel art (fallback legacy, non più usata in sequenza) ────
 
-export function playPixelArtIntro(canvas, onDone) {
-  const ctx = canvas.getContext('2d');
+export function playPixelArtIntro(canvas: HTMLCanvasElement, onDone: () => void): void {
+  const ctx = canvas.getContext('2d')!;
   let t = 0, done = false;
 
   function finish() {
@@ -166,7 +167,7 @@ export function playPixelArtIntro(canvas, onDone) {
   document.addEventListener('keydown', finish);
 
   let last = performance.now();
-  function frame(now) {
+  function frame(now: number): void {
     if (done) return;
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
@@ -206,8 +207,8 @@ export function playPixelArtIntro(canvas, onDone) {
 
 // ─── Scena pixel art ─────────────────────────────────────────────────────────
 
-function drawScene(ctx, t) {
-  const p = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+function drawScene(ctx: CanvasRenderingContext2D, t: number): void {
+  const p = (x: number, y: number, w: number, h: number, c: string) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
 
   const stress = Math.max(0, Math.min(1, (t - 0.8) / 2.2));
   const scream = t > 3.1;

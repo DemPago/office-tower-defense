@@ -6,21 +6,29 @@ const LOCAL_KEY = 'otd-v2-scores';
 const INITIALS_KEY = 'otd-v2-initials';
 const online = !!(SUPABASE.url && SUPABASE.key);
 
-// ─── Locale ─────────────────────────────────────────────────────
-
-function sortScores(rows) {
-  return rows.sort((a, b) => b.wave - a.wave || b.kills - a.kills || a.ts - b.ts);
+interface ScoreRow {
+  initials: string;
+  wave: number;
+  kills: number;
+  bosses: number;
+  ts: number;
 }
 
-function loadLocal() {
+// ─── Locale ─────────────────────────────────────────────────────
+
+function sortScores(rows: ScoreRow[]) {
+  return rows.sort((a: ScoreRow, b: ScoreRow) => b.wave - a.wave || b.kills - a.kills || a.ts - b.ts);
+}
+
+function loadLocal(): ScoreRow[] {
   try {
-    return JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
+    return JSON.parse(localStorage.getItem(LOCAL_KEY) ?? '[]') || [];
   } catch {
     return [];
   }
 }
 
-function saveLocal(row) {
+function saveLocal(row: ScoreRow) {
   const rows = sortScores([...loadLocal(), row]).slice(0, 50);
   try {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(rows));
@@ -40,21 +48,21 @@ export function lastInitials() {
 
 // ─── Online (API REST di Supabase) ──────────────────────────────
 
-function headers(extra = {}) {
-  const h = { apikey: SUPABASE.key, 'Content-Type': 'application/json', ...extra };
+function headers(extra: Record<string, string> = {}): Record<string, string> {
+  const h: Record<string, string> = { apikey: SUPABASE.key, 'Content-Type': 'application/json', ...extra };
   // Le vecchie chiavi "anon" sono JWT (iniziano con eyJ) e vanno anche in Authorization.
   if (SUPABASE.key.startsWith('eyJ')) h.Authorization = `Bearer ${SUPABASE.key}`;
   return h;
 }
 
-async function fetchOnline(limit) {
+async function fetchOnline(limit: number) {
   const url = `${SUPABASE.url}/rest/v1/scores?select=id,initials,wave,kills,bosses&order=wave.desc,kills.desc,created_at.asc&limit=${limit}`;
   const res = await fetch(url, { headers: headers() });
   if (!res.ok) throw new Error('Classifica non disponibile: ' + res.status);
   return res.json();
 }
 
-async function submitOnline(row) {
+async function submitOnline(row: ScoreRow) {
   const res = await fetch(`${SUPABASE.url}/rest/v1/scores?select=id`, {
     method: 'POST',
     headers: headers({ Prefer: 'return=representation' }),
@@ -87,7 +95,7 @@ export async function getTop(limit = 10) {
 }
 
 // Salva il punteggio. Restituisce { rank, id, ts, source }.
-export async function submitScore({ initials, wave, kills, bosses }) {
+export async function submitScore({ initials, wave, kills, bosses }: { initials: string; wave: number; kills: number; bosses: number }) {
   try {
     localStorage.setItem(INITIALS_KEY, initials);
   } catch {

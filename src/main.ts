@@ -17,16 +17,46 @@ import { createInitials } from './app/initials.js';
 import { setupControls } from './app/controls.js';
 import { createTutorial } from './ui/tutorial.js';
 import { playIntro } from './render/intro.js';
+import type { Run, Meta } from './types.js';
 
-const $ = id => document.getElementById(id);
+declare global {
+  interface Window { otd?: any }
+}
 
-const app = {
+interface Renderer {
+  draw: (run: Run | null) => void;
+  resize: () => void;
+  screenRect: (name: string) => DOMRect;
+  screenToWorld: (x: number, y: number) => { x: number; y: number };
+}
+
+interface App {
+  meta: Meta;
+  run: Run | null;
+  paused: boolean;
+  speed: number;
+  overHandled: boolean;
+  assets: any;
+  tutorial: any;
+  showTutorial: () => void;
+  initials: any;
+  flow: any;
+  wantTutorial?: boolean;
+}
+
+const $ = (id: string): HTMLElement | null => document.getElementById(id);
+
+const app: App = {
   meta: loadMeta(),   // progressi permanenti (salvati nel browser)
   run: null,          // la partita in corso (null = siamo nel menu)
   paused: false,
   speed: 1,           // x1 / x2 / x3
   overHandled: false, // la schermata di fine partita è già stata preparata
   assets: await loadAssets(),
+  tutorial: null,
+  showTutorial: () => {},
+  initials: null,
+  flow: null,
 };
 
 // I font servono già pronti per disegnare i graffiti sullo sfondo.
@@ -55,12 +85,12 @@ const badge = document.createElement('div');
 badge.style.cssText = 'position:fixed;top:4px;right:4px;font-size:10px;padding:2px 6px;z-index:9999;border-radius:3px;pointer-events:none';
 document.body.appendChild(badge);
 
-let renderer;
+let renderer: Renderer;
 if (use3d) {
   badge.style.background = '#f2b705'; badge.style.color = '#000'; badge.textContent = '3D';
   try {
     const mod = await import('./render/three/renderer.js');
-    renderer = mod.createThreeRenderer($('cv') as HTMLCanvasElement, app.assets);
+    renderer = mod.createThreeRenderer($('cv') as HTMLCanvasElement, app.assets) as Renderer;
     badge.style.background = '#2de2e6';
   } catch (err) {
     badge.style.background = '#d7263d'; badge.style.color = '#fff';
@@ -69,7 +99,7 @@ if (use3d) {
   }
 } else {
   badge.remove();
-  renderer = createRenderer($('cv'), app.assets);
+  renderer = createRenderer($('cv') as HTMLCanvasElement, app.assets) as Renderer;
 }
 const hud = createHud({
   onBuy: id => { if (app.run && buyUpgrade(app.run, app.meta, id)) play('buy'); },
@@ -88,12 +118,12 @@ app.tutorial = createTutorial({
 app.showTutorial = () => setTimeout(() => app.tutorial.start(renderer.screenRect), 150);
 app.initials = createInitials(app);
 app.flow = createFlow(app);
-setupControls(app, $('cv'), renderer);
+setupControls(app, $('cv') as HTMLCanvasElement, renderer);
 
 // ─── Game loop ──────────────────────────────────────────────────
 
 let last = performance.now();
-function frame(now) {
+function frame(now: number) {
   // dt = secondi passati dall'ultimo frame, limitato per evitare salti enormi.
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
@@ -106,9 +136,9 @@ function frame(now) {
     // suoni ordinati dai sistemi in questo frame
     for (const s of run.fx.sounds) play(s);
     run.fx.sounds.length = 0;
-    if (run.phase === 'ally' && $('scr-cards').hidden) app.flow.onAllyPhase();
-    if (run.phase === 'cards' && $('scr-cards').hidden) app.flow.onCardsPhase();
-    if (run.phase === 'bomb-placement' && $('scr-bombs').hidden) app.flow.onBombPhase();
+    if (run.phase === 'ally' && $('scr-cards')!.hidden) app.flow.onAllyPhase();
+    if (run.phase === 'cards' && $('scr-cards')!.hidden) app.flow.onCardsPhase();
+    if (run.phase === 'bomb-placement' && $('scr-bombs')!.hidden) app.flow.onBombPhase();
     if (run.phase === 'over' && !app.overHandled) app.flow.onGameOver();
   }
   renderer.draw(run);
@@ -135,7 +165,7 @@ if (use3d) {
     app.flow.toMenu();
   });
 } else {
-  playIntro($('cv'), () => {
+  playIntro($('cv') as HTMLCanvasElement, () => {
     renderer.resize();
     app.flow.toMenu();
     requestAnimationFrame(frame);

@@ -12,7 +12,7 @@ export function dealDamage(run: Run, e: Enemy, amount: number, { crit = false, s
   const dmg = amount * (1 - e.armor);
   const before = e.hp;
   e.hp -= dmg;
-  if (e.zombie && !silent) zombieGore(run, e, before);
+  if ((e as any).zombie && !silent) zombieGore(run, e, before);
   if (!silent) {
     e.hitFlash = 0.08;
     floatText(run, e.x + (Math.random() * 10 - 5), e.y - e.size * 0.8, fmt(Math.max(1, dmg)) + (crit ? '!' : ''), crit ? '#d7263d' : color || '#e8e2d0', crit ? 10 : 7);
@@ -21,8 +21,9 @@ export function dealDamage(run: Run, e: Enemy, amount: number, { crit = false, s
 }
 
 // Zombie colpito: schizzi verdi e rossi; quando perde un pezzo (braccio, testa…) ne vola via uno grosso.
-function zombieGore(run, e, hpBefore) {
-  const stage = hp => Math.floor((1 - Math.max(0, hp) / e.maxHp) * 4);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function zombieGore(run: Run, e: any, hpBefore: number) {
+  const stage = (hp: number) => Math.floor((1 - Math.max(0, hp) / e.maxHp) * 4);
   burst(run, e.x, e.y - e.size * 0.5, '#8aa070', 3, 60);
   burst(run, e.x, e.y - e.size * 0.5, '#7a0f1c', 2, 50);
   if (e.hp > 0 && stage(e.hp) > stage(hpBefore)) {
@@ -34,8 +35,9 @@ function zombieGore(run, e, hpBefore) {
 }
 
 // Il boss a vita finita non muore: lampo bianco e torna come il suo animale GIGANTE.
-function transformBoss(run, e) {
-  const A = ANIMALS[e.animalId];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function transformBoss(run: Run, e: any) {
+  const A = (ANIMALS as Record<string, any>)[e.animalId];
   e.beast = true;
   e.animal = e.animalId;
   e.maxHp *= 0.8;
@@ -47,8 +49,8 @@ function transformBoss(run, e) {
   e.enraged = false;
   e.slowT = e.stunT = e.dotT = 0;
   e.name = `${A.name} GIGANTE`;
-  if (run.boss && run.boss.list.includes(e)) run.boss.name = `${e.bossName}: ${A.name} GIGANTE`;
-  run.fx.flash = 1;
+  if (run.boss && (run.boss as any).list.includes(e)) (run.boss as any).name = `${e.bossName}: ${A.name} GIGANTE`;
+  (run.fx as any).flash = 1;
   shake(run, 14);
   burst(run, e.x, e.y - 20, '#ffffff', 30, 160);
   ring(run, e.x, e.y - 15, 60, '#ffffff');
@@ -61,17 +63,18 @@ function transformBoss(run, e) {
   e.moving = true;
   // il power-up: si annuncia in grande, con la sirena
   banner(run, "È INIZIATA LA REPERIBILITÀ!", 'Abbattila prima che sia troppo tardi!', '#f2b705');
-  run.fx.banner.life = run.fx.banner.max = 4;
+  run.fx.banner!.life = run.fx.banner!.max = 4;
   sfx(run, 'siren');
   sfx(run, 'transform');
 }
 
-function killEnemy(run, e) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function killEnemy(run: Run, e: any) {
   if (e.boss && e.animalId && !e.beast) { transformBoss(run, e); return; }
   e.dead = true;
   run.kills++;
   sfx(run, e.boss ? 'bossdown' : 'kill');
-  if (!e.sushi) run.fx.corpses.push({ look: e.look, animal: e.animal, scale: e.scale, x: e.x, y: e.y, size: e.size, dir: e.x < TOWER.x ? -1 : 1, life: 0.6, max: 0.6 });
+  if (!e.sushi) (run.fx.corpses as any[]).push({ look: e.look, animal: e.animal, scale: e.scale, x: e.x, y: e.y, size: e.size, dir: e.x < TOWER.x ? -1 : 1, life: 0.6, max: 0.6 });
   const gold = Math.max(1, Math.round(e.gold * run.stats.goldMult));
   run.gold += gold;
   floatText(run, e.x, e.y - e.size, '+' + fmt(gold) + '💰', '#f2b705', 7);
@@ -83,14 +86,14 @@ function killEnemy(run, e) {
   // Capo vendite e vicedirettore: quando cadono, delegano a due sottoposti.
   if (e.def.split) {
     for (const dx of [-8, 8]) {
-      run.enemies.push(makeEnemy(ENEMIES[e.def.split], run.wave, { x: e.x + dx, y: e.y, age: 0.4 }));
+      run.enemies.push(makeEnemy((ENEMIES as Record<string, any>)[e.def.split], run.wave, { x: e.x + dx, y: e.y, age: 0.4 }) as unknown as Enemy);
     }
     floatText(run, e.x, e.y - e.size - 10, 'DELEGA!', '#ff3e8a', 8);
     sfx(run, 'split');
   }
   if (e.boss) {
     shake(run, 8);
-    if (run.boss && run.boss.list.every(b => b.dead)) {
+    if (run.boss && (run.boss as any).list.every((b: Enemy) => b.dead)) {
       run.bossesKilled++;
       run.boss = null;
       run.bonusPending = true;
@@ -143,7 +146,7 @@ export function damageTower(run: Run, amount: number): void {
   }
 }
 
-function failBonusStage(run) {
+function failBonusStage(run: Run) {
   run.bonusStage = false;
   run.bonusWaveIdx = 0;
   run.enemies = [];

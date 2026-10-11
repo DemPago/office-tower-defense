@@ -10,24 +10,24 @@ export const AREA = { x: -MARGIN, y: -MARGIN, w: WORLD.w + MARGIN * 2, h: WORLD.
 export { YARD };
 export const LANE = 28; // mezza larghezza dei corridoi
 
-export function seeded(seed) {
+export function seeded(seed: number) {
   return () => {
     seed = (seed * 16807) % 2147483647;
     return (seed - 1) / 2147483646;
   };
 }
 
-export function inYard(x, y, pad = 0) {
+export function inYard(x: number, y: number, pad = 0) {
   return x > YARD.x - pad && x < YARD.x + YARD.w + pad && y > YARD.y - pad && y < YARD.y + YARD.h + pad;
 }
-export function inLane(x, y, pad = 0) {
+export function inLane(x: number, y: number, pad = 0) {
   return Math.abs(x - TOWER.x) < LANE + pad || Math.abs(y - TOWER.y) < LANE + pad;
 }
 // Punto libero: fuori dal cortile e dai corridoi.
-export function free(x, y, pad = 8) {
+export function free(x: number, y: number, pad = 8) {
   return !inYard(x, y, pad + 10) && !inLane(x, y, pad);
 }
-export function scatter(rnd, n, pad, fn) {
+export function scatter(rnd: () => number, n: number, pad: number, fn: (x: number, y: number, r: number) => void) {
   const pts = [];
   for (let i = 0; i < n * 4 && pts.length < n; i++) {
     const x = Math.round(AREA.x + rnd() * AREA.w), y = Math.round(AREA.y + rnd() * AREA.h);
@@ -35,4 +35,4 @@ export function scatter(rnd, n, pad, fn) {
   }
   pts.sort((a, b) => a.y - b.y).forEach(p => fn(p.x, p.y, p.r));
 }
-export const many = n => Math.round(n * (AREA.w * AREA.h) / (1200 * 1200));
+export const many = (n: number) => Math.round(n * (AREA.w * AREA.h) / (1200 * 1200));

@@ -4,27 +4,29 @@
 // Tutte le funzioni ricevono il contesto e la posizione (x, y = base dell'oggetto).
 import { PAL, SPRAY, FONT, shade } from './palette.js';
 
-const H = 0.5; // mezzo pixel: lo spessore dei dettagli fini
-const snap = v => Math.round(v * 2) / 2;
+type Ctx = CanvasRenderingContext2D;
 
-export function rect(g, x, y, w, h, c) {
+const H = 0.5; // mezzo pixel: lo spessore dei dettagli fini
+const snap = (v: number): number => Math.round(v * 2) / 2;
+
+export function rect(g: Ctx, x: number, y: number, w: number, h: number, c: string): void {
   g.fillStyle = c;
   g.fillRect(snap(x), snap(y), w, h);
 }
 
 // Rettangolo con bordo scuro sottile.
-function framed(g, x, y, w, h, fill, edge = PAL.black) {
+function framed(g: Ctx, x: number, y: number, w: number, h: number, fill: string, edge: string = PAL.black): void {
   rect(g, x - H, y - H, w + 1, h + 1, edge);
   rect(g, x, y, w, h, fill);
 }
 
 // Ombra morbida a terra (gli oggetti "poggiano" sul pavimento).
-export function shadow(g, x, y, w, h = 3) {
+export function shadow(g: Ctx, x: number, y: number, w: number, h: number = 3): void {
   rect(g, x, y, w, h, 'rgba(0,0,0,0.22)');
   rect(g, x + 1, y + H, w - 2, h - 1, 'rgba(0,0,0,0.18)');
 }
 
-export function hazardStripes(g, x, y, w, h) {
+export function hazardStripes(g: Ctx, x: number, y: number, w: number, h: number): void {
   g.save();
   g.beginPath();
   g.rect(x, y, w, h);
@@ -45,16 +47,16 @@ export function hazardStripes(g, x, y, w, h) {
   g.restore();
 }
 
-export function noise(g, area, n, colors, rnd, size = H) {
+export function noise(g: Ctx, area: { x: number; y: number; w: number; h: number }, n: number, colors: string[], rnd: () => number, size: number = H): void {
   for (let i = 0; i < n; i++) {
     g.fillStyle = colors[Math.floor(rnd() * colors.length)];
     g.fillRect(snap(area.x + rnd() * area.w), snap(area.y + rnd() * area.h), size, size);
   }
 }
 
-export function crack(g, x, y, rnd, steps = 10, color = PAL.black) {
+export function crack(g: Ctx, x: number, y: number, rnd: () => number, steps: number = 10, color: string = PAL.black): { x: number; y: number } {
   let a = rnd() * Math.PI * 2;
-  const pts = [[x, y]];
+  const pts: [number, number][] = [[x, y]];
   for (let k = 0; k < steps; k++) {
     a += (rnd() - 0.5) * 1.6;
     x += Math.cos(a) * (3 + rnd() * 3);
@@ -69,7 +71,7 @@ export function crack(g, x, y, rnd, steps = 10, color = PAL.black) {
       g.stroke();
     }
   }
-  for (const [lw, col, off] of [[1, 'rgba(255,255,255,0.08)', H], [H * 1.5, color, 0]]) {
+  for (const [lw, col, off] of [[1, 'rgba(255,255,255,0.08)', H], [H * 1.5, color, 0]] as [number, string, number][]) {
     g.strokeStyle = col;
     g.lineWidth = lw;
     g.beginPath();
@@ -79,22 +81,22 @@ export function crack(g, x, y, rnd, steps = 10, color = PAL.black) {
   return { x, y };
 }
 
-export function weeds(g, x, y) {
-  for (const [dx, h, c] of [[0, 3.5, PAL.weed], [-1.5, 2.5, PAL.weed], [1.5, 2.5, '#4f8a35'], [-0.5, 2, '#4f8a35'], [1, 3, PAL.weed]]) {
+export function weeds(g: Ctx, x: number, y: number): void {
+  for (const [dx, h, c] of [[0, 3.5, PAL.weed], [-1.5, 2.5, PAL.weed], [1.5, 2.5, '#4f8a35'], [-0.5, 2, '#4f8a35'], [1, 3, PAL.weed]] as [number, number, string][]) {
     rect(g, x + dx, y - h, H, h, c);
   }
   rect(g, x, y - 3.5, H, H, PAL.toxic);
   rect(g, x + 1.5, y - 2.5, H, H, PAL.toxic);
 }
 
-export function stain(g, x, y, w, h, color = 'rgba(0,0,0,0.3)') {
+export function stain(g: Ctx, x: number, y: number, w: number, h: number, color: string = 'rgba(0,0,0,0.3)'): void {
   g.fillStyle = color;
   g.beginPath();
   g.ellipse(x, y, w, h, 0, 0, Math.PI * 2);
   g.fill();
 }
 
-export function puddle(g, x, y, w, h, color = '#3d4a57', hi = '#6f8597') {
+export function puddle(g: Ctx, x: number, y: number, w: number, h: number, color: string = '#3d4a57', hi: string = '#6f8597'): void {
   stain(g, x, y + H, w + 0.5, h + 0.5, 'rgba(0,0,0,0.35)');
   stain(g, x, y, w, h, color);
   stain(g, x - w * 0.2, y - h * 0.2, w * 0.55, h * 0.45, shade(color, 1.12));
@@ -103,7 +105,7 @@ export function puddle(g, x, y, w, h, color = '#3d4a57', hi = '#6f8597') {
   rect(g, x - w / 3, y + h / 5, 2, H, 'rgba(255,255,255,0.35)');
 }
 
-export function manhole(g, x, y) {
+export function manhole(g: Ctx, x: number, y: number): void {
   stain(g, x, y, 7.5, 7.5, PAL.black);
   stain(g, x, y, 7, 7, '#45454b');
   stain(g, x, y, 6, 6, '#35353a');
@@ -118,7 +120,7 @@ export function manhole(g, x, y) {
   rect(g, x - 4, y - 5.5, 3, H, 'rgba(255,255,255,0.15)');
 }
 
-export function sandbag(g, x, y) {
+export function sandbag(g: Ctx, x: number, y: number): void {
   rect(g, x - H, y + 6.5, 12, 1.5, 'rgba(0,0,0,0.3)');
   rect(g, x + H, y - 1, 10, H, PAL.black);
   rect(g, x - H, y - H, 12, 7.5, PAL.black);
@@ -132,7 +134,7 @@ export function sandbag(g, x, y) {
   rect(g, x + 5, y + 1.5, H, 4, '#7a6640');
 }
 
-export function barrier(g, x, y) {
+export function barrier(g: Ctx, x: number, y: number): void {
   rect(g, x - 1, y + 10, 23, 2, 'rgba(0,0,0,0.3)');
   framed(g, x, y, 20, 10, PAL.concreteHi);
   rect(g, x, y, 20, 1.5, '#a8a296');
@@ -142,7 +144,7 @@ export function barrier(g, x, y) {
   rect(g, x + 15, y + 1, 1.5, H, PAL.concreteDk);
 }
 
-export function spray(g, text, x, y, color, angle, size) {
+export function spray(g: Ctx, text: string, x: number, y: number, color: string, angle: number, size: number): void {
   g.save();
   g.translate(x, y);
   g.rotate(angle);
@@ -161,7 +163,7 @@ export function spray(g, text, x, y, color, angle, size) {
   g.restore();
 }
 
-export function cone(g, x, y) {
+export function cone(g: Ctx, x: number, y: number): void {
   shadow(g, x - 3, y + 1, 10, 2);
   rect(g, x - 4.5, y - 1.5, 10, 3, PAL.black);
   rect(g, x - 4, y - 1, 9, 2, '#c4521a');
@@ -175,7 +177,7 @@ export function cone(g, x, y) {
   rect(g, x - 2, y - 3.5, 5, 1, '#d8d2c0');
 }
 
-export function barrel(g, x, y, color = PAL.rust) {
+export function barrel(g: Ctx, x: number, y: number, color: string = PAL.rust): void {
   shadow(g, x - 3, y + 1, 12, 2);
   rect(g, x - 5.5, y - 13.5, 12, 16, PAL.black);
   rect(g, x - 5, y - 13, 11, 15, color);
@@ -190,7 +192,7 @@ export function barrel(g, x, y, color = PAL.rust) {
   rect(g, x - 4, y - 1, 2, 1.5, 'rgba(138,59,30,0.8)'); // ruggine
 }
 
-export function box(g, x, y, w = 11, h = 9) {
+export function box(g: Ctx, x: number, y: number, w: number = 11, h: number = 9): void {
   shadow(g, x - w / 2 + 2, y + 1, w, 2);
   framed(g, x - w / 2, y - h, w, h, '#8b6a3e');
   rect(g, x - w / 2, y - h, w, 2, '#a5824f');
@@ -202,7 +204,7 @@ export function box(g, x, y, w = 11, h = 9) {
   rect(g, x - w / 2 + 2, y - 4.5, 1, 2.5, '#4a3420');
 }
 
-export function tire(g, x, y) {
+export function tire(g: Ctx, x: number, y: number): void {
   stain(g, x, y, 7.5, 4.5, PAL.black);
   stain(g, x, y, 7, 4, '#1d1d20');
   for (let a = 0; a < Math.PI * 2; a += 0.45) rect(g, x + Math.cos(a) * 6, y + Math.sin(a) * 3.5, H, H, '#3a3a40'); // battistrada
@@ -210,7 +212,7 @@ export function tire(g, x, y) {
   rect(g, x - 4, y - 3, 3, H, 'rgba(255,255,255,0.12)');
 }
 
-export function trash(g, x, y, rnd) {
+export function trash(g: Ctx, x: number, y: number, rnd: () => number): void {
   const n = 2 + Math.floor(rnd() * 3);
   for (let i = 0; i < n; i++) {
     const tx = x + Math.floor(rnd() * 10 - 5), ty = y + Math.floor(rnd() * 6 - 3), r = rnd();
@@ -229,7 +231,7 @@ export function trash(g, x, y, rnd) {
   }
 }
 
-export function dumpster(g, x, y) {
+export function dumpster(g: Ctx, x: number, y: number): void {
   shadow(g, x + 2, y + 18, 36, 4);
   framed(g, x, y, 36, 19, '#2e5b3a');
   rect(g, x, y, 36, 4, '#3f7a4e');
@@ -247,11 +249,11 @@ export function dumpster(g, x, y) {
 }
 
 // Auto vista dall'alto (verticale). broken = rottame.
-export function car(g, x, y, color, broken = false, rnd = Math.random) {
+export function car(g: Ctx, x: number, y: number, color: string, broken: boolean = false, rnd: () => number = Math.random): void {
   const w = 16, h = 28;
   shadow(g, x + 2, y + h - 1, w, 4);
   // ruote che spuntano agli angoli
-  for (const [wx, wy] of [[-1, 4], [w - 1, 4], [-1, 20], [w - 1, 20]]) rect(g, x + wx, y + wy, 2, 4.5, '#0b0b0d');
+  for (const [wx, wy] of [[-1, 4], [w - 1, 4], [-1, 20], [w - 1, 20]] as [number, number][]) rect(g, x + wx, y + wy, 2, 4.5, '#0b0b0d');
   rect(g, x - H, y + 1, w + 1, h - 1.5, PAL.black);
   rect(g, x + 1, y - H, w - 2, h + 1, PAL.black);
   rect(g, x, y + 1, w, h - 2, color);
@@ -280,7 +282,7 @@ export function car(g, x, y, color, broken = false, rnd = Math.random) {
   }
 }
 
-export function lamp(g, x, y) {
+export function lamp(g: Ctx, x: number, y: number): void {
   stain(g, x + H, y + 3, 4, 1.5, 'rgba(0,0,0,0.4)');
   rect(g, x - 4, y + 2, 9, 3, PAL.black);
   rect(g, x - 3.5, y + 2.5, 8, 1, PAL.steel);
@@ -293,7 +295,7 @@ export function lamp(g, x, y) {
   rect(g, x - 3, y - 28.5, 3, 1, '#fffbd0');
 }
 
-export function planterTree(g, x, y, dead = false) {
+export function planterTree(g: Ctx, x: number, y: number, dead: boolean = false): void {
   shadow(g, x - 8, y + 1, 20, 3);
   framed(g, x - 9, y - 6, 18, 8, PAL.concreteHi);
   rect(g, x - 9, y - 6, 18, 1.5, '#a8a296');
@@ -302,7 +304,7 @@ export function planterTree(g, x, y, dead = false) {
   rect(g, x - 1, y - 16, 2, 12, PAL.wood);
   rect(g, x - 1, y - 16, H, 12, PAL.woodHi);
   if (dead) {
-    for (const [dx, dy, len] of [[-5, -16, 4], [1, -19, 4], [-3, -21, 1], [2, -14, 3]]) rect(g, x + dx, y + dy, len, 1, PAL.wood);
+    for (const [dx, dy, len] of [[-5, -16, 4], [1, -19, 4], [-3, -21, 1], [2, -14, 3]] as [number, number, number][]) rect(g, x + dx, y + dy, len, 1, PAL.wood);
     rect(g, x - 3, y - 21, 1, 5, PAL.wood);
     rect(g, x + 4, y - 22, H, 3, PAL.wood);
   } else {
@@ -315,17 +317,17 @@ export function planterTree(g, x, y, dead = false) {
   }
 }
 
-export function bench(g, x, y) {
+export function bench(g: Ctx, x: number, y: number): void {
   shadow(g, x, y + 1, 22, 2);
   rect(g, x - H, y - 7.5, 23, 7, PAL.black);
-  for (const [sy, c] of [[-7, PAL.woodHi], [-5, PAL.wood], [-3, PAL.woodHi]]) {
+  for (const [sy, c] of [[-7, PAL.woodHi], [-5, PAL.wood], [-3, PAL.woodHi]] as [number, string][]) {
     rect(g, x, y + sy, 22, 1.5, c);
     rect(g, x, y + sy, 22, H, shade(c, 1.2));
   }
   for (const lx of [x + 2, x + 18]) { rect(g, lx, y - 1, 2, 2, PAL.black); rect(g, lx + H, y - 1, 1, 1.5, PAL.steel); }
 }
 
-export function cabinet(g, x, y, color = PAL.steel) {
+export function cabinet(g: Ctx, x: number, y: number, color: string = PAL.steel): void {
   shadow(g, x + 2, y, 14, 3);
   framed(g, x, y - 22, 12, 22, color);
   rect(g, x, y - 22, 1.5, 22, shade(color, 1.3));
@@ -343,7 +345,7 @@ export function cabinet(g, x, y, color = PAL.steel) {
   rect(g, x + 8, y - 12, 1.5, 1, 'rgba(0,0,0,0.3)'); // ammaccatura
 }
 
-export function paperStack(g, x, y, h = 6) {
+export function paperStack(g: Ctx, x: number, y: number, h: number = 6): void {
   shadow(g, x - 4, y + 1, 12, 2);
   const tabs = [PAL.red, PAL.blue, PAL.hazard, PAL.toxic];
   for (let i = 0; i < h; i++) {
@@ -355,7 +357,7 @@ export function paperStack(g, x, y, h = 6) {
   }
 }
 
-export function chair(g, x, y) {
+export function chair(g: Ctx, x: number, y: number): void {
   rect(g, x - 4.5, y - 12.5, 10, 8, PAL.black);
   rect(g, x - 4, y - 12, 9, 7, '#2a2a2e');
   rect(g, x - 4, y - 12, 9, 1, '#3a3c42');
@@ -366,7 +368,7 @@ export function chair(g, x, y) {
   rect(g, x - 4, y - H, 9, 1, PAL.steel);
 }
 
-export function desk(g, x, y) {
+export function desk(g: Ctx, x: number, y: number): void {
   shadow(g, x + 2, y + 1, 30, 3);
   framed(g, x, y - 12, 30, 8, PAL.woodHi);
   rect(g, x, y - 12, 30, 1.5, '#a5824f');
@@ -383,7 +385,7 @@ export function desk(g, x, y) {
   rect(g, x + 14, y - 11.5, 2, 2, PAL.white);                  // tazza
 }
 
-export function serverRack(g, x, y, leds) {
+export function serverRack(g: Ctx, x: number, y: number, leds: { x: number; y: number; c: string }[]): void {
   const w = 16, h = 34;
   shadow(g, x + 3, y, w, 4);
   framed(g, x, y - h, w, h, '#1d2026');
@@ -402,7 +404,7 @@ export function serverRack(g, x, y, leds) {
   rect(g, x + 1, y - h + 1, H, h - 2, '#4a515c'); // maniglia della porta
 }
 
-export function container(g, x, y, color, w = 56, h = 26) {
+export function container(g: Ctx, x: number, y: number, color: string, w: number = 56, h: number = 26): void {
   shadow(g, x + 4, y + h, w, 5);
   framed(g, x, y, w, h, color);
   rect(g, x, y, w, 2.5, shade(color, 1.35));
@@ -418,7 +420,7 @@ export function container(g, x, y, color, w = 56, h = 26) {
   for (let i = 0; i < 4; i++) rect(g, x + 6 + i * 12, y + 4 + (i * 5) % (h - 8), 2, 1.5, 'rgba(138,59,30,0.75)'); // ruggine
 }
 
-export function fence(g, x1, y1, x2, y2) {
+export function fence(g: Ctx, x1: number, y1: number, x2: number, y2: number): void {
   // rete metallica: pali ogni 16 px e maglia a rombi
   const len = Math.hypot(x2 - x1, y2 - y1), dx = (x2 - x1) / len, dy = (y2 - y1) / len;
   g.strokeStyle = 'rgba(192,196,204,0.4)';
@@ -444,7 +446,7 @@ export function fence(g, x1, y1, x2, y2) {
   g.stroke();
 }
 
-export function palm(g, x, y) {
+export function palm(g: Ctx, x: number, y: number): void {
   shadow(g, x - 6, y + 1, 16, 3);
   framed(g, x - 8, y - 6, 16, 7, '#b8592a');
   rect(g, x - 8, y - 6, 16, 1.5, '#d47a44');
@@ -453,14 +455,14 @@ export function palm(g, x, y) {
     rect(g, x - 1.5, y - 7 - i * 2, 3.5, 2, i % 2 ? '#7a5a35' : '#8b6a3e');
     rect(g, x - 1.5, y - 7 - i * 2, 3.5, H, '#5a3a22');
   }
-  for (const [dx, dy, len, dir] of [[-11, -26, 11, 1], [1, -27, 11, -1], [-8, -31, 7, 1], [2, -31, 7, -1], [-4, -24, 9, 0]]) {
+  for (const [dx, dy, len, dir] of [[-11, -26, 11, 1], [1, -27, 11, -1], [-8, -31, 7, 1], [2, -31, 7, -1], [-4, -24, 9, 0]] as [number, number, number, number][]) {
     rect(g, x + dx, y + dy, len, 2.5, PAL.black);
     rect(g, x + dx + H, y + dy + H, len - 1, 1.5, '#3f7a2e');
     for (let k = 0; k < len; k += 1.5) rect(g, x + dx + k, y + dy + 2 + (dir ? (k % 3) * H : 0), H, 1, '#4f8a35'); // foglioline
   }
 }
 
-export function kiosk(g, x, y, color, label) {
+export function kiosk(g: Ctx, x: number, y: number, color: string, label: string): void {
   shadow(g, x + 2, y + 1, 34, 4);
   framed(g, x, y - 23, 34, 24, '#3a3c42');
   for (let i = 0; i < 34; i += 4) {               // tendina a strisce
@@ -477,7 +479,7 @@ export function kiosk(g, x, y, color, label) {
   g.fillText(label, x + 17, y - 1);
 }
 
-export function skylight(g, x, y, w = 30, h = 18) {
+export function skylight(g: Ctx, x: number, y: number, w: number = 30, h: number = 18): void {
   rect(g, x - 1, y - 1, w + 2, h + 2, PAL.black);
   rect(g, x - H, y - H, w + 1, h + 1, PAL.steel);
   rect(g, x, y, w, h, '#24364a');
@@ -487,7 +489,7 @@ export function skylight(g, x, y, w = 30, h = 18) {
   rect(g, x + 2, y + h / 2 + 2, w - 4, H, 'rgba(255,255,255,0.08)');
 }
 
-export function acUnit(g, x, y) {
+export function acUnit(g: Ctx, x: number, y: number): void {
   shadow(g, x + 2, y + 1, 22, 3);
   framed(g, x, y - 14, 22, 14, PAL.steel);
   rect(g, x, y - 14, 22, 2, PAL.silver);
@@ -505,13 +507,13 @@ export function acUnit(g, x, y) {
 // ─── Dettagli italiani ──────────────────────────────────────────
 
 // Auto italiane viste dall'alto (verticali, muso in alto). kind: '500' | 'panda' | 'ape' | 'alfa'
-export function italianCar(g, x, y, kind, color, broken = false, rnd = Math.random) {
+export function italianCar(g: Ctx, x: number, y: number, kind: string, color: string, broken: boolean = false, rnd: () => number = Math.random): void {
   if (kind === 'ape') return apeCar(g, x, y, color);
   const w = kind === 'alfa' ? 16 : kind === 'panda' ? 15 : 13;
   const h = kind === 'alfa' ? 28 : kind === 'panda' ? 23 : 20;
   x += (16 - w) / 2;
   shadow(g, x + 2, y + h - 1, w, 4);
-  for (const [wx, wy] of [[-1, 3], [w - 1, 3], [-1, h - 7], [w - 1, h - 7]]) rect(g, x + wx, y + wy, 2, 4, '#0b0b0d');
+  for (const [wx, wy] of [[-1, 3], [w - 1, 3], [-1, h - 7], [w - 1, h - 7]] as [number, number][]) rect(g, x + wx, y + wy, 2, 4, '#0b0b0d');
   if (kind === '500') {
     // 500: tutta tonda
     stain(g, x + w / 2, y + h / 2, w / 2 + 0.5, h / 2 + 0.5, PAL.black);
@@ -557,7 +559,7 @@ export function italianCar(g, x, y, kind, color, broken = false, rnd = Math.rand
 }
 
 // Ape Piaggio: tre ruote, cabina piccola e cassone dietro
-function apeCar(g, x, y, color) {
+function apeCar(g: Ctx, x: number, y: number, color: string): void {
   shadow(g, x + 3, y + 25, 12, 3);
   rect(g, x + 7, y - H, 3, 2.5, '#0b0b0d');                 // ruota davanti
   rect(g, x + 1, y + 18, 2, 4, '#0b0b0d');
@@ -573,7 +575,7 @@ function apeCar(g, x, y, color) {
 }
 
 // Nasone romano: fontanella di ghisa con l'acqua che scorre (l'acqua è animata a parte).
-export function nasone(g, x, y) {
+export function nasone(g: Ctx, x: number, y: number): { x: number; y: number; ground: number } {
   shadow(g, x - 4, y + 1, 12, 2);
   stain(g, x + 1, y + 1, 6, 2, '#3d4a57');                   // pozzetto bagnato
   rect(g, x - 1, y - 2, 6, 2, PAL.black);                    // griglia di scolo
@@ -592,7 +594,7 @@ export function nasone(g, x, y) {
 }
 
 // Kebabbaro: chiosco con lo spiedo (che gira nell'animazione), insegna e sgabelli.
-export function kebab(g, x, y) {
+export function kebab(g: Ctx, x: number, y: number): { x: number; y: number; sign: { x: number; y: number } } {
   shadow(g, x + 2, y + 1, 44, 4);
   rect(g, x - H, y - 30.5, 45, 31, PAL.black);
   rect(g, x, y - 30, 44, 30, '#6d2e1f');

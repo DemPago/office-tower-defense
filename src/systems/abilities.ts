@@ -7,7 +7,7 @@ import { TOWER } from '../state.js';
 import { dist } from '../util.js';
 import type { Run } from '../types.js';
 
-const EFFECTS = {
+const EFFECTS: Record<string, (run: Run) => void> = {
   bomb(run) {
     for (const e of [...run.enemies]) {
       dealDamage(run, e, run.stats.dmg * 12);
@@ -37,7 +37,7 @@ const EFFECTS = {
       bounces: 0,
       hitIds: new Set(),
       speed: run.stats.shotSpeed * 2.5,
-      effects: {},
+      effects: { slow: 0, dot: 0, aoeRadius: 0, aoeDmg: 0, charm: 0 },
       kind: 'sniper',
     });
     run.fx.beams.push({ x1: MUZZLE.x, y1: MUZZLE.y, x2: target.x, y2: target.y - target.size * 0.35, life: 0.08, crit: true });
@@ -46,7 +46,7 @@ const EFFECTS = {
 };
 
 export function manaCost(run: Run, id: string): number {
-  return Math.round(ABILITIES.find(a => a.id === id).mana * run.stats.manaMult);
+  return Math.round(ABILITIES.find(a => a.id === id)!.mana * run.stats.manaMult);
 }
 
 export function canUse(run: Run, id: string): boolean {
@@ -57,13 +57,13 @@ export function canUse(run: Run, id: string): boolean {
 
 export function useAbility(run: Run, id: string): boolean {
   if (!canUse(run, id)) return false;
-  const def = ABILITIES.find(a => a.id === id);
+  const def = ABILITIES.find(a => a.id === id)!;
   run.mana -= manaCost(run, id);
   EFFECTS[id](run);
   sfx(run, id);
   run.abilityCd[id] = def.cd;
   banner(run, `${def.icon} ${def.name.toUpperCase()}`, '', '#2de2e6');
-  run.fx.banner.life = run.fx.banner.max = 1.2;
+  run.fx.banner!.life = run.fx.banner!.max = 1.2;
   return true;
 }
 

@@ -5,18 +5,18 @@ import * as P from '../props.js';
 import { AREA, free } from './common.js';
 
 // Cerca un punto dove un oggetto largo w e alto h sta tutto fuori da cortile e corridoi.
-function findSpot(rnd, w, h, taken) {
+function findSpot(rnd: () => number, w: number, h: number, taken: { x: number; y: number }[]) {
   for (let i = 0; i < 400; i++) {
     const x = Math.round(AREA.x + 20 + rnd() * (AREA.w - w - 40)), y = Math.round(AREA.y + h + 20 + rnd() * (AREA.h - h - 40));
     const ok = [[x, y], [x + w, y], [x, y - h], [x + w, y - h], [x + w / 2, y - h / 2]].every(([px, py]) => free(px, py, 6))
-      && taken.every(t => Math.abs(t.x - x) > 70 || Math.abs(t.y - y) > 60);
+      && taken.every((t: { x: number; y: number }) => Math.abs(t.x - x) > 70 || Math.abs(t.y - y) > 60);
     if (ok) { taken.push({ x, y }); return { x, y }; }
   }
   return null;
 }
 
-export function placeItalian(g, rnd, data, { nasoni = 0, kebab = 0 }) {
-  const taken = [];
+export function placeItalian(g: CanvasRenderingContext2D, rnd: () => number, data: any, { nasoni = 0, kebab = 0 }) {
+  const taken: { x: number; y: number }[] = [];
   data.water = [];
   data.kebabs = [];
   for (let i = 0; i < kebab; i++) {
@@ -30,7 +30,7 @@ export function placeItalian(g, rnd, data, { nasoni = 0, kebab = 0 }) {
 }
 
 // Animazione: getto d'acqua dei nasoni, spiedo del kebab che gira, insegna che lampeggia.
-export function animateItalian(ctx, time, data) {
+export function animateItalian(ctx: CanvasRenderingContext2D, time: number, data: any) {
   for (const w of data.water || []) {
     // arco del getto che scende fino a terra, con gocce che scorrono
     for (let k = 0; k < 9; k++) {

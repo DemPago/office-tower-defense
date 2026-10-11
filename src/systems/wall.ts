@@ -8,11 +8,22 @@ import { burst, floatText, sfx, shake } from './fx.js';
 import { dealDamage } from './damage.js';
 import type { Run } from '../types.js';
 
+interface WallSeg {
+  side: string;
+  a: number;
+  b: number;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  hit?: number;
+}
+
 // Crea i tratti lungo i 4 lati del cortile. Ogni tratto: { side, a, b, x, y, hp, maxHp }
 // (a-b = estremi lungo il lato; x, y = centro, usato per mirare e disegnare).
 export function buildWall() {
-  const segs = [];
-  const add = (side, from, to, fixed) => {
+  const segs: WallSeg[] = [];
+  const add = (side: string, from: number, to: number, fixed: number) => {
     const n = Math.max(1, Math.round((to - from) / WALL.segment));
     const len = (to - from) / n;
     for (let i = 0; i < n; i++) {
@@ -59,11 +70,11 @@ export function segmentToward(run: Run, p: { x: number; y: number }): any {
   let side, along;
   if (tx < ty) { side = dx > 0 ? 'right' : 'left'; along = TOWER.y + dy * tx; }
   else { side = dy > 0 ? 'bottom' : 'top'; along = TOWER.x + dx * ty; }
-  return run.wall.find(s => s.side === side && along >= s.a && along <= s.b) || null;
+  return run.wall.find((s: WallSeg) => s.side === side && along >= s.a && along <= s.b) || null;
 }
 
 // Confine esterno del muro (i tratti siedono fuori dal YARD di 3 px).
-function insideWallPerimeter(p) {
+function insideWallPerimeter(p: { x: number; y: number }) {
   return p.x > YARD.x - 3 && p.x < YARD.x + YARD.w + 3 &&
          p.y > YARD.y - 3 && p.y < YARD.y + YARD.h + 2;
 }

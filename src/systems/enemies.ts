@@ -1,4 +1,5 @@
 // Nemici: movimento verso il palazzo, attacchi, cariche dei kamikaze, cure, boss infuriati.
+import type { Run, Enemy } from '../types.js';
 import { TOWER } from '../state.js';
 import { dist } from '../util.js';
 import { floatText, burst, ring, shake, sfx, banner } from './fx.js';
@@ -6,7 +7,7 @@ import { dealDamage, damageTower } from './damage.js';
 import { blockingSegment, segmentToward, damageWall, reflectChance } from './wall.js';
 import { WALL } from '../data/wall.js';
 
-export function updateEnemies(run, dt) {
+export function updateEnemies(run: Run, dt: number) {
   for (const e of run.enemies) {
     if (e.dead) continue;
     e.age = (e.age || 0) + dt;
@@ -31,7 +32,7 @@ export function updateEnemies(run, dt) {
       floatText(run, e.x, e.y - e.size - 6, 'CARICA!', '#ff7b1c', 8);
       sfx(run, 'charge');
     }
-    const speed = e.speed * (e.slowT > 0 ? 1 - e.slowF : 1) * (e.charging ? e.charge.mult : 1);
+    const speed = e.speed * (e.slowT > 0 ? 1 - e.slowF : 1) * (e.charging ? e.charge!.mult : 1);
     const nx = e.x + (TOWER.x - e.x) / d * speed * dt, ny = e.y + (TOWER.y - e.y) / d * speed * dt;
     // Muro: chi va a piedi si ferma a sfondarlo (il kamikaze ci esplode contro)
     const wallSeg = d > stopAt && e.range === 0 ? blockingSegment(run, e, nx, ny) : null;
@@ -61,7 +62,7 @@ export function updateEnemies(run, dt) {
       if (e.boss) e.wallTouching = false; // reset quando si allontana dal muro
       e.x = nx;
       e.y = ny;
-      e.anim += dt * (speed / 30);
+      e.anim = (e.anim ?? 0) + dt * (speed / 30);
       e.moving = true;
     } else if (e.charge) {
       explode(run, e);
@@ -101,7 +102,7 @@ export function updateEnemies(run, dt) {
 }
 
 // Palla ferrata: su ogni colpo al palazzo distrugge anche i muri vicini (splash).
-function aoeWallHit(run, e) {
+function aoeWallHit(run: Run, e: Enemy) {
   let hit = false;
   for (const seg of run.wall) {
     if (seg.hp > 0 && dist(seg, e) < 55) {
@@ -116,10 +117,10 @@ function aoeWallHit(run, e) {
 }
 
 // Boss: passi pesanti che fanno tremare il terreno e rabbia a metà vita.
-function bossMood(run, e) {
-  const step = Math.floor(e.anim * 2.5) % 4;
+function bossMood(run: Run, e: Enemy) {
+  const step = Math.floor((e.anim ?? 0) * 2.5) % 4;
   if (e.moving && step !== e.lastStep && step % 2 === 0) {
-    shake(run, e.scale >= 3 ? 1.6 : 0.8);
+    shake(run, (e.scale ?? 0) >= 3 ? 1.6 : 0.8);
     burst(run, e.x + (step ? 6 : -6), e.y, '#8a8d93', 4, 40); // polvere
   }
   e.lastStep = step;
@@ -134,7 +135,7 @@ function bossMood(run, e) {
 
 // Il kamikaze arriva alla torre ed esplode: danno enorme, ma muore (senza lasciare oro).
 // hitTower = false quando esplode contro il muro invece che contro il palazzo.
-function explode(run, e, hitTower = true) {
+function explode(run: Run, e: Enemy, hitTower = true) {
   e.dead = true;
   if (hitTower) damageTower(run, e.atk);
   burst(run, e.x, e.y - 10, '#ff7b1c', 18, 140);
@@ -146,8 +147,8 @@ function explode(run, e, hitTower = true) {
 }
 
 // Chi cura (HR, DevOps, Portavoce) cura i colleghi vicini ogni 3 secondi.
-function healNearby(run, healer, dt) {
-  healer.healCd -= dt;
+function healNearby(run: Run, healer: Enemy, dt: number) {
+  healer.healCd = (healer.healCd ?? 0) - dt;
   if (healer.healCd > 0) return;
   healer.healCd = 3;
   let healed = false;
@@ -162,10 +163,10 @@ function healNearby(run, healer, dt) {
   }
 }
 
-export function updateEnemyShots(run, dt) {
+export function updateEnemyShots(run: Run, dt: number) {
   for (const s of run.enemyShots) {
     const goal = s.seg && s.seg.hp > 0 ? s.seg : TOWER;
-    const d = dist(s, goal);
+    const d = dist(s as any, goal);
     if (d < (goal === TOWER ? TOWER.radius : 4)) {
       s.done = true;
       if (goal === TOWER) {

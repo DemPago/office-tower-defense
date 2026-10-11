@@ -13,16 +13,16 @@ export function atkScale(w: number): number  { return (1 + 0.10 * (w - 1) + 0.00
 export function goldScale(w: number): number { return 1 + 0.06 * (w - 1); }
 
 // Posizione nel ciclo di 10 ondate: 1-9 = ondata normale, 0 = boss
-function cyclePos(w) { return w % 10; }
+function cyclePos(w: number) { return w % 10; }
 
 // Moltiplicatore velocità: pos 1 = lentissimi (0.25x), pos 9 = velocissimi (2.0x)
-export function waveSpeedMult(w) {
+export function waveSpeedMult(w: number) {
   const pos = cyclePos(w);
   if (pos === 0) return 1; // boss wave: velocità normale
   return 0.25 + ((pos - 1) / 8) * 1.75;
 }
 
-function speedLabel(w) {
+function speedLabel(w: number) {
   const pos = cyclePos(w);
   if (pos === 0) return '';
   const labels = ['LENTISSIMA','LENTA','LENTA','MEDIA','MEDIA','VELOCE','VELOCE','VELOCE','VELOCISSIMA'];
@@ -30,7 +30,7 @@ function speedLabel(w) {
 }
 
 // Nemici per posizione nel ciclo: 1-3 = 50, 4-6 = 75, 7-9 = 100; boss = 50 normali
-function enemyCount(w) {
+function enemyCount(w: number) {
   const pos = cyclePos(w);
   if (pos === 0) return 50;
   if (pos <= 3) return 50;
@@ -39,13 +39,13 @@ function enemyCount(w) {
 }
 
 // Sceglie un nemico del reparto di questa ondata, pesando i ruoli (tanti tank).
-function pickEnemy(w) {
-  const lineup = decadeFor(w).enemies;
+function pickEnemy(w: number) {
+  const lineup = decadeFor(w).enemies as Record<string, string>;
   let r = Math.random();
   for (const [role, weight] of Object.entries(ROLE_WEIGHTS)) {
-    if ((r -= weight) <= 0) return ENEMIES[lineup[role]];
+    if ((r -= weight) <= 0) return (ENEMIES as Record<string, any>)[lineup[role]];
   }
-  return ENEMIES[lineup.tank];
+  return (ENEMIES as Record<string, any>)[lineup.tank];
 }
 
 // Punto di partenza casuale su un cerchio intorno alla torre: arrivano da ogni direzione.
@@ -54,13 +54,13 @@ function spawnPoint() {
   return { x: TOWER.x + Math.cos(a) * SPAWN_RADIUS, y: TOWER.y + Math.sin(a) * SPAWN_RADIUS };
 }
 
-export function makeEnemy(def, w, extra = {}) {
+export function makeEnemy(def: any, w: number, extra: Record<string, any> = {}) {
   const p = extra.at || spawnPoint();
   const decade = decadeFor(w);
   const elite = decade.elite;
   const zombie = isZombieWave(w);
   // moltiplicatori tier: Graduate è più debole, Middle è più robusto, ecc.
-  const tier = def.tier ? TIERS[def.tier] : TIERS[ROLE_TIER[def.role] || 'junior'];
+  const tier = def.tier ? (TIERS as Record<string, any>)[def.tier] : (TIERS as Record<string, any>)[(ROLE_TIER as Record<string, string>)[def.role] || 'junior'];
   const deptBonus = 1 + 0.12 * Math.min(decade.index, 5);
   const hp = def.hp * hpScale(w) * deptBonus * (zombie ? ZOMBIE.hp : 1) * tier.hpMult;
   const wsm = extra.wsm ?? 1; // moltiplicatore velocità da posizione nel ciclo
@@ -69,7 +69,7 @@ export function makeEnemy(def, w, extra = {}) {
     def,
     name: def.name,
     look: def.look,
-    tier: def.tier || ROLE_TIER[def.role] || 'junior',
+    tier: def.tier || (ROLE_TIER as Record<string, string>)[def.role] || 'junior',
     scale: 1,
     x: p.x, y: p.y,
     hp, maxHp: hp,
@@ -95,7 +95,7 @@ export function makeEnemy(def, w, extra = {}) {
   };
 }
 
-function makeFocalPoint(w) {
+function makeFocalPoint(w: number) {
   const def = { ...FOCAL_POINT_DEF, look: Math.random() < 0.5 ? 'focal_m' : 'focal_f' };
   return makeEnemy(def, w);
 }
@@ -108,7 +108,7 @@ const ESCORT_BASE = { name: 'Scorta', role: 'escort', hp: 7, speed: 50, atk: 2, 
 
 // Restituisce { bosses, escorts }: il boss (o il gruppo) e i suoi animali, che arrivano dallo stesso lato.
 // playerDmg: danno per colpo del giocatore — HP boss = playerDmg * 100
-function makeBoss(b, w, playerDmg) {
+function makeBoss(b: any, w: number, playerDmg: number) {
   const base = BOSS_BASE;
   const group = b.group || 1;
   const list = [];
@@ -116,7 +116,7 @@ function makeBoss(b, w, playerDmg) {
   for (let i = 0; i < group; i++) {
     // HP = 100x il danno del giocatore; diviso per il gruppo se multi-boss
     const hp = (playerDmg * 100) / group;
-    const W = b.weapon ? WEAPONS[b.weapon] : null;
+    const W = b.weapon ? (WEAPONS as Record<string, any>)[b.weapon] : null;
     list.push(makeEnemy(base, w, {
       at: { x: at.x + (Math.random() - 0.5) * 50, y: at.y + (Math.random() - 0.5) * 50 },
       animalId: b.animal, bossName: b.name,
@@ -139,7 +139,7 @@ function makeBoss(b, w, playerDmg) {
       attackCd: 0, // sfonda il muro subito senza aspettare
     }));
   }
-  const A = ANIMALS[b.animal];
+  const A = (ANIMALS as Record<string, any>)[b.animal];
   const escorts = [];
   for (let i = 0; i < (b.escort || 0); i++) {
     escorts.push(makeEnemy(ESCORT_BASE, w, {
@@ -153,7 +153,7 @@ function makeBoss(b, w, playerDmg) {
 export function startWave(run: Run): void {
   run.wave++;
   const w = run.wave;
-  const queue = [];
+  const queue: any[] = [];
   const boss = bossForWave(w);
   const focalWave = w > 5 && w % 10 === 8;
   const n = enemyCount(w);
@@ -179,21 +179,21 @@ export function startWave(run: Run): void {
     banner(run, 'NOTTE DEGLI ZOMBIE', 'I colleghi non sono più loro… più lenti ma più duri a morire', '#7bd332');
     sfx(run, 'zombie');
   } else if ((w - 1) % 10 === 0) {
-    const names = Object.values(decade.enemies).map(id => ENEMIES[id].name).join(', ');
+    const names = Object.values(decade.enemies).map(id => (ENEMIES as Record<string, any>)[id].name).join(', ');
     banner(run, decade.name + (decade.elite ? ' ÉLITE' : ''), `Arrivano: ${names}`, '#ff3e8a');
   } else banner(run, `ONDATA ${w}${speedLabel(w)}`, `${n} nemici in arrivo`);
 }
 
 export function updateSpawns(run: Run, dt: number): void {
   if (!run.spawnQueue.length) return;
-  run.spawnTimer += dt;
-  while (run.spawnQueue.length && run.spawnTimer >= run.spawnQueue[0].delay) {
+  run.spawnTimer = (run.spawnTimer ?? 0) + dt;
+  while (run.spawnQueue.length && run.spawnTimer! >= run.spawnQueue[0].delay) {
     const next = run.spawnQueue.shift();
-    run.spawnTimer -= next.delay;
+    run.spawnTimer = run.spawnTimer! - next.delay;
     if (next.enemies) {
       const { bosses, escorts } = next.enemies();
       run.enemies.push(...bosses, ...escorts);
-      run.boss = { name: next.boss.name, list: bosses };
+      run.boss = { name: next.boss.name, list: bosses } as any;
     } else {
       run.enemies.push(next.enemy());
     }

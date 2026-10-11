@@ -3,10 +3,12 @@ import { BONUS_WAVES, BONUS_GOLD, SUSHI_TYPES } from '../data/sushi.js';
 import { TOWER, SPAWN_RADIUS } from '../state.js';
 import { banner, sfx, floatText } from './fx.js';
 import { offerCards } from './cards.js';
+import type { Run } from '../types.js';
 
 let _id = 0;
 
-function makeSushi(type) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function makeSushi(type: any) {
   const a = Math.random() * Math.PI * 2;
   const r = SPAWN_RADIUS * (0.65 + Math.random() * 0.35);
   return {
@@ -49,8 +51,8 @@ function makeSushi(type) {
   };
 }
 
-export function startBonusWave(run) {
-  const idx = run.bonusWaveIdx;
+export function startBonusWave(run: Run) {
+  const idx = run.bonusWaveIdx ?? 0;
   const count = BONUS_WAVES[idx];
   const gap = idx === 0 ? 0.28 : idx === 1 ? 0.12 : 0.04;
   const queue = [];
@@ -66,8 +68,8 @@ export function startBonusWave(run) {
   sfx(run, 'wave');
 }
 
-export function endBonusWave(run) {
-  const idx = run.bonusWaveIdx;
+export function endBonusWave(run: Run) {
+  const idx = run.bonusWaveIdx ?? 0;
   const gold = BONUS_GOLD[idx];
   run.gold += gold;
   run.enemyShots = [];
@@ -75,7 +77,7 @@ export function endBonusWave(run) {
   floatText(run, TOWER.x, TOWER.y - 90, `Sushi sconfitti! +${gold.toLocaleString('it')}💰`, '#ff9f1c', 10);
   sfx(run, idx === 2 ? 'bossdown' : 'kill');
   if (idx < BONUS_WAVES.length - 1) {
-    run.bonusWaveIdx++;
+    run.bonusWaveIdx = idx + 1;
     run.phase = 'bonus-break';
     run.bonusBreakTimer = 2.5;
   } else {

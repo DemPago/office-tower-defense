@@ -3,13 +3,14 @@ import { TOWER } from '../state.js';
 import { dist, angleOf } from '../util.js';
 import { burst } from './fx.js';
 import { dealDamage } from './damage.js';
+import type { Run } from '../types.js';
 
 // Fulmina i nemici vicini alla torre, solo nei quarti di cerchio già costruiti:
 // liv.1 = 0-90°, liv.2 = fino a 180°, liv.3 = fino a 270°, liv.4 = tutto il giro.
 export const FENCE = { inner: 28, outer: 62 };
 
-export function updateFence(run, dt) {
-  const q = run.stats.fence;
+export function updateFence(run: Run, dt: number) {
+  const q = (run.stats as unknown as Record<string, number>)['fence'];
   if (!q) return;
   const dps = run.stats.dmg * 1.2;
   for (const e of run.enemies) {

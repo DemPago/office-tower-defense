@@ -7,7 +7,7 @@ import { offerCards } from './cards.js';
 import { refreshStats } from './economy.js';
 import { banner, ring, sfx, floatText, burst } from './fx.js';
 import { angleOf, inArc } from '../util.js';
-import type { Run, Meta, Ally } from '../types.js';
+import type { Run, Meta, Ally, Enemy } from '../types.js';
 
 // Velocità dei colpi: abbastanza lente da vederli partire dalla postazione.
 const SHOT_SPEED = { laser: 650, bolt: 360, pc: 230 };
@@ -31,15 +31,15 @@ const MAX_LEVEL = ALLY_LEVELS.length;
 const SLOT_NAMES = { 0: 'Est', 45: 'Nord-Est', 90: 'Nord', 135: 'Nord-Ovest', 180: 'Ovest', 225: 'Sud-Ovest', 270: 'Sud', 315: 'Sud-Est' };
 
 export function slotName(slot: number): string {
-  return SLOT_NAMES[ALLY_SLOTS[slot]] || '';
+  return (SLOT_NAMES as Record<number, string>)[ALLY_SLOTS[slot]] || '';
 }
 
-function freeSlot(run) {
+function freeSlot(run: Run): number {
   for (let s = 0; s < ALLY_SLOTS.length; s++) if (!run.allies.some(a => a.slot === s)) return s;
   return -1;
 }
 
-function shuffle(list) {
+function shuffle<T>(list: T[]): T[] {
   for (let i = list.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [list[i], list[j]] = [list[j], list[i]];
@@ -67,7 +67,7 @@ export function pickAlly(run: Run, meta: Meta, index: number): boolean {
   if (run.phase !== 'ally' || !choice) return false;
   let ally;
   if (choice.kind === 'hire') {
-    ally = { uid: Math.random(), id: choice.def.id, level: 1, slot: choice.slot, cooldown: 0, recoil: 0, spawn: 1, hp: allyHp(1), maxHp: allyHp(1) };
+    ally = { uid: Math.random(), id: choice.def.id, level: 1, slot: choice.slot, cooldown: 0, recoil: 0, spawn: 1, hp: allyHp(1), maxHp: allyHp(1), x: 0, y: 0, hitFlash: 0, dead: false };
     run.allies.push(ally);
   } else {
     ally = choice.ally;
@@ -107,8 +107,9 @@ export function restAllies(run: Run): void {
 
 export function updateAllies(run: Run, dt: number): void {
   for (const ally of run.allies) {
-    ally.recoil = Math.max(0, ally.recoil - dt);
+    ally.recoil = Math.max(0, (ally.recoil ?? 0) - dt);
     const def = allyDef(ally.id);
+    if (!def) continue;
     if (def.aura) {
       // I maghi "lanciano" il loro bonus sul palazzo ogni tanto, così si vede che lavorano.
       ally.pulse = (ally.pulse || 0) - dt;
@@ -125,19 +126,19 @@ export function updateAllies(run: Run, dt: number): void {
 
     const pos = allyPos(ally);
     // come la torre: prima i tank, poi i più vicini, ma solo nel suo spicchio
-    const [target] = pickTargets(run.enemies, pos, def.range, 1, e => allyCovers(ally, e));
+    const [target] = pickTargets(run.enemies, pos, def.range ?? 200, 1, (e?: Enemy) => !!e && allyCovers(ally, e));
     if (!target) continue;
 
-    ally.cooldown = 1 / (def.rate * run.stats.allyRateMult);
+    ally.cooldown = 1 / ((def.rate ?? 1) * run.stats.allyRateMult);
     ally.recoil = 0.1;
     sfx(run, 'ally');
     fire(run, pos.x, pos.y - 20, target, {
-      dmg: run.stats.dmg * def.dmg * ALLY_LEVEL_MULT[ally.level - 1],
+      dmg: run.stats.dmg * (def.dmg ?? 1) * ALLY_LEVEL_MULT[ally.level - 1],
       bounces: 0,
       hitIds: new Set(),
-      speed: SHOT_SPEED[def.kind],
-      effects: { slow: def.slow || 0, dot: 0, aoeRadius: def.aoe || 0, aoeDmg: def.aoe ? 0.7 : 0 },
-      kind: def.kind,
+      speed: SHOT_SPEED[def.kind! as keyof typeof SHOT_SPEED],
+      effects: { slow: def.slow || 0, dot: 0, aoeRadius: def.aoe || 0, aoeDmg: def.aoe ? 0.7 : 0, charm: 0 },
+      kind: def.kind ?? 'bolt',
     });
   }
 }

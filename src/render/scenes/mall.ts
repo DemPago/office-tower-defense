@@ -4,7 +4,7 @@ import { PAL, FONT, shade } from '../palette.js';
 import * as P from '../props.js';
 import { AREA, LANE, free, inYard, scatter, many } from './common.js';
 
-export function build(g, rnd, data) {
+export function build(g: CanvasRenderingContext2D, rnd: () => number, data: { neons: { x: number; y: number; label: string; col: string; phase: number }[] }) {
   for (let y = AREA.y; y < AREA.y + AREA.h; y += 16) {
     for (let x = AREA.x; x < AREA.x + AREA.w; x += 16) {
       const dark = ((x + y) / 16) % 2;
@@ -39,7 +39,7 @@ export function build(g, rnd, data) {
       if (rnd() < 0.5) P.box(g, x + 10 + rnd() * 30, ry + 12, 9, 7);
     }
   }
-  scatter(rnd, many(36), 12, (x, y, r) => {
+  scatter(rnd, many(36), 12, (x: number, y: number, r: number) => {
     if (r < 0.3) P.palm(g, x, y);
     else if (r < 0.5) P.bench(g, x, y);
     else if (r < 0.62) P.kiosk(g, x, y, neonColors[Math.floor(rnd() * 4)], signs[Math.floor(rnd() * signs.length)]);
@@ -50,7 +50,7 @@ export function build(g, rnd, data) {
   return { floor: '#7e746a', seam: '#5e554d' };
 }
 
-export function ambient(ctx, time, data) {
+export function ambient(ctx: CanvasRenderingContext2D, time: number, data: { neons: { x: number; y: number; label: string; col: string; phase: number }[] }) {
   ctx.save();
   ctx.font = `6px ${FONT}`;
   ctx.textAlign = 'center';

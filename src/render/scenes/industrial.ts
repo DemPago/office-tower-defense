@@ -4,13 +4,13 @@ import { PAL, FONT, shade } from '../palette.js';
 import * as P from '../props.js';
 import { AREA, LANE, free, inYard, scatter, many } from './common.js';
 
-export function build(g, rnd, data) {
+export function build(g: CanvasRenderingContext2D, rnd: () => number, data: { lights: Array<{ x: number; y: number }> }) {
   P.rect(g, AREA.x, AREA.y, AREA.w, AREA.h, '#4d3f30');
   P.noise(g, AREA, many(60000), ['#5e4e3c', '#3d3226', '#6b5a45', '#2e261d'], rnd);
   P.noise(g, AREA, many(9000), ['#8a8d93', '#5b5f66', '#a8a296'], rnd, 1); // ghiaia
   P.noise(g, AREA, many(3000), ['#6e6a64', '#4a4743'], rnd, 1.5);
   // Piazzole di cemento
-  scatter(rnd, many(10), 30, (x, y) => {
+  scatter(rnd, many(10), 30, (x: number, y: number) => {
     const w = 50 + rnd() * 60, h = 30 + rnd() * 40;
     P.rect(g, x - 1, y - 1, w + 2, h + 2, PAL.black);
     P.rect(g, x, y, w, h, PAL.concrete);
@@ -51,7 +51,7 @@ export function build(g, rnd, data) {
     if (inYard(TOWER.x, t + 30, 30) || rnd() < 0.3) continue;
     P.fence(g, TOWER.x + LANE + 4, t, TOWER.x + LANE + 4, t + 52);
   }
-  scatter(rnd, many(110), 8, (x, y, r) => {
+  scatter(rnd, many(110), 8, (x: number, y: number, r: number) => {
     if (r < 0.35) P.barrel(g, x, y, [PAL.rust, '#2f4f6f', '#3e6b2a'][Math.floor(rnd() * 3)]);
     else if (r < 0.5) { for (let k = 0; k < 3; k++) P.rect(g, x - 8, y - 10 + k * 4, 18, 2, PAL.woodHi); P.rect(g, x - 8, y - 10, 18, 12, 'rgba(0,0,0,0.15)'); } // pallet
     else if (r < 0.62) { P.rect(g, x, y - 16, 2, 16, PAL.steel); g.fillStyle = PAL.hazard; g.beginPath(); g.moveTo(x + 1, y - 26); g.lineTo(x + 9, y - 14); g.lineTo(x - 7, y - 14); g.fill(); P.rect(g, x, y - 22, 2, 5, PAL.black); } // cartello di pericolo
@@ -69,7 +69,7 @@ export function build(g, rnd, data) {
   return { floor: '#6e6a64', seam: '#4a4743' };
 }
 
-export function ambient(ctx, time, data) {
+export function ambient(ctx: CanvasRenderingContext2D, time: number, data: { lights: Array<{ x: number; y: number }> }) {
   data.lights.forEach((l, i) => {
     const a = time * 0.6 + i * 2.1;
     const len = 260;

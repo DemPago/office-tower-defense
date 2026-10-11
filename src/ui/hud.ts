@@ -11,11 +11,13 @@ import { weaponDef } from '../data/weapons.js';
 import { fmt } from '../util.js';
 import { domUpgradeAdvice } from './dom.js';
 import { findCard } from '../data/cards.js';
+import type { Run } from '../types.js';
 
-const $ = id => document.getElementById(id);
+const $ = (id: string): HTMLElement | null => document.getElementById(id);
 
 // Cambia il testo solo se è diverso (evita lavoro inutile al browser).
-function setText(el, text) {
+function setText(el: HTMLElement | null, text: string): void {
+  if (!el) return;
   if (el.textContent !== text) el.textContent = text;
 }
 
@@ -26,7 +28,7 @@ tip.id = 'tip';
 tip.hidden = true;
 document.body.appendChild(tip);
 
-function showTip(btn, html) {
+function showTip(btn: HTMLElement, html: string): void {
   tip.innerHTML = html;
   tip.hidden = false;
   const r = btn.getBoundingClientRect();
@@ -37,26 +39,26 @@ function showTip(btn, html) {
   tip.style.top = `${y < 8 ? r.bottom + 8 : y}px`;
 }
 
-function hideTip() {
+function hideTip(): void {
   tip.hidden = true;
 }
 
 // Collega il suggerimento a un pulsante. content() costruisce il testo al momento.
 // Mouse: compare passandoci sopra. Touch: compare tenendo premuto (e quel tocco non compra).
-function withTip(btn, content, onActivate) {
-  let pressTimer = null, longPress = false;
-  btn.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') showTip(btn, content()); });
+function withTip(btn: HTMLElement, content: () => string, onActivate: () => void): void {
+  let pressTimer: ReturnType<typeof setTimeout> | null = null, longPress = false;
+  btn.addEventListener('pointerenter', (e: PointerEvent) => { if (e.pointerType === 'mouse') showTip(btn, content()); });
   btn.addEventListener('pointerleave', hideTip);
-  btn.addEventListener('pointerdown', e => {
+  btn.addEventListener('pointerdown', (e: PointerEvent) => {
     if (e.pointerType === 'mouse') return;
     longPress = false;
     pressTimer = setTimeout(() => { longPress = true; showTip(btn, content()); }, 450);
   });
   btn.addEventListener('pointerup', () => {
-    clearTimeout(pressTimer);
+    clearTimeout(pressTimer!);
     if (longPress) setTimeout(hideTip, 1800);
   });
-  btn.addEventListener('contextmenu', e => e.preventDefault()); // niente menu del telefono
+  btn.addEventListener('contextmenu', (e: Event) => e.preventDefault()); // niente menu del telefono
   btn.addEventListener('click', () => {
     if (longPress) { longPress = false; return; } // era solo per leggere
     onActivate();
@@ -64,12 +66,12 @@ function withTip(btn, content, onActivate) {
   });
 }
 
-const tipTitle = (icon, name, extra = '') => `<b><span>${icon} ${name}</span><span class="tip-extra">${extra}</span></b>`;
+const tipTitle = (icon: string, name: string, extra = ''): string => `<b><span>${icon} ${name}</span><span class="tip-extra">${extra}</span></b>`;
 
-export function createHud({ onBuy, onAbility, onSell }) {
-  let lastRun = null;
+export function createHud({ onBuy, onAbility, onSell }: { onBuy: (id: string) => void; onAbility: (id: string) => void; onSell?: (i: number) => void }) {
+  let lastRun: Run | null = null;
 
-  const upgradeEls = {};
+  const upgradeEls: Record<string, { btn: HTMLButtonElement; lv: HTMLElement | null; cost: HTMLElement | null }> = {};
   for (const def of UPGRADES) {
     const btn = document.createElement('button');
     btn.className = 'upg';
@@ -78,13 +80,13 @@ export function createHud({ onBuy, onAbility, onSell }) {
       if (!lastRun) return '';
       const L = lastRun.upgrades[def.id], cost = upgradeCost(lastRun, def.id);
       const next = cost === null ? 'Livello massimo' : `Prossimo livello: ${fmt(cost)} 💰`;
-      return `${tipTitle(def.icon, def.name, `Lv ${L}`)}<p>${def.help(lastRun.stats, L)}</p><p class="tip-cost">${next}</p>`;
+      return `${tipTitle(def.icon, def.name, `Lv ${L}`)}<p>${def.help(lastRun.stats)}</p><p class="tip-cost">${next}</p>`;
     }, () => onBuy(def.id));
-    $('upgrades').appendChild(btn);
-    upgradeEls[def.id] = { btn, lv: btn.querySelector('.lv'), cost: btn.querySelector('.cost') };
+    $('upgrades')!.appendChild(btn);
+    upgradeEls[def.id] = { btn, lv: btn.querySelector<HTMLElement>('.lv'), cost: btn.querySelector<HTMLElement>('.cost') };
   }
 
-  const abilityEls = {};
+  const abilityEls: Record<string, { btn: HTMLButtonElement; cd: HTMLElement | null; mana: HTMLElement | null; cdnum: HTMLElement | null }> = {};
   for (const def of ABILITIES) {
     const btn = document.createElement('button');
     btn.className = 'abl';
@@ -92,29 +94,29 @@ export function createHud({ onBuy, onAbility, onSell }) {
     withTip(btn, () => {
       const cost = lastRun ? manaCost(lastRun, def.id) : def.mana;
       const have = lastRun ? Math.floor(lastRun.mana) : 0;
-      const price = def.special ? 'Gratis' : `Costo: ${cost} mana (ne hai ${have})`;
+      const price = (def as any).special ? 'Gratis' : `Costo: ${cost} mana (ne hai ${have})`;
       return `${tipTitle(def.icon, def.name, `tasto ${def.key}`)}<p>${def.help}</p><p class="tip-cost">${price}</p>`;
     }, () => onAbility(def.id));
-    $('abilities').appendChild(btn);
-    if (def.special) { btn.classList.add('special'); btn.hidden = true; }
-    abilityEls[def.id] = { btn, cd: btn.querySelector('.cd'), mana: btn.querySelector('.mana'), cdnum: btn.querySelector('.cdnum') };
+    $('abilities')!.appendChild(btn);
+    if ((def as any).special) { btn.classList.add('special'); btn.hidden = true; }
+    abilityEls[def.id] = { btn, cd: btn.querySelector<HTMLElement>('.cd'), mana: btn.querySelector<HTMLElement>('.mana'), cdnum: btn.querySelector<HTMLElement>('.cdnum') };
   }
 
-  function update(run, speed) {
+  function update(run: Run, speed: number): void {
     lastRun = run;
     const narrow = innerWidth <= 520;
     setText($('wave'), run.wave ? `${narrow ? 'OND.' : 'ONDATA'} ${run.wave}` : 'PRONTI');
     setText($('gold'), fmt(run.gold));
     const hpPct = Math.max(0, run.tower.hp / run.stats.maxHp * 100);
-    $('hp-fill').style.width = hpPct.toFixed(1) + '%';
+    $('hp-fill')!.style.width = hpPct.toFixed(1) + '%';
     setText($('hp-text'), `${fmt(Math.ceil(run.tower.hp))}/${fmt(Math.ceil(run.stats.maxHp))}`);
     setText($('btn-speed'), `x${speed}`);
     const mm = maxMana(run);
-    $('mp-fill').style.width = Math.min(100, run.mana / mm * 100).toFixed(1) + '%';
+    $('mp-fill')!.style.width = Math.min(100, run.mana / mm * 100).toFixed(1) + '%';
     setText($('mp-text'), `${Math.floor(run.mana)}/${mm} 💧`);
     // riga con le statistiche della torre
     const s = run.stats;
-    setText($('stats-line'), `${weaponDef(run.weapon).icon} ⚔️ Danno ${fmt(s.dmg)} a colpo · ⚡ ${s.rate.toFixed(1)} colpi/s · 📡 Gittata ${Math.round(s.range)} · 💧 +${s.manaRegen.toFixed(1)} mana/s`);
+    setText($('stats-line'), `${weaponDef(run.weapon!).icon} ⚔️ Danno ${fmt(s.dmg)} a colpo · ⚡ ${s.rate.toFixed(1)} colpi/s · 📡 Gittata ${Math.round(s.range)} · 💧 +${s.manaRegen.toFixed(1)} mana/s`);
 
     const recUpgrade = run.phase !== 'over' ? domUpgradeAdvice(run) : null;
     for (const def of UPGRADES) {
@@ -132,13 +134,13 @@ export function createHud({ onBuy, onAbility, onSell }) {
       const cdLeft = run.abilityCd[def.id] || 0;
       if (cdLeft > 0) {
         // Countdown ricarica: copre tutto il pulsante, mostra i secondi rimasti
-        el.cd.style.height = '100%';
-        el.cdnum.hidden = false;
+        el.cd!.style.height = '100%';
+        el.cdnum!.hidden = false;
         setText(el.cdnum, Math.ceil(cdLeft) + 's');
       } else {
         // Ricarica mana: la parte scura si abbassa man mano che il mana sale
-        el.cd.style.height = Math.max(0, 1 - run.mana / cost) * 100 + '%';
-        el.cdnum.hidden = true;
+        el.cd!.style.height = Math.max(0, 1 - run.mana / cost) * 100 + '%';
+        el.cdnum!.hidden = true;
       }
       setText(el.mana, `${cost}💧`);
       el.btn.classList.toggle('off', !canUse(run, def.id));
@@ -146,10 +148,10 @@ export function createHud({ onBuy, onAbility, onSell }) {
   }
 
   // ── Pannello mano ───────────────────────────────────────────────
-  const handEl = document.getElementById('hand');
+  const handEl = document.getElementById('hand')!;
   let lastHandHash = '';
 
-  function updateHand(run) {
+  function updateHand(run: Run | null): void {
     if (!run || run.phase === 'over') { handEl.hidden = true; return; }
     const hash = run.cardPicks.map(p => p.id).join(',') + '|' + run.cardPicks.length;
     if (hash === lastHandHash) return;
@@ -179,7 +181,7 @@ export function createHud({ onBuy, onAbility, onSell }) {
   }
 
   const _origUpdate = update;
-  function updateWithHand(run, speed) {
+  function updateWithHand(run: Run, speed: number): void {
     _origUpdate(run, speed);
     updateHand(run);
   }

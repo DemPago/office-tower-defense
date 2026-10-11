@@ -43,7 +43,7 @@ export const FOCAL_POINT_DEF = {
   hp: 30, speed: 20, atk: 10, range: 0, gold: 12, armor: 0.22, taunt: true,
 };
 
-function enemy(name, look, role, extra = {}) {
+function enemy(name: string, look: string, role: keyof typeof ROLES, extra: Record<string, unknown> = {}) {
   return { name, look, role, ...ROLES[role], ...extra };
 }
 

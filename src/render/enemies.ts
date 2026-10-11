@@ -1,9 +1,19 @@
 // Nemici e boss: sprite, segnali del ruolo, aura dei boss, scie, corpi a terra.
 import { TOWER, YARD } from '../state.js';
-import { LOOKS, EYES, FRAMES } from './people.js';
+import { LOOKS, EYES, FRAMES, type Look } from './people.js';
 import { PAL, FONT } from './palette.js';
 import { drawPersonAt, enemySprite, facesLeft, hexA } from './view.js';
 import { drawHeart } from './effects.js';
+import type { Enemy, Run } from '../types.js';
+import type { loadAssets } from './assets.js';
+
+type EnemyExt = Enemy & Record<string, any>;
+type Assets = Awaited<ReturnType<typeof loadAssets>>;
+interface Trail {
+  x: number; y: number; vx: number; vy: number;
+  life: number; max: number; c: string; size: number; grow: number;
+  twinkle?: boolean;
+}
 
 // Colori badge per tier (Graduate→Junior→Middle→Senior→Focal).
 const TIER_COLORS = {
@@ -14,17 +24,17 @@ const TIER_COLORS = {
   focal:    '#ff3e8a', // rosa/magenta
 };
 
-export function drawShadow(ctx, e) {
+export function drawShadow(ctx: CanvasRenderingContext2D, e: EnemyExt) {
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.beginPath();
   ctx.ellipse(e.x, e.y, e.size * 0.32, e.size * 0.1, 0, 0, Math.PI * 2);
   ctx.fill();
 }
 
-function drawSushiEnemy(ctx, e) {
+function drawSushiEnemy(ctx: CanvasRenderingContext2D, e: EnemyExt) {
   const s = e.size;
-  const spin = e.moving ? e.anim * 3 : 0;
-  const bob  = e.moving ? Math.sin(e.anim * 5) * 1.5 : 0;
+  const spin = e.moving ? (e.anim ?? 0) * 3 : 0;
+  const bob  = e.moving ? Math.sin((e.anim ?? 0) * 5) * 1.5 : 0;
   const x = Math.round(e.x), cy = Math.round(e.y - s * 0.5 + bob);
   ctx.save();
   ctx.translate(x, cy);
@@ -105,12 +115,12 @@ function drawSushiEnemy(ctx, e) {
   }
 }
 
-export function drawEnemy(ctx, assets, e) {
+export function drawEnemy(ctx: CanvasRenderingContext2D, assets: Assets, e: EnemyExt) {
   if (e.sushi) { drawSushiEnemy(ctx, e); return; }
   const s = e.size, k = e.scale || 1;
-  const frame = e.moving ? Math.floor(e.anim * 2.5) % FRAMES : 1;
+  const frame = e.moving ? Math.floor((e.anim ?? 0) * 2.5) % FRAMES : 1;
   let x = e.x, feet = e.y;
-  if (e.moving) feet -= Math.abs(Math.sin(e.anim * Math.PI)) * k; // saltello mentre cammina
+  if (e.moving) feet -= Math.abs(Math.sin((e.anim ?? 0) * Math.PI)) * k; // saltello mentre cammina
   if (e.lunge > 0) {
     // scatto verso il palazzo quando colpisce
     const d = Math.hypot(TOWER.x - e.x, TOWER.y - e.y) || 1;
@@ -125,7 +135,7 @@ export function drawEnemy(ctx, assets, e) {
     // barcolla: lo sprite oscilla attorno ai piedi
     ctx.save();
     ctx.translate(x, feet);
-    ctx.rotate(Math.sin(e.anim * 2.2) * 0.09);
+    ctx.rotate(Math.sin((e.anim ?? 0) * 2.2) * 0.09);
     ctx.translate(-x, -feet);
   }
   drawPersonAt(ctx, enemySprite(assets, e, frame), x, feet, facesLeft(e));
@@ -134,7 +144,7 @@ export function drawEnemy(ctx, assets, e) {
     // infuriato: trema e pulsa di rosso
     x += Math.round(Math.sin((e.age || 0) * 30) * 1.5);
     ctx.globalAlpha = 0.25 + 0.15 * Math.sin(performance.now() / 120);
-    drawPersonAt(ctx, enemySprite(assets, e, frame, '#ff2a3d'), x, feet, facesLeft(e));
+    drawPersonAt(ctx, enemySprite(assets, e, frame, '#ff2a3d' as unknown as boolean), x, feet, facesLeft(e));
     ctx.globalAlpha = 1;
   }
   if ((e.elite || e.boss) && !e.animal) {
@@ -161,8 +171,8 @@ export function drawEnemy(ctx, assets, e) {
   }
   if (e.dotT > 0) {
     ctx.fillStyle = PAL.toxic;
-    ctx.fillRect(Math.round(e.x - 1 + Math.sin(e.anim * 9) * 4), y + 2, 2, 2);
-    ctx.fillRect(Math.round(e.x + 3 + Math.cos(e.anim * 7) * 3), y + 6, 1, 1);
+    ctx.fillRect(Math.round(e.x - 1 + Math.sin((e.anim ?? 0) * 9) * 4), y + 2, 2, 2);
+    ctx.fillRect(Math.round(e.x + 3 + Math.cos((e.anim ?? 0) * 7) * 3), y + 6, 1, 1);
   }
   if (e.charmT > 0) drawHeart(ctx, e.x, y - 5 + Math.sin(performance.now() / 120), 3, '#ff3e8a', '#ffd0e0');
   if (e.stunT > 0) {
@@ -171,7 +181,7 @@ export function drawEnemy(ctx, assets, e) {
     ctx.textAlign = 'center';
     ctx.fillText('zZ', e.x, y - 2);
   }
-  if (e.boss && !e.animal && !LOOKS[e.look].hat && LOOKS[e.look].hairStyle !== 'wild') {
+  if (e.boss && !e.animal && !(LOOKS as Record<string, Look>)[e.look].hat && (LOOKS as Record<string, Look>)[e.look].hairStyle !== 'wild') {
     // corona d'oro, in proporzione al boss
     const c = k / 2, cx = e.x, cy = y + s * 0.02;
     ctx.fillStyle = PAL.black;
@@ -197,7 +207,7 @@ export function drawEnemy(ctx, assets, e) {
   }
   // Tier badge: piccolo indicatore visivo del livello del nemico
   if (!e.boss && e.tier) {
-    const tc = TIER_COLORS[e.tier];
+    const tc = (TIER_COLORS as Record<string, string>)[e.tier];
     if (tc) {
       const bx = Math.round(e.x + s * 0.28), by = y + 1;
       ctx.fillStyle = PAL.black;
@@ -208,7 +218,7 @@ export function drawEnemy(ctx, assets, e) {
   }
 }
 
-export function drawGhost(ctx, assets, e) {
+export function drawGhost(ctx: CanvasRenderingContext2D, assets: Assets, e: EnemyExt) {
   if (e.sushi) return;
   ctx.globalAlpha = 0.4;
   drawPersonAt(ctx, enemySprite(assets, e, 0, true), e.x, e.y, facesLeft(e));
@@ -216,7 +226,7 @@ export function drawGhost(ctx, assets, e) {
 }
 
 // Segnali del ruolo: scudo per i tank, mirino per i cecchini, scia per i kamikaze.
-function drawRoleCue(ctx, e, x, y, s) {
+function drawRoleCue(ctx: CanvasRenderingContext2D, e: EnemyExt, x: number, y: number, s: number) {
   if (e.role === 'tank' && !e.boss) {
     const sx = Math.round(e.x) - 3, sy = y - 11;
     ctx.fillStyle = PAL.black;
@@ -262,7 +272,7 @@ function drawRoleCue(ctx, e, x, y, s) {
 }
 
 // Alone pulsante dietro al boss, del suo colore.
-function drawBossAura(ctx, e, x, feet, s) {
+function drawBossAura(ctx: CanvasRenderingContext2D, e: EnemyExt, x: number, feet: number, s: number) {
   const t = performance.now() / 1000;
   const r = s * (0.75 + Math.sin(t * 3) * 0.06);
   const cy = feet - s * 0.45;
@@ -283,9 +293,9 @@ function drawBossAura(ctx, e, x, feet, s) {
 }
 
 // Scie di particelle dei boss (solo decorazione: vivono nel renderer).
-export function updateTrails(trails, run, dt) {
+export function updateTrails(trails: Trail[], run: Run | null, dt: number) {
   if (run) {
-    for (const e of run.enemies) {
+    for (const e of (run.enemies as EnemyExt[])) {
       if (!e.boss || !e.trail || Math.random() > dt * 18) continue;
       const s = e.size;
       if (e.trail === 'smoke') trails.push({ x: e.x + s * 0.18, y: e.y - s * 0.7, vx: 4, vy: -14, life: 1.6, max: 1.6, c: '#8a8d93', size: 1.5, grow: 2 });
@@ -298,7 +308,7 @@ export function updateTrails(trails, run, dt) {
   for (let i = trails.length - 1; i >= 0; i--) if (trails[i].life <= 0) trails.splice(i, 1);
 }
 
-export function drawTrails(ctx, trails) {
+export function drawTrails(ctx: CanvasRenderingContext2D, trails: Trail[]) {
   for (const p of trails) {
     ctx.globalAlpha = Math.min(1, p.life / p.max * 1.5) * (p.twinkle && Math.random() < 0.3 ? 0.3 : 1);
     ctx.fillStyle = p.c;
@@ -308,7 +318,7 @@ export function drawTrails(ctx, trails) {
 }
 
 // Nemico sconfitto: cade di lato e svanisce, lasciando una macchia.
-export function drawCorpse(ctx, assets, c) {
+export function drawCorpse(ctx: CanvasRenderingContext2D, assets: Assets, c: EnemyExt) {
   const k = 1 - c.life / c.max;
   ctx.save();
   ctx.fillStyle = `rgba(13,13,15,${0.35 * (1 - k)})`;
@@ -327,7 +337,7 @@ export function drawCorpse(ctx, assets, c) {
 }
 
 // Cortile violato: il bordo lampeggia di rosso.
-export function drawYardAlarm(ctx, time) {
+export function drawYardAlarm(ctx: CanvasRenderingContext2D, time: number) {
   const a = 0.35 + 0.35 * Math.sin(time * 10);
   ctx.save();
   ctx.strokeStyle = `rgba(215,38,61,${a})`;

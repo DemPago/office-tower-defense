@@ -4,14 +4,26 @@ import { YARD } from '../state.js';
 import { PAL } from './palette.js';
 import * as P from './props.js';
 import { wallLook } from '../data/wall.js';
+import type { Run } from '../types.js';
 
-export function drawWall(ctx, run, time) {
+interface WallSeg {
+  side: 'top' | 'bottom' | 'left' | 'right';
+  a: number;
+  b: number;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  hit: number;
+}
+
+export function drawWall(ctx: CanvasRenderingContext2D, run: Run, time: number) {
   const look = wallLook(run.stats);
   for (const seg of run.wall) drawSegment(ctx, seg, look, run.stats.wallThorns > 0, time);
 }
 
 // Posizioni dei "mattoni" lungo un tratto: [x, y] di ognuno.
-function bricks(seg) {
+function bricks(seg: WallSeg): number[][] {
   const out = [];
   if (seg.side === 'top' || seg.side === 'bottom') {
     const y = seg.side === 'top' ? YARD.y - 7 : YARD.y + YARD.h - 2;
@@ -23,7 +35,7 @@ function bricks(seg) {
   return out;
 }
 
-function drawSegment(ctx, seg, look, thorns, time) {
+function drawSegment(ctx: CanvasRenderingContext2D, seg: WallSeg, look: string, thorns: boolean, time: number) {
   const k = seg.maxHp ? seg.hp / seg.maxHp : 1;
   const list = bricks(seg);
   if (k <= 0) { drawRubble(ctx, list, look); return; }
@@ -55,7 +67,7 @@ function drawSegment(ctx, seg, look, thorns, time) {
   }
 }
 
-function concreteBlock(ctx, x, y, k) {
+function concreteBlock(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
   P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
   P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#8f8a80');
   P.rect(ctx, x - 0.5, y - 1, 12, 1.5, '#a8a296');
@@ -65,7 +77,7 @@ function concreteBlock(ctx, x, y, k) {
   if (k < 0.4) P.rect(ctx, x + 8, y, 2, 2, '#4a4743');
 }
 
-function steelPlate(ctx, x, y, k) {
+function steelPlate(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
   P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
   P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#6b7078');
   P.rect(ctx, x - 0.5, y - 1, 12, 1, '#a0a6ae');
@@ -75,7 +87,7 @@ function steelPlate(ctx, x, y, k) {
   if (k < 0.4) P.rect(ctx, x + 2, y + 4, 2, 1.5, 'rgba(138,59,30,0.8)');
 }
 
-function drawRubble(ctx, list, look) {
+function drawRubble(ctx: CanvasRenderingContext2D, list: number[][], look: string) {
   const col = look === 'concrete' ? '#8f8a80' : look === 'steel' ? '#6b7078' : '#bfa574';
   for (const [x, y] of list) {
     P.stain(ctx, x + 5, y + 5, 6, 2, 'rgba(0,0,0,0.3)');
@@ -86,7 +98,7 @@ function drawRubble(ctx, list, look) {
   }
 }
 
-function barbedWire(ctx, seg, list, time) {
+function barbedWire(ctx: CanvasRenderingContext2D, seg: WallSeg, list: number[][], time: number) {
   ctx.strokeStyle = '#c0c4cc';
   ctx.lineWidth = 0.5;
   ctx.beginPath();

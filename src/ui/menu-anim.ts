@@ -1,12 +1,20 @@
+interface AnimItem {
+  x: number; y: number;
+  vy: number; vx: number;
+  rot: number; vr: number;
+  type: number; scale: number; alpha: number;
+}
+
 // Sfondo animato del menu: pixel art di fogli volanti e impiegati che scappano.
-export function startMenuAnimation(canvas) {
+export function startMenuAnimation(canvas: HTMLCanvasElement | null) {
   if (!canvas) return { stop: () => {} };
-  const ctx = canvas.getContext('2d');
+  const cvs: HTMLCanvasElement = canvas;
+  const ctx = cvs.getContext('2d') as CanvasRenderingContext2D;
   let running = true;
   let last = performance.now();
 
   // Fogli di carta e icone che cadono
-  const items = Array.from({ length: 28 }, (_, i) => ({
+  const items: AnimItem[] = Array.from({ length: 28 }, (_, i) => ({
     x: Math.random(),
     y: Math.random(),
     vy: 0.015 + Math.random() * 0.025,
@@ -19,7 +27,7 @@ export function startMenuAnimation(canvas) {
   }));
 
   // Griglia di sfondo (effetto foglio excel)
-  function drawGrid(W, H) {
+  function drawGrid(W: number, H: number) {
     ctx.strokeStyle = 'rgba(45,226,230,0.04)';
     ctx.lineWidth = 1;
     const step = 24;
@@ -31,14 +39,14 @@ export function startMenuAnimation(canvas) {
     }
   }
 
-  function drawItem(item, W, H) {
+  function drawItem(item: AnimItem, W: number, H: number) {
     const x = item.x * W, y = item.y * H;
     const s = item.scale;
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(item.rot);
     ctx.globalAlpha = item.alpha;
-    const p = (px, py, pw, ph, c) => { ctx.fillStyle = c; ctx.fillRect(px, py, pw, ph); };
+    const p = (px: number, py: number, pw: number, ph: number, c: string) => { ctx.fillStyle = c; ctx.fillRect(px, py, pw, ph); };
 
     if (item.type === 0) { // foglio
       p(-7 * s, -9 * s, 14 * s, 18 * s, '#e8e2d0');
@@ -73,17 +81,17 @@ export function startMenuAnimation(canvas) {
     ctx.restore();
   }
 
-  function frame(now) {
+  function frame(now: number) {
     if (!running) return;
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    const W = canvas.width || canvas.clientWidth;
-    const H = canvas.height || canvas.clientHeight;
+    const W = cvs.width || cvs.clientWidth;
+    const H = cvs.height || cvs.clientHeight;
 
     // Ridimensiona il canvas al contenitore
-    if (canvas.width !== Math.round(W) || canvas.height !== Math.round(H)) {
-      canvas.width = Math.round(W);
-      canvas.height = Math.round(H);
+    if (cvs.width !== Math.round(W) || cvs.height !== Math.round(H)) {
+      cvs.width = Math.round(W);
+      cvs.height = Math.round(H);
     }
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);

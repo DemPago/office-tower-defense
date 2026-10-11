@@ -72,7 +72,7 @@ export function checkBombs(run: Run): void {
     for (const e of run.enemies) {
       if (!e.dead && dist(e, bomb) < BOMB_RADIUS) dealDamage(run, e, dmg, { silent: true });
     }
-    burst(run, bomb.x, bomb.y, 20, '#ff6600');
+    burst(run, bomb.x, bomb.y, '#ff6600', 20);
     ring(run, bomb.x, bomb.y, BOMB_RADIUS, '#ff3300');
     floatText(run, bomb.x, bomb.y - 24, `💥 ×${bomb.mult}`, '#ffaa00', 9);
   }
