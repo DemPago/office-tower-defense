@@ -6,20 +6,51 @@ import { TOWER, SPAWN_RADIUS } from '../state.js';
 import { banner, sfx } from './fx.js';
 import type { Run } from '../types.js';
 
+// ─── Parametri di bilanciamento ondate ───────────────────────────────────────
+// Tutti i numeri che regolano la difficoltà sono qui: modificane uno solo per
+// testare l'impatto senza dover cercare nelle formule.
+export const WAVE_CONFIG = {
+  // Crescita HP: lineare + quadratica fino all'ondata 25, poi esponenziale
+  hp: { linear: 0.15, quadratic: 0.03, lateWave: 25, lateExp: 1.05 },
+  // Crescita ATK: più morbida dell'HP (i colpi non devono ammazzare subito)
+  atk: { linear: 0.10, quadratic: 0.008, lateWave: 25, lateExp: 1.03 },
+  // Crescita oro: lineare, niente esponenziale (il gioco non diventa infinitamente ricco)
+  gold: { linear: 0.06 },
+  // Velocità per posizione nel ciclo (pos 1–9, boss=pos 0 usa 1.0)
+  speed: { min: 0.25, max: 2.0 },   // waveSpeedMult = min + ((pos-1)/8)*(max-min)
+  // Numero nemici per posizione nel ciclo (1–3 / 4–6 / 7–9)
+  count: { early: 50, mid: 75, late: 100, boss: 50 },
+  // Bonus HP per reparto: +12% ogni reparto completato (max 5 reparti)
+  deptHpBonus: 0.12,
+  // HP boss = danno_per_colpo × bossHpMultiplier (diviso per group size)
+  bossHpMultiplier: 100,
+  // Oro boss base (×goldScale a runtime)
+  bossGoldBase: 30,
+  // Dimensione base nemico in px (moltiplicata per scale nei boss)
+  enemySize: 28,
+};
+
 // Quanto crescono i nemici rispetto all'ondata 1.
 // Dopo l'ondata 25 si aggiunge una crescita esponenziale, così prima o poi si perde sempre.
-export function hpScale(w: number): number   { return (1 + 0.15 * (w - 1) + 0.03 * (w - 1) ** 2) * 1.05 ** Math.max(0, w - 25); }
-export function atkScale(w: number): number  { return (1 + 0.10 * (w - 1) + 0.008 * (w - 1) ** 2) * 1.03 ** Math.max(0, w - 25); }
-export function goldScale(w: number): number { return 1 + 0.06 * (w - 1); }
+export function hpScale(w: number): number {
+  const c = WAVE_CONFIG.hp;
+  return (1 + c.linear * (w - 1) + c.quadratic * (w - 1) ** 2) * c.lateExp ** Math.max(0, w - c.lateWave);
+}
+export function atkScale(w: number): number {
+  const c = WAVE_CONFIG.atk;
+  return (1 + c.linear * (w - 1) + c.quadratic * (w - 1) ** 2) * c.lateExp ** Math.max(0, w - c.lateWave);
+}
+export function goldScale(w: number): number { return 1 + WAVE_CONFIG.gold.linear * (w - 1); }
 
 // Posizione nel ciclo di 10 ondate: 1-9 = ondata normale, 0 = boss
 function cyclePos(w: number) { return w % 10; }
 
-// Moltiplicatore velocità: pos 1 = lentissimi (0.25x), pos 9 = velocissimi (2.0x)
+// Moltiplicatore velocità: pos 1 = lentissimi, pos 9 = velocissimi (vedi WAVE_CONFIG.speed)
 export function waveSpeedMult(w: number) {
   const pos = cyclePos(w);
-  if (pos === 0) return 1; // boss wave: velocità normale
-  return 0.25 + ((pos - 1) / 8) * 1.75;
+  if (pos === 0) return 1;
+  const { min, max } = WAVE_CONFIG.speed;
+  return min + ((pos - 1) / 8) * (max - min);
 }
 
 function speedLabel(w: number) {
@@ -29,13 +60,14 @@ function speedLabel(w: number) {
   return ` — ${labels[pos - 1]}`;
 }
 
-// Nemici per posizione nel ciclo: 1-3 = 50, 4-6 = 75, 7-9 = 100; boss = 50 normali
+// Nemici per posizione nel ciclo (vedi WAVE_CONFIG.count)
 function enemyCount(w: number) {
   const pos = cyclePos(w);
-  if (pos === 0) return 50;
-  if (pos <= 3) return 50;
-  if (pos <= 6) return 75;
-  return 100;
+  const c = WAVE_CONFIG.count;
+  if (pos === 0) return c.boss;
+  if (pos <= 3)  return c.early;
+  if (pos <= 6)  return c.mid;
+  return c.late;
 }
 
 // Sceglie un nemico del reparto di questa ondata, pesando i ruoli (tanti tank).
@@ -54,26 +86,36 @@ function spawnPoint() {
   return { x: TOWER.x + Math.cos(a) * SPAWN_RADIUS, y: TOWER.y + Math.sin(a) * SPAWN_RADIUS };
 }
 
+// Calcola le statistiche scalate di un nemico dato il suo def e l'ondata corrente.
+// Separato da makeEnemy per rendere la logica di bilanciamento testabile in isolamento.
+export function scaleEnemyStats(def: any, w: number, wsm = 1) {
+  const decade   = decadeFor(w);
+  const elite    = decade.elite;
+  const zombie   = isZombieWave(w);
+  const tierKey  = def.tier || (ROLE_TIER as Record<string, string>)[def.role] || 'junior';
+  const tier     = (TIERS as Record<string, any>)[tierKey];
+  const deptBonus = 1 + WAVE_CONFIG.deptHpBonus * Math.min(decade.index, 5);
+  const hp       = def.hp * hpScale(w) * deptBonus * (zombie ? ZOMBIE.hp : 1) * tier.hpMult;
+  const speed    = def.speed * (0.9 + Math.random() * 0.2) * (elite ? 1.15 : 1) * (zombie ? ZOMBIE.speed : 1) * tier.speedMult * wsm;
+  const atk      = def.atk * atkScale(w) * tier.atkMult;
+  const gold     = def.gold * goldScale(w) * tier.goldMult;
+  return { hp, speed, atk, gold, tierKey, elite, zombie };
+}
+
 export function makeEnemy(def: any, w: number, extra: Record<string, any> = {}) {
-  const p = extra.at || spawnPoint();
-  const decade = decadeFor(w);
-  const elite = decade.elite;
-  const zombie = isZombieWave(w);
-  // moltiplicatori tier: Graduate è più debole, Middle è più robusto, ecc.
-  const tier = def.tier ? (TIERS as Record<string, any>)[def.tier] : (TIERS as Record<string, any>)[(ROLE_TIER as Record<string, string>)[def.role] || 'junior'];
-  const deptBonus = 1 + 0.12 * Math.min(decade.index, 5);
-  const hp = def.hp * hpScale(w) * deptBonus * (zombie ? ZOMBIE.hp : 1) * tier.hpMult;
-  const wsm = extra.wsm ?? 1; // moltiplicatore velocità da posizione nel ciclo
+  const p   = extra.at || spawnPoint();
+  const wsm = extra.wsm ?? 1;
+  const { hp, speed, atk, gold, tierKey, elite, zombie } = scaleEnemyStats(def, w, wsm);
   return {
     id: Math.random(),
     def,
     name: def.name,
     look: def.look,
-    tier: def.tier || (ROLE_TIER as Record<string, string>)[def.role] || 'junior',
+    tier: tierKey,
     scale: 1,
     x: p.x, y: p.y,
     hp, maxHp: hp,
-    speed: def.speed * (0.9 + Math.random() * 0.2) * (elite ? 1.15 : 1) * (zombie ? ZOMBIE.speed : 1) * tier.speedMult * wsm,
+    speed,
     elite,
     zombie,
     role: def.role,
@@ -82,11 +124,11 @@ export function makeEnemy(def: any, w: number, extra: Record<string, any> = {}) 
     charging: false,
     shotCd: def.shotCd || 1,
     healCd: 3,
-    atk: def.atk * atkScale(w) * tier.atkMult,
+    atk,
     range: def.range,
     armor: def.armor || 0,
-    gold: def.gold * goldScale(w) * tier.goldMult,
-    size: 28,
+    gold,
+    size: WAVE_CONFIG.enemySize,
     attackCd: 1,
     slowT: 0, slowF: 0, stunT: 0, dotT: 0, dotDps: 0,
     hitFlash: 0, anim: Math.random(),
@@ -114,8 +156,8 @@ function makeBoss(b: any, w: number, playerDmg: number) {
   const list = [];
   const at = spawnPoint();
   for (let i = 0; i < group; i++) {
-    // HP = 100x il danno del giocatore; diviso per il gruppo se multi-boss
-    const hp = (playerDmg * 100) / group;
+    // HP = bossHpMultiplier × danno del giocatore; diviso per group se multi-boss
+    const hp = (playerDmg * WAVE_CONFIG.bossHpMultiplier) / group;
     const W = b.weapon ? (WEAPONS as Record<string, any>)[b.weapon] : null;
     list.push(makeEnemy(base, w, {
       at: { x: at.x + (Math.random() - 0.5) * 50, y: at.y + (Math.random() - 0.5) * 50 },
@@ -129,8 +171,8 @@ function makeBoss(b: any, w: number, playerDmg: number) {
       atk: base.atk * atkScale(w) * b.atkFactor * (W ? W.atkMult : 1),
       range: W ? W.range : 0,
       shotCd: W ? W.shotCd : 1.3,
-      gold: 30 * goldScale(w) / group,
-      size: 28 * b.scale,
+      gold: WAVE_CONFIG.bossGoldBase * goldScale(w) / group,
+      size: WAVE_CONFIG.enemySize * b.scale,
       weaponType: b.weapon || null, // per effetti speciali in updateEnemies
       weaponPierce: W && W.pierce,
       weaponAoe:    W && W.aoe,
