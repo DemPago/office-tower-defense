@@ -17,7 +17,7 @@ import { buildScene, sceneIndexForWave, MARGIN, AREA } from './scenery.js';
 import { VIEW_R, CAMERA, setPixelSize } from './view.js';
 import { drawTower, updateSmoke, drawSmoke, hiddenByTower } from './tower.js';
 import { drawSectors, drawAlly } from './allies.js';
-import { drawShadow, drawEnemy, drawGhost, updateTrails, drawTrails, drawCorpse } from './enemies.js';
+import { drawShadow, drawEnemy, drawGhost, updateTrails, drawTrails, drawCorpse, drawYardAlarm } from './enemies.js';
 import { drawDust, drawGrade, drawRange, drawShots, drawFx, drawDemEagle } from './effects.js';
 import { drawZombieWorld, drawZombieGrade } from './zombie.js';
 import { isZombieWave } from '../data/enemies.js';
@@ -149,6 +149,7 @@ export function createRenderer(canvas: HTMLCanvasElement, assets: Assets) {
       drawRange(ctx, run.stats.range, time);
       for (const c of run.fx.corpses) drawCorpse(ctx, assets, c);
       for (const e of run.enemies) drawShadow(ctx, e);
+      if (run.enemies.some(e => !e.dead && e.x > YARD.x && e.x < YARD.x + YARD.w && e.y > YARD.y && e.y < YARD.y + YARD.h)) drawYardAlarm(ctx, time);
     }
 
     // Profondità: chi sta più in alto (dietro al palazzo) si disegna prima.

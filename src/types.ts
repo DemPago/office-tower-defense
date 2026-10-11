@@ -148,7 +148,6 @@ export interface Enemy {
   wallTouching: boolean;
   charge: ChargeConfig | null;
   def: EnemyDef;
-  bonusPending?: boolean;
   // Runtime state set dynamically by update systems / enemy definitions
   anim?: number;
   lastStep?: number;
