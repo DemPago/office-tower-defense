@@ -520,7 +520,7 @@ h2 {
   cursor: pointer;
   transition: border-color .1s, background .1s;
 }
-.hero canvas { width: 42px; height: 70px; image-rendering: pixelated; }
+.hero canvas { width: 70px; height: 119px; image-rendering: auto; }
 .hero span { font-size: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .hero:hover:not(.locked) { background: var(--asphalt); border-color: var(--concrete-hi); }
 .hero.sel {
@@ -540,9 +540,10 @@ h2 {
   min-height: 80px;
 }
 .preview-canvas {
-  width: 84px; height: 140px;
-  image-rendering: pixelated; flex-shrink: 0;
+  width: 160px; height: 120px;
+  image-rendering: auto; flex-shrink: 0;
   border: 2px solid var(--steel-hi);
+  object-fit: cover;
 }
 .preview-info {
   flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; text-align: left;

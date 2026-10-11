@@ -22,85 +22,89 @@ const $ = (id: string): HTMLElement | null => document.getElementById(id);
 export function createFlow(app: any) {
   const { meta, assets } = app;
 
-  // Ritratto stile Cadillacs & Dinosaurs: sfondo drammatico + outline nero + scala 2×.
-  function heroPortrait(id: string, locked: boolean) {
+  // Personaggi con illustrazione Gemini disponibile
+  const ILLUSTRATED = new Set(['peppe','dem','nando','tony','vanessa','clara','pesce']);
+
+  // Disegna il fallback pixel art con outline e sfondo drammatico
+  function drawPixelPortrait(c: HTMLCanvasElement, id: string, locked: boolean) {
     const sp = assets.person(id, 1, 1, locked ? '#141416' : false);
     const sw = sp.img.width, sh = sp.img.height;
-
-    // --- Calcola la maschera outline dal pixel-data dello sprite sorgente ---
     const srcOff = document.createElement('canvas');
     srcOff.width = sw; srcOff.height = sh;
     const srcG = srcOff.getContext('2d')!;
     srcG.drawImage(sp.img, 0, 0);
     const src = srcG.getImageData(0, 0, sw, sh).data;
-
     const outOff = document.createElement('canvas');
     outOff.width = sw; outOff.height = sh;
     const outG = outOff.getContext('2d')!;
     const outImg = outG.createImageData(sw, sh);
     const out = outImg.data;
-
-    // Per ogni pixel trasparente adiacente a uno opaco → nero pieno (outline 1px)
     for (let y = 0; y < sh; y++) {
       for (let x = 0; x < sw; x++) {
         const i = (y * sw + x) * 4;
-        if (src[i + 3] > 10) continue; // pixel già visibile, skip
+        if (src[i + 3] > 10) continue;
         outer: for (let dy = -1; dy <= 1; dy++) {
           for (let dx = -1; dx <= 1; dx++) {
             const nx = x + dx, ny = y + dy;
             if (nx < 0 || nx >= sw || ny < 0 || ny >= sh) continue;
-            if (src[(ny * sw + nx) * 4 + 3] > 10) {
-              out[i] = 20; out[i + 1] = 20; out[i + 2] = 20; out[i + 3] = 255;
-              break outer;
-            }
+            if (src[(ny * sw + nx) * 4 + 3] > 10) { out[i]=20; out[i+1]=20; out[i+2]=20; out[i+3]=255; break outer; }
           }
         }
       }
     }
     outG.putImageData(outImg, 0, 0);
-
-    // --- Canvas finale 2× con sfondo e compositing ---
-    const scale = 2;
-    const c = document.createElement('canvas');
-    c.width = sw * scale; c.height = sh * scale;
     const g = c.getContext('2d')!;
     g.imageSmoothingEnabled = false;
-
-    // Sfondo: gradiente radiale scuro con riflesso dal centro (spotlight)
     const cx = c.width / 2;
-    const bg = g.createRadialGradient(cx, c.height * 0.22, 0, cx, c.height * 0.5, c.width * 0.78);
-    if (locked) {
-      bg.addColorStop(0, '#1a1a22'); bg.addColorStop(1, '#090910');
-    } else {
-      bg.addColorStop(0, '#221428'); bg.addColorStop(0.5, '#110a1a'); bg.addColorStop(1, '#060408');
-    }
-    g.fillStyle = bg;
-    g.fillRect(0, 0, c.width, c.height);
-
-    // Ombra ellittica a pavimento
-    if (!locked) {
-      g.save();
-      g.globalAlpha = 0.6;
-      const sg = g.createRadialGradient(cx, c.height - 6, 1, cx, c.height - 6, c.width * 0.44);
-      sg.addColorStop(0, '#000000'); sg.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = sg;
-      g.fillRect(0, c.height - 18, c.width, 18);
-      g.restore();
-    }
-
-    // Striscia orizzontale sul pavimento
-    if (!locked) {
-      g.save();
-      g.globalAlpha = 0.18;
-      g.fillStyle = '#ff6600';
-      g.fillRect(0, c.height - 8, c.width, 2);
-      g.restore();
-    }
-
-    // Outline (nero, 2×), poi sprite sopra
+    const bg = g.createRadialGradient(cx, c.height*0.22, 0, cx, c.height*0.5, c.width*0.78);
+    if (locked) { bg.addColorStop(0,'#1a1a22'); bg.addColorStop(1,'#090910'); }
+    else         { bg.addColorStop(0,'#221428'); bg.addColorStop(0.5,'#110a1a'); bg.addColorStop(1,'#060408'); }
+    g.fillStyle = bg; g.fillRect(0, 0, c.width, c.height);
     g.drawImage(outOff, 0, 0, sw, sh, 0, 0, c.width, c.height);
     g.drawImage(sp.img, 0, 0, sw, sh, 0, 0, c.width, c.height);
+  }
 
+  // Ritaglia un'immagine landscape in modo da riempire il canvas portrait (crop centro-basso)
+  function drawIllustration(g: CanvasRenderingContext2D, img: HTMLImageElement, cw: number, ch: number) {
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = 'high';
+    const dstRatio = cw / ch;
+    const srcRatio = img.width / img.height;
+    let sx = 0, sy = 0, sw = img.width, sh = img.height;
+    if (srcRatio > dstRatio) {
+      // sorgente più larga: ritaglia i lati, prendi il centro
+      sw = img.height * dstRatio;
+      sx = (img.width - sw) / 2;
+    } else {
+      // sorgente più alta: ritaglia dall'alto, tieni il basso (il personaggio)
+      sh = img.width / dstRatio;
+      sy = img.height - sh;
+    }
+    g.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
+  }
+
+  // Ritratto per i card della griglia (portrait 2×) o per il preview (landscape)
+  function heroPortrait(id: string, locked: boolean, forPreview = false) {
+    // Dimensioni: preview landscape 320×240, card portrait 80×136
+    const cw = forPreview ? 320 : 80;
+    const ch = forPreview ? 240 : 136;
+    const c = document.createElement('canvas');
+    c.width = cw; c.height = ch;
+
+    if (!locked && ILLUSTRATED.has(id)) {
+      // Sfondo scuro istantaneo, poi immagine quando carica
+      const g = c.getContext('2d')!;
+      g.fillStyle = '#0e0e12';
+      g.fillRect(0, 0, cw, ch);
+      const img = new Image();
+      img.src = `/heroes/${id}.jpg`;
+      img.onload = () => {
+        g.clearRect(0, 0, cw, ch);
+        drawIllustration(g, img, cw, ch);
+      };
+    } else {
+      drawPixelPortrait(c, id, locked);
+    }
     return c;
   }
 

@@ -45,7 +45,7 @@ export function hideAll() {
 }
 
 // Popola #hero-preview con ritratto + info strutturate.
-function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean) => HTMLCanvasElement, locked: boolean) {
+function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean, forPreview?: boolean) => HTMLCanvasElement, locked: boolean) {
   const box = $('hero-preview');
   if (!box) return;
   if (locked) {
@@ -63,7 +63,7 @@ function updateHeroPreview(h: HeroDef, portrait: (id: string, locked: boolean) =
   }).join('');
 
   box.innerHTML = '';
-  const cv = portrait(h.id, false);
+  const cv = portrait(h.id, false, true); // forPreview=true → canvas landscape 320×240
   cv.className = 'preview-canvas';
   box.appendChild(cv);
 
