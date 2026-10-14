@@ -195,7 +195,8 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
     const BASE = (import.meta as any).env?.BASE_URL ?? '/office-tower-defense/';
     const MODELS = ['sedan', 'sedan-sports', 'hatchback-sports', 'suv', 'suv-luxury',
                     'van', 'taxi', 'light-curved', 'construction-cone',
-                    'construction-barrier', 'traffic-light'];
+                    'construction-barrier', 'traffic-light',
+                    'truck', 'delivery', 'firetruck', 'garbage-truck'];
     Promise.all(MODELS.map(name => new Promise<void>(ok => {
       loader.load(`${BASE}models/${name}.glb`,
         gltf => { modelCache.set(name, gltf.scene); ok(); },

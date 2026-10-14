@@ -201,6 +201,37 @@ export function buildParkingEnv(g: THREE.Group) {
       g.add(barr);
     }
   }
+
+  // Veicoli pesanti parcheggiati ai bordi
+  const HEAVY_MODELS = ['truck', 'delivery', 'firetruck', 'garbage-truck'] as const;
+  const HEAVY_COLORS = [0xe8e2d0, 0xd9c040, 0xb02030, 0x2f4f6f, 0x3a3c42, 0xcc6430];
+  const HEAVY_POSITIONS: [number, number, number][] = [
+    [TOWER.x - 200, TOWER.y - 180, 0],
+    [TOWER.x + 160, TOWER.y - 200, Math.PI],
+    [TOWER.x - 210, TOWER.y + 150, Math.PI * 0.5],
+    [TOWER.x + 190, TOWER.y + 170, Math.PI * 1.5],
+    [TOWER.x - 180, TOWER.y + 50,  0],
+    [TOWER.x + 210, TOWER.y - 60,  Math.PI],
+  ];
+  HEAVY_POSITIONS.forEach(([hx, hy, ry], i) => {
+    if (nearTower(hx, hy, 70)) return;
+    const name = HEAVY_MODELS[i % HEAVY_MODELS.length];
+    const tmpl = modelCache.get(name);
+    if (tmpl) {
+      const m = tmpl.clone();
+      m.scale.setScalar(0.28);
+      m.position.set(wx(hx), 0, wz(hy));
+      m.rotation.y = ry;
+      colorCarModel(m, HEAVY_COLORS[i % HEAVY_COLORS.length]);
+      g.add(m);
+    } else {
+      const mat = new THREE.MeshLambertMaterial({ color: HEAVY_COLORS[i % HEAVY_COLORS.length] });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.30, 1.20), mat);
+      body.position.set(wx(hx), 0.15, wz(hy));
+      body.rotation.y = ry;
+      g.add(body);
+    }
+  });
 }
 
 export function buildArchiveEnv(g: THREE.Group) {
