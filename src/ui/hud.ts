@@ -115,7 +115,9 @@ export function createHud({ onBuy, onAbility, onSell, onDetonate, onUse }: { onB
     setText($('wave'), run.wave ? `WAVE ${run.wave}` : 'READY');
     setText($('gold'), fmt(run.gold));
     const hpPct = Math.max(0, run.tower.hp / run.stats.maxHp * 100);
-    $('hp-fill')!.style.width = hpPct.toFixed(1) + '%';
+    const hpFill = $('hp-fill')!;
+    hpFill.style.width = hpPct.toFixed(1) + '%';
+    hpFill.style.background = hpPct > 60 ? 'var(--toxic)' : hpPct > 30 ? 'var(--hazard)' : 'var(--red)';
     setText($('hp-text'), `${fmt(Math.max(0, Math.floor(run.tower.hp)))}/${fmt(Math.ceil(run.stats.maxHp))}`);
     // Counter nemici rimasti (visibile solo durante l'ondata)
     const ec = $('enemy-count');

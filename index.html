@@ -18,15 +18,22 @@
 <div id="app">
 
   <header id="top">
-    <span id="wave">READY</span>
-    <div id="hp" title="Building HP"><div id="hp-fill"></div><span id="hp-text"></span></div>
-    <div id="mp" title="Mana: powers abilities, recharges over time"><div id="mp-fill"></div><span id="mp-text"></span></div>
-    <span id="gold-box">💰 <span id="gold">0</span></span>
-    <span id="enemy-count" title="Enemies left"></span>
-    <button id="btn-speed" title="Game speed">x1</button>
-    <button id="btn-pause" title="Pause (Space)">⏸</button>
-    <button id="btn-sound" title="Sound on/off (M)">🔊</button>
-    <button id="btn-full" title="Fullscreen (F)">⛶</button>
+    <div class="top-row1">
+      <span id="wave">READY</span>
+      <span id="enemy-count" title="Enemies left"></span>
+      <span class="top-spacer"></span>
+      <span id="gold-box">💰 <span id="gold">0</span></span>
+      <div class="top-buttons">
+        <button id="btn-speed" title="Game speed">x1</button>
+        <button id="btn-pause" title="Pause (Space)">⏸</button>
+        <button id="btn-sound" title="Sound on/off (M)">🔊</button>
+        <button id="btn-full" title="Fullscreen (F)">⛶</button>
+      </div>
+    </div>
+    <div class="top-row2">
+      <div id="hp" title="Building HP"><div id="hp-fill"></div><span id="hp-text"></span></div>
+      <div id="mp" title="Mana: powers abilities, recharges over time"><div id="mp-fill"></div><span id="mp-text"></span></div>
+    </div>
   </header>
 
   <main id="stage">

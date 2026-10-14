@@ -48,32 +48,59 @@ button:disabled { cursor: default; }
   box-shadow: inset -2px -2px 0 rgba(0,0,0,.45), inset 2px 2px 0 rgba(255,255,255,.12);
 }
 
-/* ─── Barra in alto ─────────────────────────────────────────── */
-/* Barre a tutta larghezza, contenuto al centro largo al massimo 560px */
+/* ─── Barra in alto (due righe) ─────────────────────────────── */
 #top {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px max(8px, calc((100vw - 560px) / 2));
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px max(8px, calc((100vw - 560px) / 2));
   background: var(--steel);
   border-bottom: 4px solid transparent;
   border-image: var(--stripes) 4;
 }
-#wave { color: var(--hazard); white-space: nowrap; }
-#enemy-count { color: var(--concrete-hi); font-size: 7px; white-space: nowrap; min-width: 2.5em; text-align: right; }
+/* Riga 1: wave · nemici · spazio · oro · pulsanti */
+.top-row1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.top-spacer { flex: 1; }
+.top-buttons { display: flex; gap: 4px; }
+/* Riga 2: barre hp + mana */
+.top-row2 {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+#wave { color: var(--hazard); white-space: nowrap; font-size: 9px; }
+#enemy-count {
+  color: var(--white);
+  font-size: 8px;
+  white-space: nowrap;
+  background: rgba(0,0,0,.30);
+  padding: 1px 5px;
+  border: 1px solid rgba(255,255,255,.10);
+}
+#enemy-count:empty { display: none; }
+#gold-box {
+  color: var(--hazard);
+  white-space: nowrap;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+}
 #hp {
   position: relative;
   flex: 1;
-  height: 16px;
+  height: 18px;
   background: var(--blood);
   border: 2px solid var(--ink);
 }
-#hp-fill { height: 100%; width: 100%; background: var(--red); transition: width .15s; }
+#hp-fill { height: 100%; width: 100%; background: var(--toxic); transition: width .15s, background .4s; }
 /* Barra del mana (per i poteri), accanto alla vita */
 #mp {
   position: relative;
-  flex: 0 0 26%;
-  height: 16px;
+  flex: 0 0 28%;
+  height: 18px;
   background: #1c1640;
   border: 2px solid var(--ink);
 }
@@ -88,7 +115,6 @@ button:disabled { cursor: default; }
   display: flex; align-items: center; justify-content: center;
   font-size: 7px; text-shadow: 1px 1px 0 var(--ink);
 }
-#gold-box { color: var(--hazard); white-space: nowrap; }
 #top button {
   background: var(--steel-hi);
   width: 28px; height: 24px;
@@ -709,14 +735,16 @@ img.hero-illustrated-preview {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* Telefono: barra in alto compatta (ondata abbreviata, vita e mana più stretti) */
+/* Telefono: barra in alto compatta */
 @media (max-width: 520px) {
-  #top { gap: 4px; padding-inline: 6px; }
+  #top { gap: 3px; padding-inline: 6px; }
   #wave { font-size: 7px; }
+  #gold-box { font-size: 8px; }
+  #enemy-count { font-size: 7px; }
   #mp { flex-basis: 24%; }
+  #hp, #mp { height: 16px; }
   #hp-text, #mp-text { font-size: 6px; }
   #top button { width: 24px; }
-  #gold-box { font-size: 7px; }
   #stats-line { font-size: 6px; }
 }
 
