@@ -27,30 +27,77 @@ import { drawSceneTitle, drawBanner, drawBossBar, drawBossPointer } from './over
 function drawBombs(ctx: CanvasRenderingContext2D, run: Run, time: number) {
   for (const b of run.bombs) {
     if (b.detonated) continue;
-    // Corpo bomba (piccolo)
-    ctx.fillStyle = '#1a1a1c';
-    ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#444450';
-    ctx.beginPath(); ctx.arc(b.x - 1, b.y - 1, 1.5, 0, Math.PI * 2); ctx.fill();
-    // Miccia
-    ctx.strokeStyle = '#c87820';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(b.x + 3, b.y - 4);
-    ctx.quadraticCurveTo(b.x + 7, b.y - 9, b.x + 5, b.y - 12);
-    ctx.stroke();
-    // Scintilla lampeggiante
-    if (Math.sin(time * 12 + b.x) > 0.3) {
-      ctx.fillStyle = '#ffe040';
-      ctx.beginPath(); ctx.arc(b.x + 5, b.y - 12, 2, 0, Math.PI * 2); ctx.fill();
-    }
-    // Raggio di detonazione (solo durante la fase di piazzamento)
+    const pulse = 1 + Math.sin(time * 10 + b.x) * 0.07;
+    const r = 8 * pulse;
+    const bx = b.x, by = b.y;
+
+    // Raggio esplosione — solo in fase piazzamento, sfumato arancione
     if (run.phase === 'bomb-placement') {
-      ctx.strokeStyle = 'rgba(255,100,0,0.25)';
+      const grad = ctx.createRadialGradient(bx, by, r, bx, by, 70);
+      grad.addColorStop(0,   'rgba(255,100,0,0.18)');
+      grad.addColorStop(0.7, 'rgba(255,60,0,0.08)');
+      grad.addColorStop(1,   'rgba(255,40,0,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(bx, by, 70, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,80,0,0.45)';
       ctx.lineWidth = 1;
-      ctx.setLineDash([3, 3]);
-      ctx.beginPath(); ctx.arc(b.x, b.y, 70, 0, Math.PI * 2); ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.setLineDash([4, 4]);
+      ctx.lineDashOffset = -time * 8;
+      ctx.beginPath(); ctx.arc(bx, by, 70, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]); ctx.lineDashOffset = 0;
+    }
+
+    // Ombra a terra
+    ctx.fillStyle = 'rgba(0,0,0,0.30)';
+    ctx.beginPath(); ctx.ellipse(bx + 1, by + r * 0.6, r * 0.75, r * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Sfera — strati sovrapposti per simulare volume
+    ctx.fillStyle = '#111114'; ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#2a2a30'; ctx.beginPath(); ctx.arc(bx - r * 0.18, by - r * 0.15, r * 0.72, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#3c3c46'; ctx.beginPath(); ctx.arc(bx - r * 0.28, by - r * 0.28, r * 0.38, 0, Math.PI * 2); ctx.fill();
+    // Highlight
+    ctx.fillStyle = 'rgba(200,200,220,0.30)'; ctx.beginPath(); ctx.arc(bx - r * 0.36, by - r * 0.38, r * 0.18, 0, Math.PI * 2); ctx.fill();
+
+    // Linguetta metallo in cima
+    ctx.fillStyle = '#5a5a68';
+    ctx.beginPath();
+    ctx.ellipse(bx, by - r + 1, 3, 2.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Miccia — linea intrecciata (tratto arancione + tratto scuro alternati)
+    const fx = bx + 2, fy = by - r + 1;
+    const fc1x = fx + 5, fc1y = fy - 6, fc2x = fx + 2, fc2y = fy - 13, fex = fx + 4, fey = fy - 18;
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#c87820';
+    ctx.beginPath(); ctx.moveTo(fx, fy); ctx.bezierCurveTo(fc1x, fc1y, fc2x, fc2y, fex, fey); ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#7a4410';
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(fx, fy); ctx.bezierCurveTo(fc1x, fc1y, fc2x, fc2y, fex, fey); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Scintilla lampeggiante
+    const sparkOn = Math.sin(time * 14 + b.x) > 0;
+    if (sparkOn) {
+      const sx = fex, sy = fey;
+      // Alone
+      ctx.fillStyle = 'rgba(255,180,0,0.25)';
+      ctx.beginPath(); ctx.arc(sx, sy, 5, 0, Math.PI * 2); ctx.fill();
+      // Raggi
+      ctx.strokeStyle = '#ffe040'; ctx.lineWidth = 1;
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + time * 8;
+        const len = 2.5 + Math.sin(time * 20 + i) * 1.5;
+        ctx.beginPath(); ctx.moveTo(sx + Math.cos(a) * 1.5, sy + Math.sin(a) * 1.5);
+        ctx.lineTo(sx + Math.cos(a) * (1.5 + len), sy + Math.sin(a) * (1.5 + len)); ctx.stroke();
+      }
+      // Nucleo
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(sx, sy, 1.5, 0, Math.PI * 2); ctx.fill();
+    } else {
+      // Brace spenta: puntino rosso scuro
+      ctx.fillStyle = '#8a2000';
+      ctx.beginPath(); ctx.arc(fex, fey, 1.2, 0, Math.PI * 2); ctx.fill();
     }
   }
 }
