@@ -1,0 +1,319 @@
+// Tipi centrali del gioco.
+// I file .js li importano via JSDoc (@type {import('./types').Run}) finché
+// non vengono convertiti in .ts — a quel punto si usa l'import diretto.
+
+// ─── Primitivi condivisi ─────────────────────────────────────────────────────
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+// ─── Meta (progressi permanenti) ────────────────────────────────────────────
+
+export interface Meta {
+  buoni: number;
+  best: number;
+  runs: number;
+  levels: Record<string, number>;
+  hero?: string;
+  heroes?: string[];
+  tutorialDone?: boolean;
+  badges?: string[];   // id dei badge romani sbloccati
+}
+
+// ─── Statistiche calcolate della torre ──────────────────────────────────────
+
+export interface Stats {
+  dmg: number;
+  rate: number;
+  allyRateMult: number;
+  range: number;
+  maxHp: number;
+  regen: number;
+  armor: number;
+  crit: number;
+  critMult: number;
+  shotSpeed: number;
+  multishot: number;
+  bounce: number;
+  aoeRadius: number;
+  aoeDmg: number;
+  slow: number;
+  dot: number;
+  goldMult: number;
+  healOnKill: number;
+  manaMult: number;
+  manaRegen: number;
+  manaMax: number;
+  manaOnKill: number;
+  wallHp: number;
+  wallThorns: number;
+  wallReflect: number;
+  wallRegen: number;
+}
+
+// ─── Effetti visivi ──────────────────────────────────────────────────────────
+
+export interface FloatText {
+  x: number; y: number;
+  text: string; color: string; size: number;
+  life: number; max: number;
+}
+
+export interface Particle {
+  x: number; y: number;
+  vx: number; vy: number;
+  color: string; size: number;
+  life: number; max: number;
+}
+
+export interface Ring {
+  x: number; y: number;
+  radius: number; color: string;
+  life: number; max: number;
+}
+
+export interface Beam {
+  x1: number; y1: number;
+  x2: number; y2: number;
+  life: number; crit: boolean;
+  kind?: string;
+}
+
+export interface WaveRing {
+  r: number; max: number; life: number;
+}
+
+export interface Banner {
+  title: string; sub: string; color: string;
+  life: number; max: number;
+}
+
+export interface FxState {
+  texts: FloatText[];
+  parts: Particle[];
+  rings: Ring[];
+  corpses: Enemy[];
+  sounds: string[];
+  beams: Beam[];
+  waves: WaveRing[];
+  shake: number;
+  banner: Banner | null;
+}
+
+// ─── Nemici ──────────────────────────────────────────────────────────────────
+
+export interface ShotEffects {
+  slow: number;
+  dot: number;
+  aoeRadius: number;
+  aoeDmg: number;
+  charm: number;
+}
+
+export interface ChargeConfig {
+  dist: number;
+  mult: number;
+}
+
+// La definizione statica del nemico (da data/enemies.js).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type EnemyDef = Record<string, any>;
+
+export interface Enemy {
+  id: number;               // id univoco per hitIds
+  name?: string;
+  x: number; y: number;
+  hp: number; maxHp: number;
+  size: number;
+  speed: number;
+  atk: number;
+  range: number;
+  armor: number;
+  dead: boolean;
+  boss: boolean;
+  age: number;
+  hitFlash: number;
+  lunge: number;
+  attackCd: number;
+  moving: boolean;
+  dotT: number;
+  dotDps: number;
+  slowT: number;
+  slowF: number;
+  stunT: number;
+  charmT: number;
+  charging: boolean;
+  wallTouching: boolean;
+  charge: ChargeConfig | null;
+  def: EnemyDef;
+  // Runtime state set dynamically by update systems / enemy definitions
+  anim?: number;
+  driftPhase?: number;
+  lastStep?: number;
+  enraged?: boolean;
+  scale?: number;
+  shotCd?: number;
+  healCd?: number;
+  role?: string;
+  weaponBeam?: boolean;
+  weaponPierce?: boolean;
+  weaponType?: string;
+  weaponSlow?: boolean;
+  weaponAoe?: boolean;
+}
+
+// ─── Colpi ───────────────────────────────────────────────────────────────────
+
+export interface Shot {
+  x: number; y: number;
+  target: Enemy;
+  dmg: number;
+  speed: number;
+  bounces: number;
+  hitIds: Set<number>;
+  effects: ShotEffects;
+  kind: string;
+  pierce: number;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type EnemyShot = Record<string, any>;
+
+// ─── Bonus accumulati (usati da stats.ts e dalle carte) ─────────────────────
+
+export interface BonusSet {
+  dmg: number; rate: number; range: number;
+  hp: number; hpFlat: number; regen: number; armor: number;
+  crit: number; critMult: number;
+  multishot: number; bounce: number; aoe: number; slow: number; dot: number;
+  gold: number; healOnKill: number; cdr: number;
+  startGold: number; rerolls: number;
+  manaRegen: number; manaMax: number; manaOnKill: number;
+  wallHp: number; wallThorns: number; wallReflect: number; wallRegen: number;
+}
+
+// ─── Carte ───────────────────────────────────────────────────────────────────
+
+export interface CardPick {
+  id: string;
+  m: number;  // power multiplier al momento della scelta
+}
+
+export interface CardDef {
+  id: string;
+  icon: string;
+  name: string;
+  rarity: string;
+  max: number;
+  linear?: boolean;
+  type?: 'use';
+  malus?: boolean;
+  heavy?: boolean;
+  desc: (m: number) => string;
+  mod: (c: BonusSet, m: number) => void;
+  onPick?: (run: Run) => void;
+  use?: (run: Run) => void;
+  reward?: (wave: number) => string;
+}
+
+// ─── Alleati ─────────────────────────────────────────────────────────────────
+
+export interface Ally {
+  id: string;
+  level: number;
+  slot: number;
+  x: number; y: number;
+  hp: number; maxHp: number;
+  spawn: number;
+  cooldown: number;
+  hitFlash: number;
+  dead: boolean;
+  uid?: number;
+  promoFlash?: number;
+  hurt?: number;
+  recoil?: number;
+  pulse?: number;
+}
+
+// ─── Stato della torre ───────────────────────────────────────────────────────
+
+export interface TowerState {
+  hp: number;
+  cooldown: number;
+  hitFlash: number;
+  recoil?: number;
+}
+
+// ─── Fase di gioco ───────────────────────────────────────────────────────────
+
+export type Phase =
+  | 'break'
+  | 'wave'
+  | 'ally'
+  | 'cards'
+  | 'over'
+  | 'bomb-placement'
+  | 'bonus-break'
+  | 'bonus-wave';
+
+// ─── Run (la partita completa) ───────────────────────────────────────────────
+
+export interface Run {
+  meta: Meta;
+  hero: string;
+  weapon: string | null;
+  phase: Phase;
+  breakTimer: number;
+  wave: number;
+  time: number;
+  gold: number;
+  rerolls: number;
+  kills: number;
+  bossesKilled: number;
+  upgrades: Record<string, number>;
+  cards: Record<string, number>;
+  cardPicks: CardPick[];
+  cardChoices: CardDef[] | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  allies: Ally[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  allyChoices: any[] | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  wall: any;
+  abilityCd: Record<string, number>;
+  mana: number;
+  tower: TowerState;
+  stats: Stats;
+  enemies: Enemy[];
+  bombs: any[];
+  bombsLeft?: number;
+  bombsDone?: boolean;
+  bombsPlacedQuadro?: number;
+  extraBombs?: number;
+  minesNext?: number;
+  shots: Shot[];
+  enemyShots: EnemyShot[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  spawnQueue: any[];
+  boss: Enemy | null;
+  slowTowerT: number;
+  spawnTimer?: number;
+  fx: FxState;
+  healFull: boolean;
+  // modalità scarto carte
+  isHeavyMalus?: boolean;
+  discarding?: boolean;
+  pendingPick?: { card: CardDef };
+  lastOffer?: string[];
+  // bonus stage
+  bonusPending?: boolean;
+  bonusStage?: boolean;
+  bonusWaveIdx?: number;
+  bonusBreakTimer?: number;
+  // sblocco personaggio
+  newHero?: string | null;
+  // badge romano guadagnato in questa run
+  newBadge?: string;
+}

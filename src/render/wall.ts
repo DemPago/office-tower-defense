@@ -1,0 +1,168 @@
+// Muro di cinta disegnato a ogni frame: cambia materiale con le carte (sacchi di sabbia,
+// cemento, acciaio, filo spinato) e si rovina man mano che viene colpito.
+import { YARD } from '../state.js';
+import { PAL } from './palette.js';
+import * as P from './props.js';
+import { wallLook } from '../data/wall.js';
+import type { Run } from '../types.js';
+
+interface WallSeg {
+  side: 'top' | 'bottom' | 'left' | 'right';
+  a: number;
+  b: number;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  hit: number;
+}
+
+export function drawWall(ctx: CanvasRenderingContext2D, run: Run, time: number) {
+  const look = wallLook(run.stats, run.wave);
+  for (const seg of run.wall) drawSegment(ctx, seg, look, run.stats.wallThorns > 0, time);
+}
+
+// Posizioni dei "mattoni" lungo un tratto: [x, y] di ognuno.
+function bricks(seg: WallSeg): number[][] {
+  const out = [];
+  if (seg.side === 'top' || seg.side === 'bottom') {
+    const y = seg.side === 'top' ? YARD.y - 7 : YARD.y + YARD.h - 2;
+    for (let x = seg.a + 1; x < seg.b - 4; x += 12) out.push([x, y]);
+  } else {
+    const x = seg.side === 'left' ? YARD.x - 8 : YARD.x + YARD.w - 3;
+    for (let y = seg.a + 1; y < seg.b - 3; y += 9) out.push([x, y]);
+  }
+  return out;
+}
+
+function drawSegment(ctx: CanvasRenderingContext2D, seg: WallSeg, look: string, thorns: boolean, time: number) {
+  const k = seg.maxHp ? seg.hp / seg.maxHp : 1;
+  const list = bricks(seg);
+  if (k <= 0) { drawRubble(ctx, list, look); return; }
+  // più è rovinato, più "mattoni" mancano (sempre gli stessi, per non sfarfallare)
+  const missing = k > 0.66 ? 0 : k > 0.33 ? 3 : 2;
+  list.forEach(([x, y], i) => {
+    if (missing && i % missing === 1) { drawRubble(ctx, [[x, y]], look); return; }
+    if (look === 'wood')        woodPlank(ctx, x, y, k);
+    else if (look === 'tin')   tinSheet(ctx, x, y, k);
+    else if (look === 'iron')  ironBlock(ctx, x, y, k);
+    else if (look === 'steel') steelPlate(ctx, x, y, k);
+    else if (look === 'adamantium') adamantiumPlate(ctx, x, y, k);
+    else if (look === 'concrete') concreteBlock(ctx, x, y, k);
+    else P.sandbag(ctx, x, y);
+  });
+  if (thorns) barbedWire(ctx, seg, list, time);
+  if (seg.hit > 0) {
+    const fi = seg.hit / 0.15;
+    const [x0, y0] = list[0], [x1, y1] = list[list.length - 1];
+    const rw = x1 - x0 + 13, rh = y1 - y0 + 9;
+    ctx.fillStyle = `rgba(232,100,27,${(fi * 0.55).toFixed(2)})`;
+    ctx.fillRect(x0 - 1, y0 - 1, rw, rh);
+    ctx.strokeStyle = `rgba(215,38,61,${(fi * 0.8).toFixed(2)})`;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x0 - 1, y0 - 1, rw, rh);
+  }
+  // barra della vita del tratto, solo se danneggiato
+  if (k < 1) {
+    const w = 14, x = seg.x - w / 2, y = seg.y - 10;
+    ctx.fillStyle = PAL.black; ctx.fillRect(x - 0.5, y - 0.5, w + 1, 2.5);
+    ctx.fillStyle = k > 0.5 ? '#bfa574' : k > 0.25 ? PAL.hazard : PAL.red;
+    ctx.fillRect(x, y, w * k, 1.5);
+  }
+}
+
+function concreteBlock(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
+  P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
+  P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#8f8a80');
+  P.rect(ctx, x - 0.5, y - 1, 12, 1.5, '#a8a296');
+  P.rect(ctx, x - 0.5, y + 5.5, 12, 2, '#6e6a64');
+  P.rect(ctx, x + 5, y - 1, 0.5, 8.5, '#6e6a64');
+  if (k < 0.66) { P.rect(ctx, x + 2, y + 1, 3, 0.5, PAL.black); P.rect(ctx, x + 4, y + 1.5, 0.5, 2.5, PAL.black); } // crepe
+  if (k < 0.4) P.rect(ctx, x + 8, y, 2, 2, '#4a4743');
+}
+
+function steelPlate(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
+  P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
+  P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#6b7078');
+  P.rect(ctx, x - 0.5, y - 1, 12, 1, '#a0a6ae');
+  P.rect(ctx, x + 10.5, y - 1, 1, 8.5, '#4a4e55');
+  for (const [rx, ry] of [[1, 0.5], [9.5, 0.5], [1, 5.5], [9.5, 5.5]]) P.rect(ctx, x + rx, y + ry, 1, 1, '#c0c4cc'); // rivetti
+  if (k < 0.66) P.rect(ctx, x + 4, y + 2, 3, 2, '#3a3c42'); // ammaccatura
+  if (k < 0.4) P.rect(ctx, x + 2, y + 4, 2, 1.5, 'rgba(138,59,30,0.8)');
+}
+
+function woodPlank(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
+  P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
+  P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#7a4a28');
+  P.rect(ctx, x - 0.5, y - 1, 12, 1.5, '#a06a3a');
+  P.rect(ctx, x - 0.5, y + 5.5, 12, 2,  '#5a3218');
+  P.rect(ctx, x + 5,  y - 1,  0.5, 8.5, '#5a3218');
+  P.rect(ctx, x + 2,  y + 3,   10, 0.5, '#5a3218');
+  if (k < 0.66) { P.rect(ctx, x + 1, y + 1, 2, 0.5, PAL.black); P.rect(ctx, x + 7, y + 4, 3, 0.5, PAL.black); }
+  if (k < 0.4)  P.rect(ctx, x + 4, y + 1.5, 1, 5, PAL.black);
+}
+
+function tinSheet(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
+  P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
+  P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#8a8e94');
+  P.rect(ctx, x - 0.5, y - 1, 12, 1,   '#b0b4ba');
+  for (let i = 0; i < 3; i++) P.rect(ctx, x - 0.5 + i * 4, y - 1, 2, 8.5, '#9a9ea4');
+  P.rect(ctx, x + 10.5, y - 1, 1, 8.5, '#5a5e64');
+  if (k < 0.66) P.rect(ctx, x + 2, y + 3, 4, 2, '#6a6e74');
+  if (k < 0.4)  P.rect(ctx, x + 6, y + 1, 2, 6, '#4a3020');
+}
+
+function ironBlock(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
+  P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
+  P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#48505e');
+  P.rect(ctx, x - 0.5, y - 1, 12, 1,   '#6870a0');
+  P.rect(ctx, x - 0.5, y + 5.5, 12, 2, '#282e38');
+  P.rect(ctx, x + 5.5, y - 1,   1, 8.5,'#282e38');
+  for (const [rx, ry] of [[0.5, 0.5], [9.5, 0.5], [0.5, 5.5], [9.5, 5.5]] as [number,number][])
+    P.rect(ctx, x + rx, y + ry, 1.5, 1.5, '#2de2e6');
+  if (k < 0.66) P.rect(ctx, x + 3, y + 2, 5, 2, '#1a2030');
+  if (k < 0.4)  P.rect(ctx, x + 1, y + 4, 2, 3, '#c03850');
+}
+
+function adamantiumPlate(ctx: CanvasRenderingContext2D, x: number, y: number, k: number) {
+  P.rect(ctx, x - 1, y - 1.5, 13, 9.5, PAL.black);
+  P.rect(ctx, x - 0.5, y - 1, 12, 8.5, '#1a1030');
+  P.rect(ctx, x - 0.5, y - 1, 12, 1,   '#6040b0');
+  P.rect(ctx, x - 0.5, y + 6.5, 12, 1, '#0a0820');
+  P.rect(ctx, x + 5,   y + 1,   1, 5,  '#4020a0');
+  P.rect(ctx, x + 1,   y + 3.5, 9, 1,  '#4020a0');
+  for (const [rx, ry] of [[0.5, 0], [9.5, 0], [0.5, 6], [9.5, 6]] as [number,number][])
+    P.rect(ctx, x + rx, y + ry, 1.5, 1.5, '#9060e0');
+  if (k < 0.66) P.rect(ctx, x + 2, y + 1, 1, 5, '#ff3090');
+  if (k < 0.4)  P.rect(ctx, x + 7, y + 2, 3, 3, '#ff90ff');
+}
+
+function drawRubble(ctx: CanvasRenderingContext2D, list: number[][], look: string) {
+  const col = look === 'wood' ? '#7a4a28' : look === 'tin' ? '#8a8e94' : look === 'iron' ? '#48505e'
+    : look === 'adamantium' ? '#1a1030' : look === 'concrete' ? '#8f8a80' : look === 'steel' ? '#6b7078' : '#bfa574';
+  for (const [x, y] of list) {
+    P.stain(ctx, x + 5, y + 5, 6, 2, 'rgba(0,0,0,0.3)');
+    P.rect(ctx, x, y + 4, 3, 2, col);
+    P.rect(ctx, x + 5, y + 5, 2, 1.5, col);
+    P.rect(ctx, x + 8, y + 3.5, 3, 2, col);
+    P.rect(ctx, x + 3, y + 6, 2, 1, PAL.black);
+  }
+}
+
+function barbedWire(ctx: CanvasRenderingContext2D, seg: WallSeg, list: number[][], time: number) {
+  ctx.strokeStyle = '#c0c4cc';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  const horizontal = seg.side === 'top' || seg.side === 'bottom';
+  const [x0, y0] = list[0];
+  const [x1, y1] = list[list.length - 1];
+  if (horizontal) {
+    for (let x = x0; x <= x1 + 11; x += 1.5) ctx.lineTo(x, y0 - 2.5 + Math.sin(x * 1.3) * 1.5);
+  } else {
+    for (let y = y0; y <= y1 + 7; y += 1.5) ctx.lineTo(x0 + 5.5 + Math.sin(y * 1.3) * 2, y);
+  }
+  ctx.stroke();
+  ctx.fillStyle = '#e8e2d0';
+  if (horizontal) for (let x = x0; x <= x1 + 11; x += 4) ctx.fillRect(x, y0 - 3, 0.5, 1.5); // spine
+  else for (let y = y0; y <= y1 + 7; y += 4) ctx.fillRect(x0 + 5, y, 1.5, 0.5);
+}

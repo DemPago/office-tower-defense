@@ -1,0 +1,79 @@
+// Poteri attivi (vedi data/abilities.js per nomi e ricariche).
+import { ABILITIES, maxMana } from '../data/abilities.js';
+import { dealDamage, fire } from './combat.js';
+import { MUZZLE } from './shooting.js';
+import { DOM_WIN } from '../render/tower.js';
+import { banner, burst, shake, sfx } from './fx.js';
+import { TOWER } from '../state.js';
+import { dist } from '../util.js';
+import type { Run } from '../types.js';
+
+const EFFECTS: Record<string, (run: Run) => void> = {
+  bomb(run) {
+    for (const e of [...run.enemies]) {
+      dealDamage(run, e, run.stats.dmg * 12);
+      burst(run, e.x, e.y - e.size * 0.3, '#f97316', 8, 90);
+    }
+    shake(run, 7);
+  },
+  coffee(run) {
+    for (const e of run.enemies) { e.slowT = 5; e.slowF = 0.6; }
+  },
+  meeting(run) {
+    for (const e of run.enemies) e.stunT = e.boss ? 1.2 : 3;
+  },
+  audit(run) {
+    for (const e of run.enemies) {
+      const loss = e.hp * (e.boss ? 0.15 : 0.5);
+      dealDamage(run, e, loss / (1 - e.armor)); // ignora l'armatura
+    }
+  },
+  sniper(run) {
+    const outOfRange = run.enemies.filter(e => !e.dead && dist(e, TOWER) > run.stats.range);
+    // Prioritize enemy snipers in their nests; fall back to nearest out-of-range enemy
+    const sniperPool = outOfRange.filter(e => e.role === 'sniper');
+    const pool = sniperPool.length ? sniperPool : outOfRange;
+    const target = pool.sort((a, b) => dist(a, TOWER) - dist(b, TOWER))[0];
+    if (!target) return;
+    // Il colpo parte dalla finestra di Dom, non dal tetto (MUZZLE)
+    fire(run, DOM_WIN.x, DOM_WIN.y, target, {
+      dmg: run.stats.dmg * 5,
+      bounces: 0,
+      hitIds: new Set(),
+      speed: run.stats.shotSpeed * 2.5,
+      effects: { slow: 0, dot: 0, aoeRadius: 0, aoeDmg: 0, charm: 0 },
+      kind: 'sniper',
+    });
+    run.fx.beams.push({ x1: DOM_WIN.x, y1: DOM_WIN.y, x2: target.x, y2: target.y - target.size * 0.35, life: 0.08, crit: true, kind: 'sniper' });
+    burst(run, target.x, target.y - target.size * 0.3, '#ffffff', 4, 80);
+  },
+};
+
+export function manaCost(run: Run, id: string): number {
+  return Math.round(ABILITIES.find(a => a.id === id)!.mana * run.stats.manaMult);
+}
+
+export function canUse(run: Run, id: string): boolean {
+  if (run.phase !== 'wave' && run.phase !== 'bonus-wave') return false;
+  if (run.abilityCd[id] > 0 || run.mana < manaCost(run, id)) return false;
+  if (id === 'sniper') return run.enemies.some(e => !e.dead && dist(e, TOWER) > run.stats.range);
+  return run.enemies.length > 0;
+}
+
+export function useAbility(run: Run, id: string): boolean {
+  if (!canUse(run, id)) return false;
+  const def = ABILITIES.find(a => a.id === id)!;
+  run.mana -= manaCost(run, id);
+  EFFECTS[id](run);
+  sfx(run, id);
+  run.abilityCd[id] = def.cd;
+  banner(run, `${def.icon} ${def.name.toUpperCase()}`, '', '#2de2e6');
+  run.fx.banner!.life = run.fx.banner!.max = 1.2;
+  return true;
+}
+
+// Ricarica del mana e della piccola pausa dopo l'uso.
+export function updateAbilities(run: Run, dt: number): void {
+  run.mana = Math.min(maxMana(run), run.mana + run.stats.manaRegen * dt);
+  for (const id in run.abilityCd) run.abilityCd[id] = Math.max(0, run.abilityCd[id] - dt);
+}

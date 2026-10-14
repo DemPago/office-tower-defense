@@ -1,0 +1,153 @@
+// Rinforzi: scelta del collega e i loro spari.
+import { ALLIES, ALLY_LEVELS, ALLY_LEVEL_MULT, ALLY_SLOTS, ALLY_RING, allyArc, allyHp } from '../data/allies.js';
+import { TOWER } from '../state.js';
+import { dist } from '../util.js';
+import { fire, pickTargets } from './combat.js';
+import { offerCards } from './cards.js';
+import { refreshStats } from './economy.js';
+import { banner, ring, sfx, floatText, burst } from './fx.js';
+import { angleOf, inArc } from '../util.js';
+import type { Run, Meta, Ally, Enemy } from '../types.js';
+
+// Velocità dei colpi: abbastanza lente da vederli partire dalla postazione.
+const SHOT_SPEED = { laser: 650, bolt: 360, pc: 230 };
+const AURA_COLOR = { rate: '#2de2e6', dmg: '#ff3e8a' };
+
+export function allyDef(id: string) {
+  return ALLIES.find(a => a.id === id);
+}
+
+export function allyPos(ally: Ally): { x: number; y: number } {
+  const a = ALLY_SLOTS[ally.slot] * Math.PI / 180;
+  return { x: TOWER.x + Math.cos(a) * ALLY_RING, y: TOWER.y - Math.sin(a) * ALLY_RING };
+}
+
+// Il collega spara solo ai nemici dentro il suo spicchio (visto dal centro della torre).
+export function allyCovers(ally: Ally, enemy: { x: number; y: number }): boolean {
+  return inArc(angleOf(TOWER, enemy), ALLY_SLOTS[ally.slot], allyArc(ally.level));
+}
+
+const MAX_LEVEL = ALLY_LEVELS.length;
+const SLOT_NAMES = { 0: 'East', 45: 'North-East', 90: 'North', 135: 'North-West', 180: 'West', 225: 'South-West', 270: 'South', 315: 'South-East' };
+
+export function slotName(slot: number): string {
+  return (SLOT_NAMES as Record<number, string>)[ALLY_SLOTS[slot]] || '';
+}
+
+function freeSlot(run: Run): number {
+  for (let s = 0; s < ALLY_SLOTS.length; s++) if (!run.allies.some(a => a.slot === s)) return s;
+  return -1;
+}
+
+function shuffle<T>(list: T[]): T[] {
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
+}
+
+// Propone 3 carte: "assumi" un collega nuovo (finché ci sono postazioni libere,
+// almeno 2 carte su 3 sono assunzioni) oppure "promuovi" un collega già in campo.
+export function offerAllies(run: Run): void {
+  const slot = freeSlot(run);
+  const promos = shuffle(run.allies.filter(a => a.level < MAX_LEVEL))
+    .map(a => ({ kind: 'promote', def: allyDef(a.id), ally: a }));
+  // Rob è esclusivo di Clara; max 1 alleato aura (agile/scrum) per offerta
+  const alreadyHasAura = run.allies.some(a => allyDef(a.id)?.aura);
+  const hirePool = ALLIES.filter(a => {
+    if (a.id === 'rob') return false;
+    if (a.aura && alreadyHasAura) return false; // non offrire un secondo aura se già ne hai uno
+    return true;
+  });
+  const hires = slot < 0 ? [] : shuffle([...hirePool]).map(def => ({ kind: 'hire', def, slot }));
+  const choices = [...hires.slice(0, promos.length ? 2 : 3), ...promos.slice(0, 1)];
+  // se mancano carte (es. postazioni piene) si riempie con altre promozioni
+  for (const p of promos.slice(1)) if (choices.length < 3) choices.push(p);
+  if (!choices.length) { offerCards(run); return; } // tutti al massimo
+  run.allyChoices = shuffle(choices);
+  run.phase = 'ally';
+}
+
+export function pickAlly(run: Run, meta: Meta, index: number): boolean {
+  const choice = run.allyChoices?.[index];
+  if (run.phase !== 'ally' || !choice) return false;
+  let ally;
+  if (choice.kind === 'hire') {
+    ally = { uid: Math.random(), id: choice.def.id, level: 1, slot: choice.slot, cooldown: 0, recoil: 0, spawn: 1, hp: allyHp(1), maxHp: allyHp(1), x: 0, y: 0, hitFlash: 0, dead: false };
+    run.allies.push(ally);
+  } else {
+    ally = choice.ally;
+    ally.level++;
+    ally.promoFlash = 1.5;
+    ally.maxHp = allyHp(ally.level);
+    ally.hp = ally.maxHp; // la promozione rimette in forma
+  }
+  const { def } = choice;
+  const pos = allyPos(ally);
+  const hired = choice.kind === 'hire';
+  banner(run, `${def.icon} ${def.name.toUpperCase()}`,
+    hired ? `Hired! Defends the ${slotName(ally.slot)} side` : `Promoted to ${ALLY_LEVELS[ally.level - 1]}!`, '#f2b705');
+  floatText(run, pos.x, pos.y - 44, hired ? 'HIRED!' : 'PROMOTED!', '#f2b705', 9);
+  ring(run, pos.x, pos.y - 10, 26, '#f2b705');
+  run.allyChoices = null;
+  sfx(run, 'pick');
+  refreshStats(run, meta);
+  offerCards(run);
+  return true;
+}
+
+// Animazioni dei colleghi (arrivo dall'alto, lampo di promozione): girano anche fra un'ondata e l'altra.
+export function animateAllies(run: Run, dt: number): void {
+  for (const ally of run.allies) {
+    ally.spawn = Math.min(1, ally.spawn + dt * 2);
+    ally.promoFlash = Math.max(0, (ally.promoFlash || 0) - dt);
+    ally.hurt = Math.max(0, (ally.hurt || 0) - dt);
+  }
+}
+
+
+// A fine ondata i colleghi sopravvissuti tornano in piena forma.
+export function restAllies(run: Run): void {
+  for (const ally of run.allies) ally.hp = ally.maxHp;
+}
+
+export function updateAllies(run: Run, dt: number): void {
+  for (const ally of run.allies) {
+    ally.recoil = Math.max(0, (ally.recoil ?? 0) - dt);
+    const def = allyDef(ally.id);
+    if (!def) continue;
+    if (def.aura) {
+      ally.pulse = (ally.pulse || 0) - dt;
+      if (ally.pulse <= 0) {
+        ally.pulse = 1.5;
+        const pos = allyPos(ally);
+        const col = AURA_COLOR[def.aura];
+        ring(run, pos.x, pos.y - 12, 18, col);
+        ring(run, TOWER.x, TOWER.y - 40, 50, col);
+        const label = def.aura === 'rate' ? '+⚡' : '+⚔️';
+        floatText(run, pos.x, pos.y - 30, label, col, 7);
+      }
+      continue;
+    }
+    ally.cooldown -= dt;
+    if (ally.cooldown > 0) continue;
+
+    const pos = allyPos(ally);
+    // come la torre: prima i tank, poi i più vicini, ma solo nel suo spicchio
+    const [target] = pickTargets(run.enemies, pos, def.range ?? 200, 1, (e?: Enemy) => !!e && allyCovers(ally, e));
+    if (!target) continue;
+
+    ally.cooldown = 1 / ((def.rate ?? 1) * run.stats.allyRateMult);
+    ally.recoil = 0.1;
+    sfx(run, 'ally');
+    fire(run, pos.x, pos.y - 20, target, {
+      dmg: run.stats.dmg * (def.dmg ?? 1) * ALLY_LEVEL_MULT[ally.level - 1],
+      bounces: 0,
+      hitIds: new Set(),
+      speed: SHOT_SPEED[def.kind! as keyof typeof SHOT_SPEED],
+      effects: { slow: def.slow || 0, dot: 0, aoeRadius: def.aoe || 0, aoeDmg: def.aoe ? 0.7 : 0, charm: 0 },
+      kind: def.kind ?? 'bolt',
+    });
+  }
+}

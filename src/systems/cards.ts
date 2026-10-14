@@ -1,0 +1,152 @@
+// Scelta delle carte fra un'ondata e l'altra.
+import { CARDS, MALUS_CARDS, HEAVY_MALUS_CARDS, RARITY, cardPower, MAX_HAND, findCard } from '../data/cards.js';
+import { refreshStats } from './economy.js';
+import { maxMana } from '../data/abilities.js';
+import { floatText } from './fx.js';
+import { TOWER } from '../state.js';
+import { fmt } from '../util.js';
+import type { Run, Meta, CardDef } from '../types.js';
+
+// Estrae una carta dal mazzo, pesata per rarità.
+function draw(pool: CardDef[]): CardDef {
+  const total = pool.reduce((sum, c) => sum + RARITY[c.rarity].weight, 0);
+  let r = Math.random() * total;
+  return pool.find(c => (r -= RARITY[c.rarity].weight) <= 0) || pool[pool.length - 1];
+}
+
+// Estrae 3 carte sempre diverse:
+//  1) prima quelle che non hai ancora preso;
+//  2) solo se non bastano, quelle già prese (diventano "POTENZIA", l'effetto si somma);
+//  3) se possibile, mai le stesse dell'offerta precedente.
+export function rollChoices(run: Run, n = 3): CardDef[] {
+  const last = new Set(run.lastOffer || []);
+  const available = CARDS.filter(c => !c.malus && (run.cards[c.id] || 0) < c.max);
+  const fresh = available.filter(c => !run.cards[c.id]);
+  const owned = available.filter(c => run.cards[c.id]);
+  const picked = [];
+  for (let group of [fresh, owned]) {
+    // evita le carte appena viste, a meno che non ci sia altra scelta
+    const notLast = group.filter(c => !last.has(c.id));
+    if (notLast.length >= n - picked.length) group = notLast;
+    while (picked.length < n && group.length) {
+      const card = draw(group);
+      picked.push(card);
+      group = group.filter(c => c !== card);
+    }
+  }
+  run.lastOffer = picked.map(c => c.id);
+  return picked;
+}
+
+export function offerCards(run: Run, { noMalus = false } = {}): void {
+  run.phase = 'cards';
+  const choices = rollChoices(run);
+  // Se hai vinto troppo facilmente (vita > 80%), una delle 3 carte è un malus.
+  // Il bonus stage è già abbastanza brutale: niente malus dopo.
+  const hpPct = run.tower.hp / run.stats.maxHp;
+  if (!noMalus && run.wave > 2 && hpPct > 0.80) {
+    const pool = MALUS_CARDS.filter(c => (run.cards[c.id] || 0) < c.max);
+    if (pool.length) {
+      const malus = pool[Math.floor(Math.random() * pool.length)];
+      choices[Math.floor(Math.random() * choices.length)] = malus;
+    }
+  }
+  run.cardChoices = choices;
+}
+
+// Dopo ogni ondata zombie: tutte e 3 le scelte sono malus pesanti, nessun reroll.
+export function offerHeavyMalus(run: Run): void {
+  run.phase = 'cards';
+  run.isHeavyMalus = true;
+  const pool = [...HEAVY_MALUS_CARDS];
+  const choices = [];
+  while (choices.length < 3 && pool.length) {
+    const i = Math.floor(Math.random() * pool.length);
+    choices.push(pool.splice(i, 1)[0]);
+  }
+  run.cardChoices = choices;
+}
+
+export function reroll(run: Run): boolean {
+  if (run.phase !== 'cards' || run.rerolls <= 0 || run.isHeavyMalus) return false;
+  run.rerolls--;
+  run.cardChoices = rollChoices(run);
+  return true;
+}
+
+function applyCard(run: Run, meta: Meta, card: CardDef): void {
+  run.cards[card.id] = (run.cards[card.id] || 0) + 1;
+  run.cardPicks.push({ id: card.id, m: card.malus ? 1 : cardPower(run.wave) });
+  if (card.onPick) card.onPick(run);
+  refreshStats(run, meta);
+  run.fx.sounds.push('pick');
+  run.cardChoices = null;
+  run.isHeavyMalus = false;
+  run.phase = 'break';
+  run.breakTimer = 1.5;
+}
+
+// Gioca una carta usabile dalla mano (effetto immediato, poi sparisce).
+export function playCard(run: Run, meta: Meta, handIndex: number): CardDef | false {
+  const pick = run.cardPicks[handIndex];
+  if (!pick) return false;
+  const card = findCard(pick.id);
+  if (!card || card.type !== 'use') return false;
+  card.use!(run);
+  run.tower.hp = Math.min(run.stats.maxHp, run.tower.hp);
+  run.mana = Math.min(maxMana(run), run.mana);
+  run.cardPicks.splice(handIndex, 1);
+  if (run.cards[pick.id] > 0) run.cards[pick.id]--;
+  refreshStats(run, meta);
+  run.fx.sounds.push('pick');
+  floatText(run, TOWER.x, TOWER.y - 60, `${card.icon} ${card.name}!`, '#2de2e6', 9);
+  return card;
+}
+
+// Vende una carta dalla mano: rimuove il bonus e dà HP + mana.
+export function sellCard(run: Run, meta: Meta, handIndex: number): { hp: number; mana: number; card: CardDef } | null {
+  const pick = run.cardPicks[handIndex];
+  if (!pick) return null;
+  const card = findCard(pick.id);
+  if (!card) return null;
+  const hp = Math.round(run.stats.maxHp * 0.15);
+  const mana = 25;
+  run.cardPicks.splice(handIndex, 1);
+  if (run.cards[pick.id] > 0) run.cards[pick.id]--;
+  refreshStats(run, meta);
+  run.tower.hp = Math.min(run.stats.maxHp, run.tower.hp + hp);
+  run.mana = Math.min(maxMana(run), run.mana + mana);
+  run.fx.sounds.push('pick');
+  floatText(run, TOWER.x, TOWER.y - 60, `${card.icon} venduta! +${fmt(hp)}❤️ +${mana}💧`, '#f2b705', 8);
+  return { hp, mana, card };
+}
+
+export function pickCard(run: Run, meta: Meta, index: number): boolean | 'discard' {
+  // Modalità scarto: il giocatore ha scelto quale carta rimuovere.
+  if (run.discarding) {
+    if (index < 0 || index >= run.cardPicks.length) return false;
+    const victim = run.cardPicks[index];
+    run.cardPicks.splice(index, 1);
+    if (run.cards[victim.id] > 0) run.cards[victim.id]--;
+    run.discarding = false;
+    const { card } = run.pendingPick!;
+    run.pendingPick = undefined;
+    applyCard(run, meta, card);
+    return true;
+  }
+
+  const card = run.cardChoices?.[index];
+  if (run.phase !== 'cards' || !card) return false;
+
+  // Mano piena: entra in modalità scarto prima di aggiungere la nuova carta.
+  if (run.cardPicks.length >= MAX_HAND) {
+    run.pendingPick = { card };
+    run.discarding = true;
+    run.cardChoices = null;
+    run.isHeavyMalus = false;
+    return 'discard';
+  }
+
+  applyCard(run, meta, card);
+  return true;
+}

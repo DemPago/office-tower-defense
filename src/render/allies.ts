@@ -1,0 +1,124 @@
+// Rinforzi: colleghi intorno al palazzo, i loro spicchi e il recinto elettrico.
+import type { Run, Ally } from '../types.js';
+import { TOWER } from '../state.js';
+import { allyDef, allyPos } from '../systems/allies.js';
+import { ALLY_SLOTS, allyArc } from '../data/allies.js';
+import { PAL } from './palette.js';
+import { sandbag } from './props.js';
+import { drawPersonAt, rad } from './view.js';
+
+const ALLY_COLOR = { pm: PAL.red, sm: PAL.toxic, dev: PAL.cyan };
+
+// Spicchi difesi dai colleghi: un arco colorato a terra.
+export function drawSectors(ctx: CanvasRenderingContext2D, run: Run, time: number) {
+  for (const ally of run.allies) {
+    const color = ALLY_COLOR[ally.id as keyof typeof ALLY_COLOR];
+    if (!color) continue; // i maghi non hanno spicchio
+    const width = allyArc(ally.level), center = ALLY_SLOTS[ally.slot];
+    const r = 104 + ally.slot * 3;
+    ctx.save();
+    ctx.globalAlpha = run.phase === 'wave' ? 0.35 : 0.6 + Math.sin(time * 4) * 0.2;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    if (width >= 360) ctx.arc(TOWER.x, TOWER.y, r, 0, Math.PI * 2);
+    else ctx.arc(TOWER.x, TOWER.y, r, rad(center + width / 2), rad(center - width / 2));
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function drawAlly(ctx: CanvasRenderingContext2D, assets: any, ally: Ally, time: number) {
+  const def = allyDef(ally.id);
+  if (!def) return;
+  const { x, y } = allyPos(ally);
+  const drop = 0;
+
+  // ombra a terra
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(x - 12, y, 26, 4);
+
+  // ── Struttura torretta (disegnata PRIMA del personaggio) ──────────────────
+  const tx = Math.round(x), ty = Math.round(y);
+  if (def.aura) {
+    // Maghi: piedistallo magico con incisioni rune
+    const pc = def.aura === 'rate' ? '#1a6a7a' : '#6a1a5a';
+    const pl = def.aura === 'rate' ? '#2de2e6' : '#ff3e8a';
+    ctx.fillStyle = pc; ctx.fillRect(tx - 14, ty - 6, 28, 6);
+    ctx.fillStyle = pl; ctx.fillRect(tx - 14, ty - 6, 28, 2);
+    ctx.fillStyle = pl; ctx.fillRect(tx - 14, ty - 6, 1, 6);
+    ctx.globalAlpha = 0.5 + Math.sin(time * 4) * 0.3;
+    ctx.fillStyle = pl;
+    for (let i = 0; i < 4; i++) ctx.fillRect(tx - 11 + i * 6, ty - 5, 2, 3);
+    ctx.globalAlpha = 1;
+  } else {
+    // Combattenti: pali di legno + traversa + pavimento piattaforma
+    ctx.fillStyle = '#3e2510'; ctx.fillRect(tx - 13, ty - 52, 3, 52); // palo sx scuro
+    ctx.fillStyle = '#6a4220'; ctx.fillRect(tx - 13, ty - 52, 1, 52); // highlight sx
+    ctx.fillStyle = '#3e2510'; ctx.fillRect(tx + 11, ty - 52, 3, 52); // palo dx scuro
+    ctx.fillStyle = '#6a4220'; ctx.fillRect(tx + 11, ty - 52, 1, 52); // highlight dx
+    ctx.fillStyle = '#4e2e14'; ctx.fillRect(tx - 14, ty - 50, 30, 3); // traversa alta
+    ctx.fillStyle = '#7a5228'; ctx.fillRect(tx - 14, ty - 50, 30, 1); // highlight traversa
+    ctx.fillStyle = '#5a3a18'; ctx.fillRect(tx - 13, ty - 26, 28, 4); // pavimento piattaforma
+    ctx.fillStyle = '#8a6230'; ctx.fillRect(tx - 13, ty - 26, 28, 1); // highlight pavimento
+  }
+
+  if (def.aura) {
+    const pulse = 0.5 + Math.sin(time * 3) * 0.5;
+    ctx.fillStyle = def.aura === 'rate' ? `rgba(45,226,230,${0.15 + pulse * 0.2})` : `rgba(255,62,138,${0.15 + pulse * 0.2})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 18 + pulse * 3, 7 + pulse, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const recoil = (ally.recoil ?? 0) > 0 ? 1 : 0;
+  if ((ally.promoFlash ?? 0) > 0) {
+    // promozione: colonna di luce dorata
+    ctx.fillStyle = `rgba(242,183,5,${0.35 * (ally.promoFlash ?? 0) / 1.5})`;
+    ctx.fillRect(x - 8, y - 70, 16, 72);
+  }
+  drawPersonAt(ctx, assets.person(def.look, 0, 1), x, y - 1 + drop + recoil);
+  if ((ally.hurt ?? 0) > 0) {
+    ctx.globalAlpha = 0.45;
+    drawPersonAt(ctx, assets.person(def.look, 0, 1, '#ff2a3d'), x, y - 1 + drop + recoil);
+    ctx.globalAlpha = 1;
+  }
+  if (ally.hp < ally.maxHp) {
+    const bw = 18, bx = x - bw / 2, by = y - 34, k = Math.max(0, ally.hp / ally.maxHp);
+    ctx.fillStyle = PAL.black;
+    ctx.fillRect(bx - 0.5, by - 0.5, bw + 1, 3);
+    ctx.fillStyle = PAL.blood;
+    ctx.fillRect(bx, by, bw, 2);
+    ctx.fillStyle = k > 0.5 ? PAL.toxic : k > 0.25 ? PAL.hazard : PAL.red;
+    ctx.fillRect(bx, by, bw * k, 2);
+  }
+  if (recoil) {
+    // lampo allo sparo, sopra la testa
+    ctx.fillStyle = PAL.white;
+    ctx.fillRect(x - 2, y - 24, 5, 5);
+    ctx.fillStyle = PAL.cyan;
+    ctx.fillRect(x - 4, y - 23, 9, 3);
+    ctx.fillRect(x - 1, y - 26, 3, 9);
+  }
+  sandbag(ctx, x - 12, y - 5);
+  sandbag(ctx, x + 1, y - 5);
+
+  // segno di riconoscimento: freccia gialla e tacche del livello
+  {
+    const by = y - (def.aura ? 44 : 38) + Math.round(Math.sin(time * 3 + ally.slot));
+    ctx.fillStyle = PAL.black;
+    ctx.fillRect(x - 4, by - 1, 9, 5);
+    ctx.fillStyle = PAL.hazard;
+    ctx.fillRect(x - 3, by, 7, 1);
+    ctx.fillRect(x - 2, by + 1, 5, 1);
+    ctx.fillRect(x - 1, by + 2, 3, 1);
+    for (let i = 0; i < ally.level; i++) {
+      ctx.fillStyle = PAL.black;
+      ctx.fillRect(x - 10 + i * 4, y + 4, 4, 4);
+      ctx.fillStyle = i === 4 ? PAL.pink : PAL.hazard;
+      ctx.fillRect(x - 9 + i * 4, y + 5, 2, 2);
+    }
+  }
+}

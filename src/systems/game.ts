@@ -1,0 +1,124 @@
+// Il "regista" della partita: fa avanzare tutti i sistemi di un passo
+// e decide quando un'ondata finisce, quando scegliere le carte e quando si perde.
+import { updateSpawns, startWave } from './waves.js';
+import { updateEnemies, updateEnemyShots, updateTower, updateShots } from './combat.js';
+import { updateWall, repairWall, fullRepairWall } from './wall.js';
+import { updateAbilities } from './abilities.js';
+import { offerCards, offerHeavyMalus } from './cards.js';
+import { isZombieWave } from '../data/enemies.js';
+import { offerAllies, updateAllies, animateAllies, restAllies } from './allies.js';
+import { REINFORCE_EVERY } from '../data/allies.js';
+import { updateFx, floatText } from './fx.js';
+import { checkBombs, resetBombsLeft } from './bombs.js';
+import { TOWER } from '../state.js';
+import { UNLOCK_WAVE, unlockNextHero } from '../data/heroes.js';
+import { badgeForWave } from '../data/badges.js';
+import { banner } from './fx.js';
+import { startBonusWave, endBonusWave } from './bonus.js';
+import type { Run } from '../types.js';
+
+export function update(run: Run, dt: number): void {
+  updateFx(run, dt);
+  animateAllies(run, dt);
+  if (run.phase === 'over' || run.phase === 'cards' || run.phase === 'ally') return;
+  run.time += dt;
+
+  if (run.phase === 'bomb-placement') {
+    updateTower(run, dt);
+    updateAbilities(run, dt);
+    return; // attende la conferma del giocatore
+  }
+
+  if (run.phase === 'break') {
+    updateTower(run, dt); // la torre si rigenera anche in pausa
+    updateAbilities(run, dt); // e il mana si ricarica
+    run.breakTimer -= dt;
+    if (run.breakTimer <= 0) {
+      // Prima di ogni ondata non-boss → piazza le bombe; boss = multiplo di 10
+      const nextWave = run.wave + 1;
+      const isBossWave = nextWave % 10 === 0;
+      if (!isBossWave && !run.bombsDone) {
+        resetBombsLeft(run);
+        run.phase = 'bomb-placement';
+      } else {
+        run.bombsDone = false;
+        startWave(run);
+      }
+    }
+    return;
+  }
+
+  if (run.phase === 'bonus-break') {
+    updateTower(run, dt);
+    updateAbilities(run, dt);
+    run.bonusBreakTimer = (run.bonusBreakTimer ?? 0) - dt;
+    if (run.bonusBreakTimer <= 0) startBonusWave(run);
+    return;
+  }
+
+  // phase === 'wave' | 'bonus-wave'
+  updateSpawns(run, dt);
+  updateEnemies(run, dt);
+  updateEnemyShots(run, dt);
+  updateTower(run, dt);
+  updateAllies(run, dt);
+  updateWall(run, dt);
+  updateShots(run, dt);
+  updateAbilities(run, dt);
+
+  if (run.phase === 'bonus-wave' && !run.spawnQueue.length && !run.enemies.length) {
+    endBonusWave(run);
+  }
+
+  checkBombs(run);
+
+  if (run.phase === 'wave' && !run.spawnQueue.length && !run.enemies.length) {
+    const bonus = 5 + run.wave * 2;
+    run.gold += bonus;
+    floatText(run, TOWER.x, TOWER.y - 90, `Wave cleared! +${bonus}💰`, '#7bd332', 9);
+    run.enemyShots = [];
+    run.shots = [];
+    restAllies(run);
+    // Ogni 10 ondate (nuovo macro-stage) il muro torna integro, anche le brecce.
+    if (run.wave % 10 === 0) {
+      fullRepairWall(run);
+      banner(run, `SECTOR ${run.wave / 10 + 1}`, 'Wall restored — new round incoming!', '#2de2e6');
+    } else {
+      repairWall(run); // solo i tratti ancora in piedi si riparano
+    }
+    // Badge romano: milestone raggiunta durante il gioco → banner celebrativo.
+    const newBadge = badgeForWave(run.wave);
+    if (newBadge && !(run.meta.badges ?? []).includes(newBadge.id)) {
+      banner(run, `🏛 ${newBadge.name.toUpperCase()}`, `${newBadge.role} · ${newBadge.years}`, newBadge.color);
+      if (!run.newBadge) run.newBadge = newBadge.id;
+    }
+    // Completati tutti i livelli (i 6 reparti): si sblocca un nuovo personaggio.
+    if (run.wave % UNLOCK_WAVE === 0) {
+      const hero = unlockNextHero(run.meta);
+      if (hero) {
+        run.newHero = hero.id;
+        banner(run, `NEW CHARACTER: ${hero.name.toUpperCase()}!`, 'Find them in the main menu', '#ff3e8a');
+      }
+    }
+    // Bonus stage dopo ogni boss: parte prima delle carte.
+    if (run.bonusPending) {
+      delete run.bonusPending;
+      run.bonusStage = true;
+      run.bonusWaveIdx = 0;
+      run.phase = 'bonus-break';
+      run.bonusBreakTimer = 1.5;
+      banner(run, 'BONUS STAGE!', 'A sushi attack is about to begin...', '#ff9f1c');
+      return;
+    }
+    // Ogni tot ondate arrivano i rinforzi; ondate zombie → 3 malus pesanti; altrimenti carta normale.
+    if (run.wave % REINFORCE_EVERY === 0) offerAllies(run);
+    else if (isZombieWave(run.wave)) offerHeavyMalus(run);
+    else offerCards(run);
+  }
+}
+
+// Buoni pasto guadagnati a fine partita (valuta permanente).
+export function runReward(run: Run): number {
+  const cleared = Math.max(0, run.wave - 1);
+  return Math.floor(cleared ** 1.25) + run.bossesKilled * 10;
+}
