@@ -134,7 +134,8 @@ export function createHud({ onBuy, onAbility, onSell, onDetonate, onUse }: { onB
     setText($('mp-text'), `${Math.floor(run.mana)}/${mm} 💧`);
     // riga con le statistiche della torre
     const s = run.stats;
-    setText($('stats-line'), `${weaponDef(run.weapon!).icon} ⚔️ ${fmt(s.dmg)} dmg/shot · ⚡ ${s.rate.toFixed(1)} shots/s · 📡 ${Math.round(s.range)} range · 💧 +${s.manaRegen.toFixed(1)} mana/s`);
+    const sl = $('stats-line')!;
+    sl.innerHTML = `<span>${weaponDef(run.weapon!).icon} ⚔️ ${fmt(s.dmg)}/shot</span><span>⚡ ${s.rate.toFixed(1)} shots/s</span><span>📡 ${Math.round(s.range)} range</span><span>💧 +${s.manaRegen.toFixed(1)}/s</span>`;
 
     const recUpgrade = run.phase !== 'over' ? domUpgradeAdvice(run) : null;
     for (const def of UPGRADES) {

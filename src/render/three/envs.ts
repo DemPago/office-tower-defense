@@ -235,26 +235,106 @@ export function buildParkingEnv(g: THREE.Group) {
 }
 
 export function buildArchiveEnv(g: THREE.Group) {
-  const mat    = new THREE.MeshLambertMaterial({ color: 0x606858 });
-  const matTop = new THREE.MeshLambertMaterial({ color: 0x3a4038 });
+  const mat      = new THREE.MeshLambertMaterial({ color: 0x606858 });
+  const matTop   = new THREE.MeshLambertMaterial({ color: 0x3a4038 });
+  const matPaper = new THREE.MeshLambertMaterial({ color: 0xd8d2be });
+  const matBox   = new THREE.MeshLambertMaterial({ color: 0xb09060 });
+  const matBoxLid= new THREE.MeshLambertMaterial({ color: 0x8a6e42 });
+
+  // Schedari — file ordinate con altezze variabili e pile di carta sopra
   let ci = 0;
   for (let ry = 30; ry < WORLD.h - 30; ry += 80) {
     for (let sx = 10; sx < WORLD.w - 20; sx += 60) {
       const cx = sx + 16, cy = ry + 26;
       if (nearTower(cx, cy)) continue;
-      const h = (ci % 3 === 0) ? 0.95 : 0.70;
-      const cab = new THREE.Mesh(new THREE.BoxGeometry(0.50, h, 0.38), mat);
-      cab.position.set(wx(cx), h / 2, wz(cy));
-      const lid = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.04, 0.40), matTop);
-      lid.position.y = h / 2 + 0.02;
-      cab.add(lid);
-      g.add(cab); ci++;
+      // Colonna di 1-3 schedari sovrapposti
+      const stack = 1 + (ci % 3 === 0 ? 1 : 0);
+      let yBase = 0;
+      for (let s = 0; s < stack; s++) {
+        const h = (ci % 5 === 0) ? 0.95 : 0.70;
+        const cab = new THREE.Mesh(new THREE.BoxGeometry(0.50, h, 0.38), mat);
+        cab.position.set(wx(cx), yBase + h / 2, wz(cy));
+        const lid = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.04, 0.40), matTop);
+        lid.position.y = h / 2 + 0.02;
+        cab.add(lid);
+        g.add(cab);
+        yBase += h + 0.04;
+      }
+      // Pile di carta/scatole sopra ogni schedaio
+      if (ci % 4 !== 0) {
+        const paperH = 0.06 + (ci % 3) * 0.04;
+        const paper = new THREE.Mesh(new THREE.BoxGeometry(0.44, paperH, 0.30), matPaper);
+        paper.position.set(wx(cx), yBase + paperH / 2, wz(cy));
+        g.add(paper);
+      }
+      ci++;
     }
   }
+
+  // Scatoloni sparsi — pratiche archiviate
+  for (let i = 0; i < 30; i++) {
+    const bx = 40 + (i * 137) % (WORLD.w - 80);
+    const by = 40 + (i * 97 + 30) % (WORLD.h - 80);
+    if (nearTower(bx, by, 50)) continue;
+    const bw = 0.30 + (i % 3) * 0.08, bh = 0.28, bd = 0.22 + (i % 2) * 0.06;
+    const box = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), matBox);
+    box.position.set(wx(bx), bh / 2, wz(by));
+    box.rotation.y = (i * 0.9) % (Math.PI * 2);
+    const lid = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.02, 0.04, bd + 0.02), matBoxLid);
+    lid.position.y = bh / 2 + 0.02;
+    box.add(lid);
+    g.add(box);
+    // A volte impilati
+    if (i % 4 === 0 && !nearTower(bx, by, 55)) {
+      const box2 = new THREE.Mesh(new THREE.BoxGeometry(bw * 0.9, bh * 0.9, bd * 0.9), matBox);
+      box2.position.set(wx(bx), bh + bh * 0.45, wz(by));
+      box2.rotation.y = (i * 0.5);
+      g.add(box2);
+    }
+  }
+
+  // Carrelli portadocumenti
+  const matCart = new THREE.MeshLambertMaterial({ color: 0x9a9070 });
+  const matCartBar = new THREE.MeshLambertMaterial({ color: 0x666a60 });
+  for (let i = 0; i < 14; i++) {
+    const cx = 50 + (i * 113) % (WORLD.w - 100);
+    const cy = 50 + (i * 89 + 40) % (WORLD.h - 100);
+    if (nearTower(cx, cy, 50)) continue;
+    const cart = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.50, 0.25), matCart);
+    cart.position.set(wx(cx), 0.25, wz(cy));
+    cart.rotation.y = (i * 1.1) % (Math.PI * 2);
+    // Ripiani
+    for (let sh = 0; sh < 2; sh++) {
+      const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.02, 0.25), matCartBar);
+      shelf.position.y = -0.12 + sh * 0.24;
+      cart.add(shelf);
+    }
+    g.add(cart);
+  }
+
+  // Barriere di sicurezza archivio (construction-barrier)
+  const barrTemplate = modelCache.get('construction-barrier');
+  if (barrTemplate) {
+    const BARR_POS: [number, number][] = [
+      [TOWER.x - 160, TOWER.y - 160], [TOWER.x + 160, TOWER.y - 160],
+      [TOWER.x - 160, TOWER.y + 160], [TOWER.x + 160, TOWER.y + 160],
+      [TOWER.x - 200, TOWER.y], [TOWER.x + 200, TOWER.y],
+    ];
+    BARR_POS.forEach(([bx, by], i) => {
+      if (nearTower(bx, by, 60)) return;
+      const barr = barrTemplate.clone();
+      barr.scale.setScalar(0.28);
+      barr.position.set(wx(bx), 0, wz(by));
+      barr.rotation.y = (i * Math.PI / 3);
+      g.add(barr);
+    });
+  }
+
+  // Lampade da soffitto (su palo basso, archivio sotterraneo)
   const matLamp = new THREE.MeshLambertMaterial({ color: 0x888880 });
   const matDiff = new THREE.MeshBasicMaterial({ color: 0xfff8d8 });
-  for (let cx = 120; cx < WORLD.w - 80; cx += 140) {
-    for (let cy = 120; cy < WORLD.h - 80; cy += 140) {
+  for (let cx = 100; cx < WORLD.w - 60; cx += 120) {
+    for (let cy = 100; cy < WORLD.h - 60; cy += 120) {
       if (nearTower(cx, cy)) continue;
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.40, 5), matLamp);
       pole.position.set(wx(cx), 0.50, wz(cy));
@@ -266,15 +346,6 @@ export function buildArchiveEnv(g: THREE.Group) {
       pole.add(bulb);
       g.add(pole);
     }
-  }
-  const matCart = new THREE.MeshLambertMaterial({ color: 0x9a9070 });
-  for (let i = 0; i < 12; i++) {
-    const cx = 50 + (i * 113) % (WORLD.w - 100);
-    const cy = 50 + (i * 89 + 40) % (WORLD.h - 100);
-    if (nearTower(cx, cy, 50)) continue;
-    const cart = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.50, 0.25), matCart);
-    cart.position.set(wx(cx), 0.25, wz(cy));
-    g.add(cart);
   }
 }
 
