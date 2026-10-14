@@ -47,16 +47,7 @@ export function build(g: CanvasRenderingContext2D, rnd: () => number, data?: any
       P.rect(g, sx, ry, 1, 34, 'rgba(220,215,195,0.6)');
       P.rect(g, sx, ry + 34, 22, 1, 'rgba(220,215,195,0.4)');
       if (!opts?.skipCars && rnd() < 0.7) P.italianCar(g, sx + 3, ry + 3, kinds[Math.floor(rnd() * kinds.length)], colors[Math.floor(rnd() * colors.length)], rnd() < 0.15, rnd);
-      else if (rnd() < 0.25) P.moto(g, sx + 8, ry + 4, colors[Math.floor(rnd() * colors.length)]);
       else if (rnd() < 0.3) P.trash(g, sx + 10, ry + 20, rnd);
-    }
-  }
-  // Camion parcheggiati lungo il bordo
-  if (!opts?.skipCars) {
-    const truckColors = ['#e8e2d0', '#d9c040', '#b02030', '#2f4f6f', '#3a3c42'];
-    for (let i = 0; i < many(3); i++) {
-      const tx = AREA.x + 20 + Math.floor(rnd() * 3) * 90, ty = AREA.y + 10 + Math.floor(rnd() * 4) * 80;
-      if (free(tx + 20, ty + 30, 30)) P.truck(g, tx, ty, truckColors[Math.floor(rnd() * truckColors.length)], rnd() < 0.1, rnd);
     }
   }
   // Crepe, erbacce, macchie
@@ -69,7 +60,6 @@ export function build(g: CanvasRenderingContext2D, rnd: () => number, data?: any
   scatter(rnd, many(30), 6,  (x: number, y: number) => P.stain(g, x, y, 5 + rnd() * 10, 3 + rnd() * 5));
   scatter(rnd, many(10), 14, (x: number, y: number) => P.puddle(g, x, y, 10 + rnd() * 10, 4 + rnd() * 4));
   scatter(rnd, many(8),  10, (x: number, y: number) => P.manhole(g, x, y));
-  scatter(rnd, many(6),  16, (x: number, y: number) => P.parkingMeter(g, x, y));
   scatter(rnd, many(40), 10, (x: number, y: number, r: number) => {
     if      (r < 0.20) P.cone(g, x, y);
     else if (r < 0.35) P.barrel(g, x, y, rnd() < 0.5 ? PAL.rust : '#2f4f6f');
