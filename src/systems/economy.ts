@@ -23,6 +23,7 @@ export function buyUpgrade(run: Run, meta: Meta, id: string): boolean {
 // Se la vita massima sale, la differenza viene aggiunta anche alla vita attuale.
 export function refreshStats(run: Run, meta: Meta): void {
   const oldMax = run.stats.maxHp;
+  const oldManaMax = run.stats.manaMax;
   run.stats = computeStats(run, meta);
   const t = run.tower;
   if (run.healFull) {
@@ -31,4 +32,5 @@ export function refreshStats(run: Run, meta: Meta): void {
   } else {
     t.hp = Math.min(run.stats.maxHp, t.hp + Math.max(0, run.stats.maxHp - oldMax));
   }
+  run.mana = Math.min(run.stats.manaMax, run.mana + Math.max(0, run.stats.manaMax - oldManaMax));
 }

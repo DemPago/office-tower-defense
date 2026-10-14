@@ -357,6 +357,86 @@ export function palm(g: Ctx, x: number, y: number): void {
   }
 }
 
+// Camion da consegna (vista dall'alto) — cab ~20px + cassone ~36px = 56px totali
+export function truck(g: Ctx, x: number, y: number, color: string, broken: boolean = false, rnd: () => number = Math.random): void {
+  const cw = 22, cabH = 18, boxH = 36;
+  const total = cabH + boxH;
+  shadow(g, x + 2, y + total - 1, cw, 6);
+  // Ruote
+  for (const [wx, wy] of [[-2,4],[cw,4],[-2,12],[cw,12],[-2,cabH+6],[cw,cabH+6],[-2,cabH+18],[cw,cabH+18]] as [number,number][]) {
+    rect(g, x + wx, y + wy, 3, 6, '#0b0b0d');
+  }
+  // Contorno scuro
+  rect(g, x - 1, y, cw + 2, total, PAL.black);
+  // Cassone
+  rect(g, x, y + cabH, cw, boxH, color);
+  rect(g, x, y + cabH, 1.5, boxH, shade(color, 1.3));
+  rect(g, x + cw - 1.5, y + cabH, 1.5, boxH, shade(color, 0.65));
+  rect(g, x, y + cabH, cw, 2, shade(color, 1.2));
+  // Pannelli laterali del cassone
+  for (let i = 4; i < boxH - 4; i += 8) {
+    rect(g, x + 2, y + cabH + i, cw - 4, 1, shade(color, 0.75));
+    rect(g, x + 2, y + cabH + i + 1, cw - 4, H, shade(color, 1.15));
+  }
+  // Portellone posteriore
+  rect(g, x + 1, y + cabH + boxH - 5, cw - 2, 4, shade(color, 0.8));
+  rect(g, x + cw / 2 - 2, y + cabH + boxH - 4, 4, 2, PAL.steel);
+  // Cab
+  rect(g, x, y, cw, cabH, shade(color, 0.88));
+  rect(g, x, y, 1.5, cabH, shade(color, 1.2));
+  rect(g, x + cw - 1.5, y, 1.5, cabH, shade(color, 0.6));
+  rect(g, x, y, cw, 1.5, shade(color, 1.3)); // cofano top
+  // Parabrezza
+  rect(g, x + 2, y + 5, cw - 4, 7, broken ? '#060607' : PAL.glass);
+  if (!broken) {
+    for (let k = 0; k < 3; k++) rect(g, x + 3 + k * 2, y + 6 + k, H, H, '#6f8597');
+    rect(g, x + 12, y + 7, 3, H, '#4b6075');
+  }
+  // Fari e frecce
+  rect(g, x + 1, y, 4, 1, PAL.fluo);
+  rect(g, x + cw - 5, y, 4, 1, PAL.fluo);
+  rect(g, x + 1, y + cabH + boxH - 1, 4, 1, PAL.red);
+  rect(g, x + cw - 5, y + cabH + boxH - 1, 4, 1, PAL.red);
+  if (broken) {
+    for (let i = 0; i < 10; i++) rect(g, x + rnd() * (cw - 2), y + cabH + rnd() * (boxH - 2), 1.5, 1, i % 2 ? PAL.rust : PAL.rustHi);
+  }
+}
+
+// Moto parcheggiat (vista dall'alto) — stretta e allungata
+export function moto(g: Ctx, x: number, y: number, color: string): void {
+  const w = 7, h = 22;
+  shadow(g, x + 1, y + h - 1, w, 3);
+  // Ruote
+  rect(g, x + 1, y, w - 2, 4, PAL.black);
+  rect(g, x + 2, y + H, w - 4, 3, '#2a2c32');
+  rect(g, x + 1, y + h - 4, w - 2, 4, PAL.black);
+  rect(g, x + 2, y + h - 3.5, w - 4, 3, '#2a2c32');
+  // Corpo
+  rect(g, x + 1, y + 4, w - 2, h - 8, color);
+  rect(g, x + 1, y + 4, 1, h - 8, shade(color, 1.3));
+  rect(g, x + w - 2, y + 4, 1, h - 8, shade(color, 0.65));
+  // Sella
+  rect(g, x + 2, y + 9, w - 4, 6, PAL.black);
+  rect(g, x + 2, y + 9, w - 4, 1, '#3a3a42');
+  // Specchietti
+  rect(g, x - 1, y + 5, 2, 2, PAL.steel);
+  rect(g, x + w - 1, y + 5, 2, 2, PAL.steel);
+  // Fari
+  rect(g, x + 2, y, w - 4, 1, PAL.fluo);
+  rect(g, x + 2, y + h - 1, w - 4, 1, PAL.red);
+}
+
+// Parcometro (cassa parcheggio)
+export function parkingMeter(g: Ctx, x: number, y: number): void {
+  rect(g, x - 1, y - 20, 4, 21, PAL.black);
+  rect(g, x, y - 20, 2, 20, PAL.steel);
+  rect(g, x, y - 20, 1, 20, PAL.grey);
+  framed(g, x - 3, y - 28, 8, 8, PAL.hazard);
+  rect(g, x - 2, y - 27, 6, 2, shade(PAL.hazard, 1.2));
+  rect(g, x - 2, y - 24, 6, 1, PAL.black);
+  rect(g, x - 1, y - 22, 4, 1, PAL.black);
+}
+
 export function kiosk(g: Ctx, x: number, y: number, color: string, label: string): void {
   shadow(g, x + 2, y + 1, 34, 4);
   framed(g, x, y - 23, 34, 24, '#3a3c42');
