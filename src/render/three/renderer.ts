@@ -77,14 +77,48 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
     m.position.y = 0.003;
     return m;
   });
-  const bombPool  = new MeshPool(scene, () => new THREE.Mesh(
-    new THREE.SphereGeometry(0.14, 8, 6),
-    new THREE.MeshStandardMaterial({ color: 0x1a1a1c, emissive: 0x000000, roughness: 0.6, metalness: 0.3 }),
-  ));
+  // Gruppo bomba: sfera scura + miccia + scintilla
+  const bombPool = new MeshPool(scene, () => {
+    const grp = new THREE.Group();
+    // Sfera principale
+    const sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.13, 16, 12),
+      new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.55, metalness: 0.45 }),
+    );
+    sphere.name = 'body';
+    grp.add(sphere);
+    // Occhiello in cima
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(0.028, 0.010, 6, 10),
+      new THREE.MeshLambertMaterial({ color: 0x555560 }),
+    );
+    ring.position.y = 0.13;
+    ring.rotation.x = Math.PI / 2;
+    grp.add(ring);
+    // Miccia (cilindro curvo simulato con due segmenti)
+    const fuseMat = new THREE.MeshLambertMaterial({ color: 0xc87820 });
+    const fuse1 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.14, 5), fuseMat);
+    fuse1.position.set(0.04, 0.20, 0);
+    fuse1.rotation.z = -0.4;
+    grp.add(fuse1);
+    const fuse2 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.10, 5), fuseMat);
+    fuse2.position.set(0.10, 0.30, 0);
+    fuse2.rotation.z = 0.3;
+    grp.add(fuse2);
+    // Scintilla (sfera emissive in cima alla miccia)
+    const spark = new THREE.Mesh(
+      new THREE.SphereGeometry(0.028, 7, 5),
+      new THREE.MeshBasicMaterial({ color: 0xffe040 }),
+    );
+    spark.name = 'spark';
+    spark.position.set(0.16, 0.36, 0);
+    grp.add(spark);
+    return grp as unknown as THREE.Mesh;
+  });
   const BOMB_RADIUS_3D = 70 * S;
   const bombRingPool = new MeshPool(scene, () => new THREE.Mesh(
-    new THREE.RingGeometry(BOMB_RADIUS_3D - 0.04, BOMB_RADIUS_3D + 0.04, 48),
-    new THREE.MeshBasicMaterial({ color: 0xff6400, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }),
+    new THREE.CircleGeometry(BOMB_RADIUS_3D, 48),
+    new THREE.MeshBasicMaterial({ color: 0xff5500, transparent: true, opacity: 0.10, side: THREE.DoubleSide, depthWrite: false }),
   ));
   const wallPool  = new MeshPool(scene, () => new THREE.Mesh(new THREE.BoxGeometry(1, WALL_H, 0.08), new THREE.MeshLambertMaterial({ color: 0xbfa574 })));
   const beamPool = new MeshPool(scene, () => new THREE.Mesh(
@@ -533,17 +567,19 @@ export function createThreeRenderer(canvas: HTMLCanvasElement, _assets: unknown)
     bombRingPool.reset();
     if (run) for (const b of (run as any).bombs ?? []) {
       if (b.detonated) continue;
-      const m = bombPool.get();
-      m.position.set(wx(b.x), 0.18, wz(b.y));
-      const pulse = 1 + Math.sin(now * 12 + b.x) * 0.15;
-      m.scale.setScalar(pulse);
-      (m.material as THREE.MeshStandardMaterial).emissive.setHex(
-        Math.sin(now * 12 + b.x) > 0.3 ? 0xffe040 : 0x000000
-      );
+      const grp = bombPool.get() as unknown as THREE.Group;
+      grp.position.set(wx(b.x), 0.14, wz(b.y));
+      const sparkOn = Math.sin(now * 14 + b.x) > 0;
+      const spark = grp.getObjectByName('spark') as THREE.Mesh | undefined;
+      if (spark) {
+        spark.visible = sparkOn;
+        (spark.material as THREE.MeshBasicMaterial).color.setHex(sparkOn ? 0xffffff : 0xffe040);
+        spark.scale.setScalar(sparkOn ? 1.4 + Math.sin(now * 30 + b.x) * 0.4 : 1);
+      }
       if (run.phase === 'bomb-placement') {
         const ring = bombRingPool.get();
         ring.rotation.x = -Math.PI / 2;
-        ring.position.set(wx(b.x), 0.02, wz(b.y));
+        ring.position.set(wx(b.x), 0.005, wz(b.y));
       }
     }
 
