@@ -49,8 +49,8 @@ export function drawPerson(g: CanvasRenderingContext2D, L: Look, frame: number) 
   const legW = L.build === 'huge' ? 7 : L.build === 'fat' ? 6 : L.build === 'thin' ? 4 : 5;
   const pants = L.pants || '#2a2a2e';
   const shoes = L.shoes || INK;
-  const liftL = frame === 0 ? 2 : 0, liftR = frame === 2 ? 2 : 0;
-  const swing = [2, 0, -2, 0][frame];
+  const liftL = frame === 0 ? 3 : 0, liftR = frame === 2 ? 3 : 0;
+  const swing = [4, 1, -4, -1][frame];
   const skinDk = shade(L.skin, 0.82);
 
   // Mantello (dietro a tutto): si allarga verso il basso, con bordo dorato

@@ -122,28 +122,41 @@ function drawSushiEnemy(ctx: CanvasRenderingContext2D, e: EnemyExt) {
 export function drawEnemy(ctx: CanvasRenderingContext2D, assets: Assets, e: EnemyExt) {
   if (e.sushi) { drawSushiEnemy(ctx, e); return; }
   const s = e.size, k = e.scale || 1;
-  const frame = e.moving ? Math.floor((e.anim ?? 0) * 2.5) % FRAMES : 1;
+  const t = performance.now() / 1000;
+  // Idle: alterna frame 0↔1 lentamente per dare l'impressione di respiro/dondolio
+  const idleFrame = Math.floor(t * 1.4) % 2;
+  const frame = e.moving ? Math.floor((e.anim ?? 0) * 2.5) % FRAMES : idleFrame;
   let x = e.x, feet = e.y;
-  if (e.moving) feet -= Math.abs(Math.sin((e.anim ?? 0) * Math.PI)) * k; // saltello mentre cammina
+  if (e.moving) {
+    feet -= Math.abs(Math.sin((e.anim ?? 0) * Math.PI)) * k; // saltello mentre cammina
+  } else {
+    feet -= 0.5 + 0.5 * Math.sin(t * 1.6); // respiro idle
+  }
   if (e.lunge > 0) {
-    // scatto verso il palazzo quando colpisce
     const d = Math.hypot(TOWER.x - e.x, TOWER.y - e.y) || 1;
     x += (TOWER.x - e.x) / d * 5;
     feet += (TOWER.y - e.y) / d * 5;
   }
-  const y = Math.round(feet - s); // cima della testa, per barre e simboli
+  const y = Math.round(feet - s);
 
-  ctx.globalAlpha = Math.min(1, (e.age || 0) / 0.4); // compare in dissolvenza
+  ctx.globalAlpha = Math.min(1, (e.age || 0) / 0.4);
   if (e.boss) drawBossAura(ctx, e, x, feet, s);
+
+  // Dondolio del corpo: durante la camminata inclina leggermente (effetto passo naturale),
+  // da fermo oscilla piano come respiro.
+  const tilt = e.moving
+    ? Math.sin((e.anim ?? 0) * Math.PI * 2) * 0.038
+    : Math.sin(t * 1.6) * 0.012;
+  ctx.save();
+  ctx.translate(x, feet);
   if (e.zombie) {
-    // barcolla: lo sprite oscilla attorno ai piedi
-    ctx.save();
-    ctx.translate(x, feet);
-    ctx.rotate(Math.sin((e.anim ?? 0) * 2.2) * 0.09);
-    ctx.translate(-x, -feet);
+    ctx.rotate(Math.sin((e.anim ?? 0) * 2.2) * 0.09 + tilt);
+  } else {
+    ctx.rotate(tilt);
   }
+  ctx.translate(-x, -feet);
   drawPersonAt(ctx, enemySprite(assets, e, frame), x, feet, facesLeft(e));
-  if (e.zombie) ctx.restore();
+  ctx.restore();
   if (e.enraged) {
     // infuriato: trema e pulsa di rosso
     x += Math.round(Math.sin((e.age || 0) * 30) * 1.5);

@@ -205,10 +205,31 @@ function drawCastle(ctx: CanvasRenderingContext2D, assets: any, run: Run | null,
   ctx.restore();
   // Protagonist on roof
   if (dead) return;
+  drawHeroOnRoof(ctx, assets, run, time, B);
+}
+
+function drawHeroOnRoof(ctx: CanvasRenderingContext2D, assets: any, run: Run | null, time: number, B: { top: number }) {
+  const hero = run ? run.hero : 'peppe';
+  const phase = run?.phase;
   const recoil = run && run.tower.recoil! > 0 ? 1 : 0;
-  const bob = Math.round(Math.sin(time * 2.2) * 0.6);
-  const feet = B.top - 3 + recoil + bob;
-  drawPersonAt(ctx, assets.person(run ? run.hero : 'peppe', 0, 1), TOWER.x + 4, feet);
+  // Balletto: a fine ondata (break/cards/ally) l'eroe esulta — ciclo rapido + salto
+  const celebrate = phase === 'break' || phase === 'cards' || phase === 'ally';
+  const heroFrame = celebrate
+    ? Math.floor(time * 9) % 4          // cammina sul posto veloce
+    : Math.floor(time * 1.4) % 2;       // dondolio idle normale
+  const bob = celebrate
+    ? Math.abs(Math.sin(time * 9)) * -3 // saltella
+    : Math.sin(time * 1.8) * 1.2;       // respiro
+  const tilt = celebrate
+    ? Math.sin(time * 9) * 0.08         // ondeggia vistoso
+    : Math.sin(time * 1.8) * 0.018;     // dondolio minimo
+  const feet = B.top - 3 + recoil + Math.round(bob);
+  ctx.save();
+  ctx.translate(TOWER.x + 4, feet);
+  ctx.rotate(tilt);
+  ctx.translate(-(TOWER.x + 4), -feet);
+  drawPersonAt(ctx, assets.person(hero, heroFrame, 1), TOWER.x + 4, feet);
+  ctx.restore();
   if (recoil) {
     const fx = TOWER.x + 5, fy = feet - 15;
     ctx.fillStyle = PAL.white; ctx.fillRect(fx - 2, fy - 2, 5, 5);
@@ -371,13 +392,13 @@ export function drawTower(ctx: CanvasRenderingContext2D, assets: any, run: Run |
   if (dead) return;
 
   // Il protagonista sul tetto: elmetto e giubbotto catarifrangente
-  const recoil = run && run.tower.recoil! > 0 ? 1 : 0;
-  const bob = Math.round(Math.sin(time * 2.2) * 0.6);
-  const feet = B.top - 3 + recoil + bob;
-  drawPersonAt(ctx, assets.person(run ? run.hero : 'peppe', 0, 1), TOWER.x + 4, feet);
+  drawHeroOnRoof(ctx, assets, run, time, B);
   // Lampo allo sparo
-  if (recoil) {
-    const fx = TOWER.x + 5, fy = feet - 15;
+  if (run && run.tower.recoil! > 0) {
+    const phase = run.phase, celebrate = phase === 'break' || phase === 'cards' || phase === 'ally';
+    const bob = celebrate ? Math.abs(Math.sin(time * 9)) * -3 : Math.sin(time * 1.8) * 1.2;
+    const fy = B.top - 3 + Math.round(bob) - 15;
+    const fx = TOWER.x + 5;
     ctx.fillStyle = PAL.white;
     ctx.fillRect(fx - 2, fy - 2, 5, 5);
     ctx.fillStyle = PAL.hazard;
