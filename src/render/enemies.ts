@@ -125,7 +125,7 @@ export function drawEnemy(ctx: CanvasRenderingContext2D, assets: Assets, e: Enem
   const t = performance.now() / 1000;
   // Idle: alterna frame 0↔1 lentamente per dare l'impressione di respiro/dondolio
   const idleFrame = Math.floor(t * 1.4) % 2;
-  const frame = e.moving ? Math.floor((e.anim ?? 0) * 2.5) % FRAMES : idleFrame;
+  const frame = e.moving ? Math.floor((e.anim ?? 0) * 5) % FRAMES : idleFrame;
   let x = e.x, feet = e.y;
   if (e.moving) {
     feet -= Math.abs(Math.sin((e.anim ?? 0) * Math.PI)) * k; // saltello mentre cammina
@@ -142,11 +142,12 @@ export function drawEnemy(ctx: CanvasRenderingContext2D, assets: Assets, e: Enem
   ctx.globalAlpha = Math.min(1, (e.age || 0) / 0.4);
   if (e.boss) drawBossAura(ctx, e, x, feet, s);
 
-  // Dondolio del corpo: durante la camminata inclina leggermente (effetto passo naturale),
-  // da fermo oscilla piano come respiro.
-  const tilt = e.moving
-    ? Math.sin((e.anim ?? 0) * Math.PI * 2) * 0.038
-    : Math.sin(t * 1.6) * 0.012;
+  // Tilt del corpo: lunge = scatto in avanti, cammino = dondolio naturale, boss idle = respiro lento.
+  const tilt = e.lunge > 0
+    ? (facesLeft(e) ? -0.22 : 0.22)
+    : e.moving
+      ? Math.sin((e.anim ?? 0) * Math.PI * 2) * 0.038
+      : Math.sin(t * (e.boss ? 0.8 : 1.6)) * (e.boss ? 0.018 : 0.012);
   ctx.save();
   ctx.translate(x, feet);
   if (e.zombie) {

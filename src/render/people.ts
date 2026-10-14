@@ -14,7 +14,7 @@ export const GRID = { w: 40, h: 68, top: 12 };
 // a mantelli larghi e oggetti in mano.
 const OX = 4;
 export const WORLD_PER_PX = 0.5;
-export const FRAMES = 4; // fotogrammi della camminata
+export const FRAMES = 8; // fotogrammi della camminata
 // Posizione degli occhi nella griglia (per gli occhi rossi dei nemici élite).
 export const EYES = { y: GRID.top + 10, xs: [12 + OX, 18 + OX] };
 
@@ -49,8 +49,10 @@ export function drawPerson(g: CanvasRenderingContext2D, L: Look, frame: number) 
   const legW = L.build === 'huge' ? 7 : L.build === 'fat' ? 6 : L.build === 'thin' ? 4 : 5;
   const pants = L.pants || '#2a2a2e';
   const shoes = L.shoes || INK;
-  const liftL = frame === 0 ? 3 : 0, liftR = frame === 2 ? 3 : 0;
-  const swing = [4, 1, -4, -1][frame];
+  // Ciclo a 8 frame: sinusoide liscia per gambe e braccia
+  const LIFTS: [number, number][] = [[4,0],[2,0],[0,0],[0,2],[0,4],[0,2],[0,0],[2,0]];
+  const [liftL, liftR] = LIFTS[frame % FRAMES] ?? [0, 0];
+  const swing = [4, 3, 1, -2, -4, -3, -1, 2][frame % FRAMES] ?? 0;
   const skinDk = shade(L.skin, 0.82);
 
   // Mantello (dietro a tutto): si allarga verso il basso, con bordo dorato
