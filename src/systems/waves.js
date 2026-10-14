@@ -62,7 +62,7 @@ export function makeEnemy(def, w, extra = {}) {
     size: 28,
     attackCd: 1,
     slowT: 0, slowF: 0, stunT: 0, dotT: 0, dotDps: 0,
-    hitFlash: 0, anim: Math.random(),
+    hitFlash: 0, anim: Math.random(), driftPhase: Math.random() * Math.PI * 2,
     boss: false,
     ...extra,
   };

@@ -32,7 +32,18 @@ export function updateEnemies(run, dt) {
       sfx(run, 'charge');
     }
     const speed = e.speed * (e.slowT > 0 ? 1 - e.slowF : 1) * (e.charging ? e.charge.mult : 1);
-    const nx = e.x + (TOWER.x - e.x) / d * speed * dt, ny = e.y + (TOWER.y - e.y) / d * speed * dt;
+    // Direzione normalizzata verso la torre
+    const dirX = (TOWER.x - e.x) / d, dirY = (TOWER.y - e.y) / d;
+    // Componente laterale: cecchini zigzagano (difficili da colpire), gli altri derivano leggermente
+    // così non convergono tutti sullo stesso punto. Boss e kamikaze in carica vanno dritti.
+    let latV = 0;
+    if (!e.boss && !e.charging) {
+      latV = e.role === 'sniper'
+        ? Math.sin(e.age * 2.8) * 22
+        : Math.sin(e.age * 1.1 + e.driftPhase) * 6;
+    }
+    const nx = e.x + (dirX * speed - dirY * latV) * dt;
+    const ny = e.y + (dirY * speed + dirX * latV) * dt;
     // Muro: chi va a piedi si ferma a sfondarlo (il kamikaze ci esplode contro)
     const wallSeg = d > stopAt && e.range === 0 ? blockingSegment(run, e, nx, ny) : null;
     if (wallSeg) {
