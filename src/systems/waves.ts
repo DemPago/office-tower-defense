@@ -19,7 +19,7 @@ export const WAVE_CONFIG = {
   // Velocità per posizione nel ciclo (pos 1–9, boss=pos 0 usa 1.0)
   speed: { min: 0.25, max: 2.0 },   // waveSpeedMult = min + ((pos-1)/8)*(max-min)
   // Numero nemici per posizione nel ciclo (1–3 / 4–6 / 7–9)
-  count: { early: 50, mid: 75, late: 100, boss: 50 },
+  count: { early: 30, mid: 45, late: 65, boss: 30 },
   // Bonus HP per reparto: +12% ogni reparto completato (max 5 reparti)
   deptHpBonus: 0.12,
   // HP boss = danno_per_colpo × bossHpMultiplier (diviso per group size)

@@ -75,11 +75,12 @@ button:disabled { cursor: default; }
 #wave { color: var(--hazard); white-space: nowrap; font-size: 9px; }
 #enemy-count {
   color: var(--white);
-  font-size: 8px;
+  font-size: 11px;
   white-space: nowrap;
-  background: rgba(0,0,0,.30);
-  padding: 1px 5px;
-  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.40);
+  padding: 2px 7px;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 2px;
 }
 #enemy-count:empty { display: none; }
 #gold-box {
@@ -293,17 +294,40 @@ button:disabled { cursor: default; }
 /* Suggerimento sui pulsanti */
 #tip {
   position: fixed; z-index: 50; pointer-events: none;
-  max-width: 260px;
-  padding: 10px 12px;
-  background: var(--char);
+  max-width: 280px;
+  background: var(--ink);
   border: 2px solid var(--hazard);
-  box-shadow: 4px 4px 0 rgba(0,0,0,.5);
+  box-shadow: 0 0 0 1px var(--ink), 6px 6px 0 rgba(0,0,0,.7);
   font-size: 8px; line-height: 1.7; color: var(--white);
+  overflow: hidden;
 }
-#tip b { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; color: var(--hazard); font-weight: normal; font-size: 9px; margin-bottom: 6px; }
-#tip .tip-extra { color: var(--grey); font-size: 7px; white-space: nowrap; }
-#tip p + p { margin-top: 6px; }
-#tip .tip-cost { color: var(--toxic); }
+/* Header con sfondo hazard */
+#tip b {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  background: var(--hazard);
+  color: var(--ink);
+  font-weight: normal; font-size: 8px;
+  padding: 5px 10px;
+  margin: 0;
+}
+#tip .tip-extra {
+  color: rgba(13,13,15,0.65);
+  font-size: 7px; white-space: nowrap;
+}
+/* Corpo */
+#tip p {
+  padding: 0 10px;
+  color: var(--white);
+}
+#tip p:first-of-type { padding-top: 8px; }
+#tip p:last-of-type  { padding-bottom: 8px; }
+#tip p + p { margin-top: 5px; }
+#tip .tip-cost {
+  color: var(--toxic);
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding-top: 6px !important;
+  margin-top: 6px;
+}
 
 /* ─── Schermate sovrapposte ─────────────────────────────────── */
 .overlay {
