@@ -134,6 +134,19 @@
       </div>
       <div id="hero-list"></div>
       <div id="hero-info"></div>
+      <div class="game-settings">
+        <div class="gs-group">
+          <span class="gs-label">Difficulty</span>
+          <button id="diff-easy"   class="gs-btn diff-btn">🟢 Easy</button>
+          <button id="diff-normal" class="gs-btn diff-btn active">🟡 Normal</button>
+          <button id="diff-hard"   class="gs-btn diff-btn">🔴 Hard</button>
+        </div>
+        <div class="gs-group">
+          <span class="gs-label">Render</span>
+          <button id="rt-2d" class="gs-btn">2D</button>
+          <button id="rt-3d" class="gs-btn">3D</button>
+        </div>
+      </div>
       <button id="btn-play" class="btn big">▶ PLAY</button>
       <div class="menu-nav-grid">
         <button id="btn-shop" class="menu-nav-card">
@@ -153,13 +166,9 @@
         </button>
       </div>
       <div class="support">
-        <a id="kofi" class="kofi-button" href="https://ko-fi.com/dem420156" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee</a>
-        <p class="dim">Like it? Share it:</p>
-        <div id="share-menu" class="share-row"></div>
-        <div id="renderer-toggle" class="renderer-toggle" title="Switch render mode (reloads page)">
-          <span class="rt-label">Render</span>
-          <button id="rt-2d" class="rt-btn">2D</button>
-          <button id="rt-3d" class="rt-btn">3D</button>
+        <div class="support-row">
+          <a id="kofi" class="kofi-button" href="https://ko-fi.com/dem420156" target="_blank" rel="noopener noreferrer">☕ Coffee</a>
+          <div id="share-menu" class="share-row"></div>
         </div>
       </div>
     </div>

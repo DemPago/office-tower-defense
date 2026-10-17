@@ -20,6 +20,7 @@ interface BoardRow {
   initials: string;
   wave: number;
   kills: number;
+  difficulty?: import('../data/difficulty.js').DifficultyId;
 }
 
 interface BoardData {
@@ -358,7 +359,8 @@ function renderBoard(list: HTMLElement, top: BoardData, mine: ScoreResult | null
     const li = document.createElement('li');
     const isMine = mine && (mine.id ? r.id === mine.id : r.ts === mine.ts);
     li.className = isMine ? 'me' : '';
-    li.innerHTML = `<span class="pos">${i + 1}</span><span class="ini">${r.initials}</span><span class="w">WAVE ${r.wave}</span><span class="k">${fmt(r.kills)}💀</span>`;
+    const diffLabel = r.difficulty === 'easy' ? '🟢' : r.difficulty === 'normal' ? '🟡' : r.difficulty === 'hard' ? '🔴' : '<span class="diff-legacy">Legacy</span>';
+    li.innerHTML = `<span class="pos">${i + 1}</span><span class="ini">${r.initials}</span><span class="w">WAVE ${r.wave}</span><span class="k">${fmt(r.kills)}💀</span><span class="diff">${diffLabel}</span>`;
     list.appendChild(li);
   });
 }

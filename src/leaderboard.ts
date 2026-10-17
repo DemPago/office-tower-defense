@@ -1,6 +1,7 @@
 // Classifica: online su Supabase se configurata (src/config.js), altrimenti solo locale.
 // Ogni punteggio viene salvato anche in locale, così la classifica funziona pure offline.
 import { SUPABASE } from './config.js';
+import type { DifficultyId } from './data/difficulty.js';
 
 const LOCAL_KEY = 'otd-v2-scores';
 const INITIALS_KEY = 'otd-v2-initials';
@@ -12,6 +13,7 @@ interface ScoreRow {
   kills: number;
   bosses: number;
   ts: number;
+  difficulty?: DifficultyId;
 }
 
 // ─── Locale ─────────────────────────────────────────────────────
@@ -66,7 +68,7 @@ async function submitOnline(row: ScoreRow) {
   const res = await fetch(`${SUPABASE.url}/rest/v1/scores?select=id`, {
     method: 'POST',
     headers: headers({ Prefer: 'return=representation' }),
-    body: JSON.stringify({ initials: row.initials, wave: row.wave, kills: row.kills, bosses: row.bosses }),
+    body: JSON.stringify({ initials: row.initials, wave: row.wave, kills: row.kills, bosses: row.bosses, difficulty: row.difficulty ?? null }),
   });
   if (!res.ok) throw new Error('Invio non riuscito: ' + res.status);
   const [saved] = await res.json();
@@ -95,13 +97,13 @@ export async function getTop(limit = 10) {
 }
 
 // Salva il punteggio. Restituisce { rank, id, ts, source }.
-export async function submitScore({ initials, wave, kills, bosses }: { initials: string; wave: number; kills: number; bosses: number }) {
+export async function submitScore({ initials, wave, kills, bosses, difficulty }: { initials: string; wave: number; kills: number; bosses: number; difficulty?: DifficultyId }) {
   try {
     localStorage.setItem(INITIALS_KEY, initials);
   } catch {
     // niente
   }
-  const row = { initials, wave, kills, bosses, ts: Date.now() };
+  const row = { initials, wave, kills, bosses, ts: Date.now(), difficulty };
   const localRank = saveLocal(row);
   if (online) {
     try {

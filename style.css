@@ -554,7 +554,7 @@ img.hero-illustrated-preview {
 
 .board { list-style: none; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 3px; }
 .board li {
-  display: grid; grid-template-columns: 28px 44px 1fr auto; align-items: center; gap: 6px;
+  display: grid; grid-template-columns: 28px 44px 1fr auto auto; align-items: center; gap: 6px;
   padding: 6px 8px; background: var(--asphalt); border: 2px solid var(--ink); text-align: left;
 }
 .board li:nth-child(1) .pos { color: var(--hazard); }
@@ -563,6 +563,8 @@ img.hero-illustrated-preview {
 .board .ini { color: var(--white); font-size: 10px; }
 .board .w { color: var(--grey); }
 .board .k { color: var(--grey); }
+.board .diff { font-size: 9px; text-align: right; }
+.board .diff-legacy { color: var(--grey); font-size: 7px; opacity: 0.6; }
 .board li.me { border-color: var(--hazard); background: #3a3420; animation: pulse 1s ease-in-out infinite alternate; }
 .board li.empty { display: block; text-align: center; color: var(--grey); }
 @keyframes pulse { to { background: #4a4224; } }
@@ -722,20 +724,26 @@ img.hero-illustrated-preview {
 .mnc-title { font-size: 7px; color: var(--white); margin-top: 1px; }
 .mnc-sub   { font-size: 5px; color: var(--grey); text-align: center; line-height: 1.5; }
 
-/* Toggle 2D/3D — ora nella sezione support in fondo */
-.renderer-toggle {
-  display: flex; align-items: center; gap: 6px;
+/* Barra impostazioni partita (difficoltà + 2D/3D) */
+.game-settings {
+  display: flex; gap: 8px; width: 100%; flex-wrap: wrap;
   background: var(--asphalt); border: 2px solid var(--ink);
-  padding: 5px 10px; box-sizing: border-box; flex-shrink: 0;
+  padding: 6px 10px;
 }
-.rt-label { font-size: 7px; color: var(--grey); flex: 1; }
-.rt-btn {
-  font-family: var(--font); font-size: 8px; cursor: pointer;
-  padding: 4px 10px; background: var(--char); color: var(--steel-hi);
-  border: 2px solid var(--steel); min-width: 0;
+.gs-group {
+  display: flex; align-items: center; gap: 4px; flex: 1;
 }
-.rt-btn.active { background: var(--cyan); color: var(--ink); border-color: var(--cyan); }
-.rt-btn:hover:not(.active) { background: var(--steel); }
+.gs-label {
+  font-family: var(--font); font-size: 6px; color: var(--grey);
+  margin-right: 2px; white-space: nowrap;
+}
+.gs-btn {
+  font-family: var(--font); font-size: 7px; cursor: pointer;
+  padding: 4px 8px; background: var(--char); color: var(--steel-hi);
+  border: 2px solid var(--steel); min-width: 0; flex: 1;
+}
+.gs-btn.active { background: var(--hazard); color: var(--ink); border-color: var(--hazard); }
+.gs-btn:hover:not(.active) { background: var(--steel); }
 /* Mobile: riduci ulteriormente */
 @media (max-width: 520px) {
   #menu-wrap { padding: 8px 10px 12px; gap: 7px; }
@@ -781,16 +789,18 @@ img.hero-illustrated-preview {
 
 /* Ko-fi e condivisione */
 .support {
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
   width: 100%;
   padding-top: 4px;
   border-top: 1px solid var(--steel);
 }
+.support-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+}
 .kofi-button {
   display: inline-block;
-  padding: 10px 22px;
+  padding: 6px 14px;
   background: #ff5e5b; color: #fff; text-decoration: none;
-  font-size: 10px; letter-spacing: 0.02em;
+  font-size: 8px; letter-spacing: 0.02em;
   border: 2px solid var(--ink);
   box-shadow: inset -2px -2px 0 rgba(0,0,0,.3), inset 2px 2px 0 rgba(255,255,255,.2);
   transition: background .15s;

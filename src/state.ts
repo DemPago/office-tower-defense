@@ -6,6 +6,7 @@ import { UPGRADES } from './data/upgrades.js';
 import { computeStats, metaBonuses } from './systems/stats.js';
 import { unlockedHeroes, heroDef } from './data/heroes.js';
 import { buildWall, repairWall } from './systems/wall.js';
+import { setDifficulty, DIFF } from './data/difficulty.js';
 
 // Mondo di gioco in pixel logici: un quadrato con la torre al centro,
 // attaccabile da tutte le direzioni (360°).
@@ -18,6 +19,7 @@ export const SPAWN_RADIUS = 330;
 export const YARD = { x: TOWER.x - 50, y: TOWER.y - 46, w: 100, h: 92 };
 
 export function createRun(meta: Meta): Run {
+  setDifficulty(meta.difficulty ?? 'normal');
   const mb = metaBonuses(meta);
   const fx: FxState = {
     texts: [], parts: [], rings: [], corpses: [], sounds: [],
@@ -32,7 +34,8 @@ export function createRun(meta: Meta): Run {
     breakTimer: 1.5,
     wave: 0,
     time: 0,
-    gold: 20 + mb.startGold,
+    gold: 20 + mb.startGold + DIFF.startGold,
+    difficulty: meta.difficulty ?? 'normal',
     rerolls: mb.rerolls,
     kills: 0,
     bossesKilled: 0,

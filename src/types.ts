@@ -19,7 +19,8 @@ export interface Meta {
   hero?: string;
   heroes?: string[];
   tutorialDone?: boolean;
-  badges?: string[];   // id dei badge romani sbloccati
+  badges?: string[];
+  difficulty?: import('./data/difficulty.js').DifficultyId;
 }
 
 // ─── Statistiche calcolate della torre ──────────────────────────────────────
@@ -316,4 +317,5 @@ export interface Run {
   newHero?: string | null;
   // badge romano guadagnato in questa run
   newBadge?: string;
+  difficulty: import('./data/difficulty.js').DifficultyId;
 }

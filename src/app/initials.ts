@@ -25,7 +25,7 @@ export function createInitials(app: any) {
     ($('btn-save-score') as HTMLButtonElement).disabled = true;
     $('btn-save-score')!.textContent = 'INVIO...';
     const { run } = app;
-    const result = await submitScore({ initials: initials.join(''), wave: run.wave, kills: run.kills, bosses: run.bossesKilled });
+    const result = await submitScore({ initials: initials.join(''), wave: run.wave, kills: run.kills, bosses: run.bossesKilled, difficulty: run.difficulty });
     screens.showOverAfter(result as any, await getTop(10));
     saving = false;
   }

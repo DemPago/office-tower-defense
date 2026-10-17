@@ -6,6 +6,7 @@ import { ALLIES } from '../data/allies.js';
 import { MANA } from '../data/abilities.js';
 import { weaponDef } from '../data/weapons.js';
 import { heroDef } from '../data/heroes.js';
+import { DIFF } from '../data/difficulty.js';
 import type { Run, Meta, Stats, BonusSet } from '../types.js';
 
 // ─── Statistiche base della torre (senza nessun bonus) ───────────────────────
@@ -84,7 +85,7 @@ export function computeStats(run: Run, meta: Meta): Stats {
     rate:         Math.min(S.rateMax * W.rate, (1 + H.rate) * W.rate * BASE.rate * (1 + u.rate + c.rate + m.rate + auraRate)),
     allyRateMult: 1 + auraRate,
     range:        Math.min(S.rangeMax, (1 + H.range) * W.range * BASE.range * (1 + u.range + c.range) * (1 + (run.wave || 0) * S.rangeWaveK)),
-    maxHp:        (BASE.hp + u.hpFlat + c.hpFlat) * (1 + c.hp + m.hp) * (1 + H.hp),
+    maxHp:        (BASE.hp * DIFF.towerHp + u.hpFlat + c.hpFlat) * (1 + c.hp + m.hp) * (1 + H.hp),
     regen:        (BASE.regen + u.regen + c.regen) * (1 + H.regen),
     armor:        Math.min(S.armorMax, c.armor + H.armor),
     crit:         Math.min(S.critMax, BASE.crit + c.crit + H.crit),

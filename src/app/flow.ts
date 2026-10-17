@@ -4,6 +4,8 @@ import { createRun, TOWER } from '../state.js';
 import { allyHp } from '../data/allies.js';
 import { banner, floatText } from '../systems/fx.js';
 import { saveMeta } from '../save.js';
+import { DIFFICULTIES } from '../data/difficulty.js';
+import type { DifficultyId } from '../data/difficulty.js';
 import { runReward } from '../systems/game.js';
 import { pickCard, reroll, playCard, sellCard } from '../systems/cards.js';
 import { pickAlly } from '../systems/allies.js';
@@ -152,6 +154,21 @@ export function createFlow(app: any) {
 
   let menuAnim: { stop: () => void } | null = null;
 
+  function updateDiffButtons() {
+    const cur = meta.difficulty ?? 'normal';
+    for (const id of Object.keys(DIFFICULTIES) as DifficultyId[]) {
+      $(`diff-${id}`)?.classList.toggle('active', id === cur);
+    }
+  }
+
+  for (const id of Object.keys(DIFFICULTIES) as DifficultyId[]) {
+    $(`diff-${id}`)?.addEventListener('click', () => {
+      meta.difficulty = id;
+      saveMeta(meta);
+      updateDiffButtons();
+    });
+  }
+
   function showMenu() {
     screens.showMenu(meta, heroPortrait, robMiniSprite, id => {
       meta.hero = id;
@@ -159,6 +176,7 @@ export function createFlow(app: any) {
       play('pick');
       showMenu();
     });
+    updateDiffButtons();
     if (!menuAnim) menuAnim = startMenuAnimation($('menu-bg') as HTMLCanvasElement);
   }
 

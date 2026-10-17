@@ -1,5 +1,6 @@
 // Ondate: quanti nemici, quali, quanto sono forti e da dove arrivano.
 import { ENEMIES, ROLE_WEIGHTS, TIERS, ROLE_TIER, FOCAL_POINT_DEF, decadeFor, isZombieWave, ZOMBIE } from '../data/enemies.js';
+import { DIFF } from '../data/difficulty.js';
 import { ANIMALS } from '../data/animals.js';
 import { bossForWave, WEAPONS } from '../data/bosses.js';
 import { TOWER, SPAWN_RADIUS } from '../state.js';
@@ -60,14 +61,12 @@ function speedLabel(w: number) {
   return ` — ${labels[pos - 1]}`;
 }
 
-// Nemici per posizione nel ciclo (vedi WAVE_CONFIG.count)
+// Nemici per posizione nel ciclo (vedi WAVE_CONFIG.count), scalati per difficoltà
 function enemyCount(w: number) {
   const pos = cyclePos(w);
   const c = WAVE_CONFIG.count;
-  if (pos === 0) return c.boss;
-  if (pos <= 3)  return c.early;
-  if (pos <= 6)  return c.mid;
-  return c.late;
+  const base = pos === 0 ? c.boss : pos <= 3 ? c.early : pos <= 6 ? c.mid : c.late;
+  return Math.max(1, Math.round(base * DIFF.enemyCount));
 }
 
 // Sceglie un nemico del reparto di questa ondata, pesando i ruoli (tanti tank).
@@ -109,9 +108,9 @@ export function scaleEnemyStats(def: any, w: number, wsm = 1) {
   const tierKey  = def.tier || (ROLE_TIER as Record<string, string>)[def.role] || 'junior';
   const tier     = (TIERS as Record<string, any>)[tierKey];
   const deptBonus = 1 + WAVE_CONFIG.deptHpBonus * Math.min(decade.index, 5);
-  const hp       = def.hp * hpScale(w) * deptBonus * (zombie ? ZOMBIE.hp : 1) * tier.hpMult;
+  const hp       = def.hp * hpScale(w) * DIFF.enemyHp * deptBonus * (zombie ? ZOMBIE.hp : 1) * tier.hpMult;
   const speed    = def.speed * (0.9 + Math.random() * 0.2) * (elite ? 1.15 : 1) * (zombie ? ZOMBIE.speed : 1) * tier.speedMult * wsm;
-  const atk      = def.atk * atkScale(w) * tier.atkMult;
+  const atk      = def.atk * atkScale(w) * DIFF.enemyAtk * tier.atkMult;
   const gold     = def.gold * goldScale(w) * tier.goldMult;
   return { hp, speed, atk, gold, tierKey, elite, zombie };
 }
